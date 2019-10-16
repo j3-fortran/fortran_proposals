@@ -1,7 +1,7 @@
-To: J3                                                     J3/##-###
+To: J3                                                     J3/19-246
 From: Ondrej Certik
 Subject: Namespace For Modules
-Date: 2019-October-15
+Date: 2019-October-16
 
 Proposal for Fortran Standard: 202y (NOT 202x)
 
@@ -104,3 +104,5 @@ Instead, one can write it as:
 
 Then when another subroutine must be called from the `lapack` module, one
 can just call it, without having to modify the `use` statement.
+
+
