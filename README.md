@@ -1,6 +1,6 @@
 # Fortran Proposals
 
-This repository contains proposals for the Fortran Standard Committee. The idea for this repository is to act as a public facing discussion tool to collaborate with the user community to gather proposals for the Fortran language and systematically track all discussions for each proposal.
+This repository contains proposals for the Fortran Standard Committee in the [Issues](https://github.com/lfortran/fortran_proposals/issues) section. The idea for this repository is to act as a public facing discussion tool to collaborate with the user community to gather proposals for the Fortran language and systematically track all discussions for each proposal.
 
 ## Workflow
 
