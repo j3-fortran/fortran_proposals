@@ -1,14 +1,15 @@
+To: J3                                                     J3/19-246
+From: Ondrej Certik
+Subject: Namespace For Modules
+Date: 2019-October-16
+
 Proposal for Fortran Standard: 202y (NOT 202x)
 
-To: J3                                                     J3/19-246
-From: Ondřej Čertík
-Subject: Namespace For Modules
-Date: 2019-October-15
 
 1. Introduction
 
-The proposal is to allow import a module as a namespace and access its members
-using the % operator. Example:
+The proposal is to allow import a module as a namespace and access its
+members using the % operator. Example:
 
     use, namespace :: utils
     ...
@@ -78,11 +79,12 @@ With this proposal one could also do:
 
 3.2 Need to import lots of functions from a module
 
-Exisintg code (https://github.com/certik/fortran-utils/blob/b43bd24cd421509a5bc6d3b9c3eeae8ce856ed88/src/linalg.f90):
+Exising code (https://github.com/certik/fortran-utils/blob/
+b43bd24cd421509a5bc6d3b9c3eeae8ce856ed88/src/linalg.f90):
 
     use lapack, only: dsyevd, dsygvd, ilaenv, zgetri, zgetrf, zheevd, &
-        dgeev, zgeev, zhegvd, dgesv, zgesv, dgetrf, dgetri, dgelsy, zgelsy, &
-        dgesvd, zgesvd, dgeqrf, dorgqr, dpotrf, dtrtrs
+        dgeev, zgeev, zhegvd, dgesv, zgesv, dgetrf, dgetri, dgelsy, &
+        zgelsy, dgesvd, zgesvd, dgeqrf, dorgqr, dpotrf, dtrtrs
     ...
     call dgeev('N', 'V', n, At, lda, wr, wi, vl, ldvl, vr, ldvr, &
      work, lwork, info)
@@ -100,5 +102,7 @@ Instead, one can write it as:
     call lapack%dgetrf(n, n, Amt, lda, ipiv, info)
     ...
 
-Then when another subroutine must be called from the `lapack` module, one can
-just call it, without having to modify the `use` statement.
+Then when another subroutine must be called from the `lapack` module, one
+can just call it, without having to modify the `use` statement.
+
+
