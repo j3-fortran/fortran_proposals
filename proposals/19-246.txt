@@ -1,9 +1,10 @@
-Proposal for Fortran Standard: 202y (NOT 202x)
-
-To: J3                                                     J3/19-246
+To: J3                                                     J3/##-###
 From: Ondřej Čertík
 Subject: Namespace For Modules
 Date: 2019-October-15
+
+Proposal for Fortran Standard: 202y (NOT 202x)
+
 
 1. Introduction
 
