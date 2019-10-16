@@ -14,3 +14,7 @@ This repository contains proposals for the Fortran Standard Committee.
    * positive feedback, we can start drafting a formal proposal to be submitted into [Documents](https://j3-fortran.org/doc/meeting) for the US committee. One has to find an advocate at the committee to advocate for the proposal. 
 
 4. Getting the proposal through the Committee is a long process, with multiple approvals, formal requirements, specifications, edits to the standard, etc. We will document this step in more detail. During this process, we can document the latest status at the issue.
+
+## Plan For This Repository
+
+Currently this repository is maintained by [Ondřej Čertík](https://github.com/certik) and [Zach Jibben](https://github.com/zjibben) (both members of the Fortran Committee). As the repository gains traction, the plan is to have a "blessed" organization at GitHub that the Standard Committee owns and move this repository there.
