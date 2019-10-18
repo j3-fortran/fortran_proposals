@@ -17,7 +17,13 @@ This repository contains proposals for the Fortran Standard Committee in the [Is
 
 ## Plan For This Repository
 
-Currently this repository is maintained by [Ondřej Čertík](https://github.com/certik) and [Zach Jibben](https://github.com/zjibben) (both members of the Fortran Committee). As the repository gains traction, the plan is to have a "blessed" organization at GitHub that the Standard Committee owns and move this repository there.
+Currently this repository is maintained by
+[Ondřej Čertík](https://github.com/certik),
+[Zach Jibben](https://github.com/zjibben) and
+[Gary Klimowicz](https://github.com/gklimowicz)
+(all members of the Fortran Committee). We plan to maintain this repository,
+keep it up to date with what the committee is doing and use it to collaborate
+on ideas and proposal with the Fortran community.
 
 ## Links
 
