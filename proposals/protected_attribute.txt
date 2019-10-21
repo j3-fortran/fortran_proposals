@@ -1,0 +1,89 @@
+To: J3
+From: Balint Aradi
+Subject: Protected attribute for derived type components
+Date: 2019-October-21
+
+Proposal for Fortran Standard: 202y (NOT 202x)
+
+
+1. Introduction
+
+The proposal is to allow specify the protected attribute for components in
+derived types. Example:
+
+
+    type :: prot_t
+      integer, allocatable, protected :: array(:)
+    end type prot_t
+
+
+2. Motivation
+
+Data hiding using derived types with private components allows programmer to
+provide robust types, where internals can only be changed in controlled
+fashion. The usual implementation is to provide setter and getter routines for
+writing and reading components. Both operations involve copying the passed data,
+which can be inefficient when storing large arrays in the derived type
+instance. While in the setter routine the copying serves robustness by
+"disentangling" the data stored in the derived type from the original data, the
+getter routine and the connected copy operation might be superfluous, when the
+consumer only wants to read but not modify the data stored in the derived type
+intance.  By allowing for a direct read-only access, one could enhance
+efficiency in those case without sacrificing the robustness of data
+encapsulation and hiding.
+
+This proposal suggests to allow the "protected" attribute already used for
+module variables being used for derived type components as well. It would also
+remedy the asymmetry between the attributes "private"/"public" and the attribute
+"protected", as the former two can be applied to both, module variables and
+derived type components, while the latter only for module variables.
+
+
+3. Use Cases
+
+Derived types storing large amount of data could enable read-only access to
+components without the necessity of a getter routine and the connected copy
+operation:
+
+  module data_m
+    implicit none
+
+    type :: prot_t
+      ! Large array component
+      integer, allocatable, protected :: array(:)
+    contains
+      procedure :: set
+    end type prot_t
+
+  contains
+
+    subroutine set(this, array)
+      type(prot_t), intent(out) :: this
+
+      this%array = array
+
+    end subroutine set
+
+  end module data_m
+
+
+
+  program use_data
+    use data_m
+    implicit none
+
+    type(prot_t) :: storage
+    integer, allocatable :: large_array(:)
+
+    ! Filling up and allocating the large array
+    ! ...
+
+    ! Storing the large array in the derived type instance
+    call storage%set(large_array)
+
+    ! Accessing large array stored in the derived type directly
+    ! No getter routine and no copy necessary
+    ! Dummy argument of the called routine must be intent(in)
+    call some_routine_processing_but_not_changing_the_array(storage%array)
+
+  end program use_data
