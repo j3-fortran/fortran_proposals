@@ -23,7 +23,7 @@ Currently this repository is maintained by
 [Gary Klimowicz](https://github.com/gklimowicz)
 (all members of the Fortran Committee). We plan to maintain this repository,
 keep it up to date with what the committee is doing and use it to collaborate
-on ideas and proposal with the Fortran community.
+on ideas and proposals with the Fortran community.
 
 ## Links
 
