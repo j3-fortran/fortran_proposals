@@ -25,6 +25,12 @@ Currently this repository is maintained by
 keep it up to date with what the committee is doing and use it to collaborate
 on ideas and proposals with the Fortran community.
 
+## Code of Conduct
+
+Please note that all participants of this project are expected to follow our
+Code of Conduct. By participating in this project you agree to abide by its
+terms. See [CODE_OF_CONDUCT.md](CODE_OF_CONDUCT.md).
+
 ## Links
 
 * [US Fortran Standards Committee](https://j3-fortran.org/)
