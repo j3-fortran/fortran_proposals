@@ -91,8 +91,9 @@ dummy argument to have an initializer, which would be triggered only
 when corresponding actual argument is not passed by the caller. 
 
 This improvement has already been suggested by Van Snyder in 
-18-136r1, has received votes in the user survey for 202X (TODO 
-link), and appeared on Data subgroup's wishlist at meeting 215 (see 
+18-136r1, has received votes in the user survey for 202X (see
+https://isotc.iso.org/livelink/livelink?func=ll&objId=19530634&objAction=Open&viewType=1), 
+and appeared on Data subgroup's wishlist at meeting 215 (see 
 https://j3-fortran.org/doc/year/18/18-122r1.txt).
 
 3. Backward compatibility
