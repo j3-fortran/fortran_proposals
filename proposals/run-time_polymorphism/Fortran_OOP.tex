@@ -1,0 +1,1139 @@
+\documentclass[11pt,oneside]{article}
+\usepackage[a4paper, total={6.5in, 9in}]{geometry}
+\usepackage{natbib}
+\usepackage{url}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage[title]{appendix}
+
+\frenchspacing
+
+\definecolor{codegreen}{rgb}{0,0.6,0}
+\definecolor{codegray}{rgb}{0.5,0.5,0.5}
+\definecolor{codepurple}{rgb}{0.58,0,0.82}
+\definecolor{backcolour}{rgb}{0.95,0.95,0.92}
+ 
+\lstdefinestyle{mystyle}{
+%   backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+%   keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+%   numbers=left,                    
+    numbers=none,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+ 
+\lstset{style=mystyle}
+
+\begin{document}
+
+\title{Improved run-time polymorphism for Fortran \\ [1em]
+  \large{Proposal to J3 for inclusion into Fortran 202y}
+}
+\author{K. Kifonidis}
+
+\maketitle
+
+\abstract{A case is made for extending Fortran's support for
+  object-oriented (OO) programming (i.e. run-time polymorphism) in
+  order to enable and encourage the use of best practices for the
+  design and implementation of flexible OO software, and to improve
+  the safety and efficiency of the language. It is proposed to
+  introduce multiple inheritance of specification, in order to
+  supplement the single inheritance of implementation that is already
+  contained in the language. The new feature extends Fortran's
+  abstract interfaces and derived types by functionality akin to what
+  is present in Java, and some other, recent, languages. It is
+  essential for writing code that conforms to the dependency inversion
+  principle of OO programming. This will encourage the development of
+  software that forgoes dependency upon concretions in favor of
+  dependency on abstractions. The decoupling of classes that can be
+  achieved in this way will lead to significantly more flexible and
+  extensible numerical codes, that are also more efficient. The new
+  feature enables a programming style that dispenses with the use of
+  implementation inheritance, and therefore helps to eliminate type
+  conflicts whose resolution requires ``select type'' (down-casting)
+  statements. These, and their associated run-time overhead, have been
+  a frequent gripe of Fortran OO programmers since the introduction of
+  Fortran 2003. As a bonus, the feature should be relatively easy to
+  implement in Fortran compilers that adhere to at least the Fortran
+  2003 standard.}
+
+\section{Introduction}
+
+Over the last decades, a significant body of experience has
+accumulated concerning the practical use of object-oriented
+programming (OOP). This experience has markedly shaped the design of
+some very recent programming languages, like Rust and Go, and it has
+also led to some notable revision of our notions of what actually
+constitutes OOP. In this modern view, the very essence of OOP, and in
+fact its ultimate upshot, is the use of (run-time) polymorphism to
+manage (i.e. minimize) code dependencies
+\cite{Martin_03,Bates_et_al_09}. Viewed in this way, OOP is simply a
+means to organize code so that it achieves a maximum amount of
+\emph{decoupling}.
+
+The crucial idea in this context is that polymorphism has the unique
+ability to allow one to invert the flow of dependency in a computer
+code, which normally points from higher level modules to lower level
+modules (read ``classes'' in the OOP context). Polymorphism makes it
+possible to replace (``invert'') the dependency of a higher level
+class upon a lower level class by a dependency of both these classes
+upon a pure abstraction, which is called an interface (or a contract,
+protocol, or trait). Thereby, high-level policy gets decoupled from
+low-level implementation detail. This is known as the dependency
+inversion principle \cite{Martin_03}. If strictly followed, this
+principle leads to the development of loosely coupled, easily
+extensible, easily testable, modular, maintainable, and thus
+future-proof software. It is this decoupling which allows for the
+re-usability and flexibility of well-written OO code.
+
+The situation encountered in practice is usually a different one,
+though. Experience has shown that OO software which is written in
+Fortran 2003 (and its successors) seldom displays these desirable
+characteristics. It will be argued in the following that it is the
+combination of a lack of appropriate features in the language, for
+encouraging (or even enforcing) a programming style that upholds the
+dependency inversion principle, and the consequent indiscriminate use
+of features that the language \emph{does} provide (in particular
+inheritance of implementation), that has to be blamed for this
+situation.
+
+\section{Deficiencies in Fortran 2018 addressed by this proposal}
+\label{sect:F08_deficits}
+
+\subsection{No explicit distinction between different inheritance types}
+
+In statically typed languages, like Fortran, run-time polymorphism is
+tightly bound to inheritance. In order to manage dependencies in the
+way it was described above, the users of these languages must employ
+some form of inheritance mechanism. It is important to realize that it
+is \emph{inheritance of (object) specification}, i.e. inheritance of
+interfaces, that is required for this purpose. It is this (restricted)
+form of inheritance that is today viewed as being indispensable for
+OOP. Interface inheritance allows for the aforementioned
+interface-based programming style, that embodies the dependency
+inversion principle.
+
+Fortran, on the other hand, makes exclusive use of \emph{inheritance
+  of implementation}, i.e. inheritance of classes. A class encompasses
+both an interface (given by the union of its methods' signatures,
+through which it communicates with the external world), \emph{and} the
+implementation details of an OO algorithm (in the form of data
+variables, and the implementation bodies of its methods). A class is
+therefore not a proper abstraction (for other classes or procedures)
+to depend upon. It is not sufficiently generic. It contains
+implementation-dependent detail, which other classes end up being
+needlessly coupled to, if they make use of it via either inheritance
+or object composition. Only the class's interface is free from such
+detail and should be depended upon for these purposes, to achieve a
+maximum amount of decoupling in an application.
+
+Fortran presently makes no explicit distinction between implementation
+inheritance and specification inheritance. The latter can only be
+\emph{emulated} in Fortran by \emph{re-purposing} class inheritance,
+and exploiting (or rather abusing) the fact that classes intermingle
+implementation with specification. Fortran offers abstract types
+(i.e. abstract classes) for related use cases, which can contain
+deferred (i.e. abstract) procedures, for which ``abstract interfaces''
+have to be specified by the user. However, abstract classes (as all
+other classes) are explicitly allowed to \emph{also} contain variables
+and concrete methods, i.e. state, as well as implementation code,
+which makes abstract classes dangerous to depend upon for inheriting
+specification from.
+
+In contrast to Java, C\#, D, Swift, Rust, Go and some other modern
+languages, Fortran does not offer a means to inherit specification
+directly from its ``abstract interfaces'', which --- though available,
+and guaranteed to be completely free of implementation detail --- play
+only a sub-ordinate, instead of a cardinal role in the language. Hence
+it is not possible to enforce, at the language level, the strict
+separation of the implementation of an OO algorithm from its
+interface, that is required for adherence to the dependency inversion
+principle.
+
+\subsection{Problems due to the lack of distinction between inheritance types}
+\label{sect:problems}
+
+Interface inheritance has the sole purpose of enabling polymorphism,
+in order to invert dependencies and thereby make parts of an algorithm
+interchangeable (i.e. to achieve high-level code reuse
+\cite{Gamma_et_al_94}). This is also called \emph{sub-typing}. In
+contrast, class inheritance is meant to be used primarily for sharing
+common implementation code between parent and child classes. This is
+also called \emph{sub-classing}, and can be viewed as a form of
+low-level code reuse.
+
+There is a significant body of evidence that demonstrates that
+sub-classing is a dangerous practice, which, moreover, is not
+essential to OOP. Snyder \cite{Snyder86} showed already in the
+eighties that sub-classing breaks encapsulation. Weck and Szyperski
+re-emphasized this \cite{Weck_Szyperski}. They proposed to abolish
+sub-classing, since they regard it as being prone to abuse. Even
+moderately incautious use of sub-classing typically leads to rigid,
+brittle code, that is tightly coupled to the details of concrete
+(implementation) classes, and is therefore unmaintainable and
+in-extensible. This is especially the case when sub-classing is used in
+combination with method overriding, or changes to a base object's
+state \cite{Weck_Szyperski}. Moreover, when sub-classing is employed
+along with object composition in an application (which is inevitable
+in practice), type conflicts can often result. These can then only be
+resolved by down-casting, i.e. by the use of \texttt{select type}
+statements in Fortran, which lead to unnecessary run-time
+overhead. This can be viewed as resulting from a violation of the
+dependency inversion principle, which states that inheritance should
+be used \emph{exclusively} for sub-typing.
+
+All these issues could be avoided, if Fortran would be extended to
+allow for (multiple) inheritance of interfaces, in order to provide
+its programmers with easy and safe access to sub-typing. Sub-classing
+(i.e. type extension) could then be mostly shunned in the development
+of new codes. Clear guidelines could then be given to Fortran
+programmers to rely instead on object composition for low-level, and
+on the features proposed in this proposal for high-level code reuse,
+in the vast majority of their code. A coding style that is in
+accordance with the dependency inversion principle would thus be
+encouraged that would eliminate type conflicts, the need for
+\texttt{select type} statements, and their run-time overhead. A
+potential drawback of object composition is the need for some
+boilerplate code, i.e. for methods that delegate functionality to
+composed classes. However, efficiency can still be expected to improve
+over present Fortran OOP codes, especially in cases where
+\texttt{select type} statements appear in low-level code, e.g. in
+computational kernels.
+
+The importance of such a coding style is actually not some entirely
+new insight. Among the very first recommendations that one finds in
+the pioneering work of Gamma et al. \cite{Gamma_et_al_94} on OO design
+patterns are the statements ``program to an interface not an
+implementation'' and ``favor object composition over class
+inheritance''. What had apparently not been recognized widely is that
+these are also recommendations for language design. This has changed
+recently, with the availability of the Rust and Go languages. In these
+languages, interface inheritance is the \emph{only} type of inheritance
+that is supported. These languages therefore \emph{enforce} an OOP
+style that is in accordance with the dependency inversion principle.
+
+
+\section{Proposed additions to Fortran 202y}
+\label{sect:propositions}
+
+The new features proposed to solve the problems discussed in the last
+section are
+
+\begin{itemize}
+\item
+  A possibility to declare \emph{named} versions of Fortran's abstract
+  interfaces, from which derived types would then be able to inherit
+  specification.
+\item
+  An \texttt{extends} attribute-specifier for the declaration header of
+  these named abstract interfaces, to allow hierarchies of such (named)
+  abstract interfaces to be built\footnote{Hierarchies of interfaces
+    do not pose the dangers that sub-classing poses, as only
+    \emph{specification} is shared, see \cite{Weck_Szyperski}.}.
+\item
+  A new \texttt{implements} type-attribute-specifier for derived types, to
+  enable these types to inherit specification from one or more named
+  abstract interfaces.
+\item
+  A new \texttt{trait} declaration-type-specifier for sub-typing
+  polymorphism, in order to declare polymorphic variables of named
+  abstract interfaces.
+
+\end{itemize}
+
+\subsection{Extended declaration syntax for abstract interfaces}
+\label{sect:declare}
+
+The following listing shows an example of an extended syntax for
+interface declarations. In a module named \texttt{interfaces}, three
+named abstract interfaces are declared: \texttt{ISolver},
+\texttt{IPrinter}, and \texttt{IClient}. \texttt{ISolver} and
+\texttt{IPrinter} contain the declarations of function
+\texttt{solve\_system}, and subroutine \texttt{print\_result},
+respectively. \texttt{IClient} on the other hand contains declarations
+for \emph{two} procedures: function \texttt{solve\_system}, and
+subroutine \texttt{print\_result}, which it inherits from
+\texttt{ISolver} and \texttt{IPrinter}, respectively, by means of the
+\texttt{extends} attribute-specifier.
+
+\newpage
+
+\begin{lstlisting}[language=Fortran]
+module interfaces
+  abstract interface :: ISolver
+      function solve_system(a,b) result(x)
+         real, dimension(:,:), intent(in)  :: a
+         real, dimension(:),   intent(in)  :: b
+         real, dimension(:),   allocatable :: x
+      end function solve_system
+   end interface ISolver
+
+   abstract interface :: IPrinter
+      subroutine print_result(x)
+         real, dimension(:), intent(in) :: x
+      end subroutine print_result
+   end interface IPrinter
+   
+   abstract interface, extends(ISolver,IPrinter) :: IClient
+   end interface IClient
+end module interfaces
+\end{lstlisting}
+\label{list:interface}
+We remark here that a named abstract interface may depend on other
+named abstract interfaces, not only via an \texttt{extends}
+attribute-specifier, but also through the procedure declarations that
+it contains. Namely, the latter may contain polymorphic arguments that
+are declared with the help of the new \texttt{trait}
+declaration-type-specifier (see Sect.~\ref{sect:declarations}), much
+in the same way that procedures in Fortran~2018 can contain
+polymorphic arguments that are declared using the \texttt{class}
+specifier of sub-classing. In such cases, Fortran's \texttt{import}
+statement could be required in order to bring the names of other
+abstract interfaces into an abstract interface's scope.
+
+Other ways to express and implement the proposed functionality are
+possible, and need to be considered. The one discussed here has the
+advantages that abstract interfaces are already a part of the language
+and are merely extended here by functionality that does not affect
+their other uses. It does, however, elevate their status in the
+language as it makes them central to expressing interface
+inheritance. This syntax also makes the distinction between sub-typing
+and sub-classing very obvious, which is a major plus. It has the further
+advantage that named abstract interfaces could also be used in future
+extensions of the language, e.g. in connection with \emph{intrinsic}
+types, and with generics. This is the approach taken in the Swift
+programming language where (named) abstract interfaces (called
+``protocols'' there) are so central to its functionality, that Swift
+has been called a ``protocol-based'' language. It is not our purpose
+here to delve deeper into syntactic or extensibility issues. We rather
+need some syntax that is able to express the following code examples,
+and the present one does so satisfactorily.
+
+
+\subsection{Facility to implement interfaces}
+
+Once a named abstract interface has been declared, it can be
+implemented by a derived type that needs to conform to that interface,
+by using the new \texttt{implements} type-attribute-specifier as
+follows
+\begin{lstlisting}[language=Fortran]
+module lu_decomp
+   use interfaces, only: ISolver
+   type, implements(ISolver) :: LUDecomposition
+   contains
+      procedure, nopass :: solve_system
+   end type LUDecomposition
+contains
+   function solve_system(a,b) result(x)
+      real, dimension(:,:), intent(in)  :: a
+      real, dimension(:),   intent(in)  :: b
+      real, dimension(:),   allocatable :: x
+      ! Implementation of LU decomposition goes here
+   end function solve_system   
+end module lu_decomp
+\end{lstlisting}
+In case the derived type is abstract, it is allowed to provide an only
+partial implementation of the interface(s) that it implements. Any
+non-abstract derived type that extends the abstract type must,
+however, provide a full implementation.
+
+\subsection{Polymorphism via sub-typing}
+\label{sect:declarations}
+
+To make actual use of the sub-typing polymorphism that we have just
+set up, polymorphic variables of named abstract interfaces would then
+be declared with the help of the \texttt{trait}
+declaration-type-specifier; for instance, as arguments of a procedure,
+or within another derived type. They could then be used in the actual
+implementation of this derived type's bound procedures, much in the
+same fashion as it is presently possible using variables of derived
+types that are declared with the \texttt{class} specifier (of
+sub-classing):
+\begin{lstlisting}[language=Fortran]
+type, implements(IClient) :: Client
+   trait(ISolver),  allocatable :: solver
+   trait(IPrinter), pointer     :: printer => null()
+contains
+   procedure, nopass :: solve_system
+   procedure, nopass :: print_result
+end type Client
+\end{lstlisting}
+Here, two polymorphic variables, \texttt{solver} and \texttt{printer},
+that conform to the \texttt{ISolver} and \texttt{IPrinter} interfaces,
+respectively, are declared for the purpose of object composition
+within type \texttt{Client}, which itself implements the
+\texttt{IClient} interface, and thus has to provide implementations
+for the procedures \texttt{solve\_system} and \texttt{print\_result}
+(whose actual code is omitted here, and would simply employ delegation
+to \texttt{solver} and \texttt{printer} to provide the required
+functionality).
+
+Notice also, that the proposed features allow multiple interface
+inheritance. In case \texttt{Client} has to conform to either
+\texttt{ISolver} or \texttt{IPrinter}, one could, for instance,
+provide an implementation much as in the last example, but would use
+the \texttt{implements} specifier as follows
+\begin{lstlisting}[language=Fortran]
+type, implements(ISolver,IPrinter) :: Client
+   trait(ISolver),  allocatable :: solver
+   trait(IPrinter), pointer     :: printer => null()
+contains
+   procedure, nopass :: solve_system
+   procedure, nopass :: print_result
+end type Client
+\end{lstlisting}
+
+\subsection{Combination of sub-classing with sub-typing}
+
+The new features need to be inter-operable also with type extension
+(i.e. sub-classing). They need to enable one to declare derived types
+that conform to some interfaces, and inherit at the same time
+implementation from some other derived type (e.g. the procedure
+\texttt{solve\_system} implemented by type \texttt{LUDecomposition} in
+the following example):
+\begin{lstlisting}[language=Fortran]
+type, extends(LUDecomposition), implements(ISolver,IPrinter) :: Client
+   trait(IPrinter), pointer :: printer => null()
+contains
+   procedure, nopass :: solve_system
+   procedure, nopass :: print_result
+end type Client
+\end{lstlisting}
+In the Java language, from which this idea is borrowed, the convention
+is that \texttt{extends} shall precede \texttt{implements}. The
+combination of sub-typing and sub-classing will allow advanced users
+of the language, who have a good understanding of OO design, to employ
+some advanced techniques that make use of both the flexibility that
+sub-typing affords one, with the raw reduction of code lines that
+sub-classing permits.
+
+
+\section{Example of a use case: a Taylor series application}
+
+To illustrate the difficulties that were discussed in
+Sect.~\ref{sect:problems}, and to demonstrate how the use of the new
+features will contribute to the solution of these problems, we will
+present here a small case study that exhibits a pattern that is
+encountered often in practical applications, namely the coupling of
+two separate inheritance hierarchies through object composition. It is
+truly only the pattern that is of importance here, but in order to
+provide a concrete example, we will present it in the framework of a
+somewhat fictional application that calculates the Taylor series
+expansion of some function up to certain orders of accuracy.
+
+\subsection{The basic design}
+\label{sect:basic_design}
+
+Suppose that we have an application that needs to calculate the Taylor
+series of a function $F(x)$ for some concrete $x$ --- and it needs to
+do so only up to the linear term, i.e. it only needs access to the
+first derive, $F'(x)$, of $F$ with respect to $x$. Ignoring all the
+details of how this first derivative might be calculated, a code
+skeleton for using it within our application might look as
+follows. Declare a derived type \texttt{DerivF} that contains a
+procedure \texttt{deriv1} that calculates $F'(x)$, and a separate
+type, named \texttt{Taylor}, that makes use of type \texttt{DerivF}
+via object composition in order to \texttt{evaluate} the actual Taylor
+series approximation itself (whose details, like calculation of the
+zeroth order term, etc., are immaterial here):
+\begin{lstlisting}[language=Fortran]
+module derivs
+   type :: DerivF
+   contains
+      procedure, nopass :: deriv1 => deriv1f
+   end type DerivF
+contains
+   subroutine deriv1f()
+      write(*,*) ' 1st derivative of function F!'
+   end subroutine deriv1f
+end module derivs
+
+module series
+   use derivs, only: DerivF
+   type :: Taylor
+      type(DerivF), allocatable :: calc
+   contains
+      procedure :: term1
+      procedure :: evaluate
+   end type Taylor
+contains
+   subroutine term1(self)
+      class(Taylor), intent(in) :: self
+      call self%calc%deriv1()
+   end subroutine term1
+
+   subroutine evaluate(self)
+      class(Taylor), intent(in) :: self
+      write(*,*) 'Evaluating Taylor series using'
+      call self%term1()
+   end subroutine evaluate   
+end module series
+\end{lstlisting}
+Our client application would then set up an object \texttt{teval} of
+type \texttt{Taylor} in order to evaluate the Taylor series
+approximation it needs, e.g. as follows
+\newpage
+\begin{lstlisting}[language=Fortran]
+program client
+   use derivs, only: DerivF
+   use series, only: Taylor
+   type(Taylor), allocatable :: teval
+   teval = Taylor( DerivF() )   
+   call teval%evaluate()   
+end program client
+\end{lstlisting}
+
+Suppose now, that our requirements on the application have changed.
+We need some additional functionality. We want the application to be
+able to also calculate, if required, a higher-order accurate
+approximation to the Taylor series of $F$, say up to the quadratic
+term. In addition, we also want it to be able to use some other
+function, say $G$, instead of $F$. Moreover, we do not want to change
+any of the present code structure, if possible. We only wish to extend
+it by the new functionality.
+
+
+\subsection{Extension by sub-classing}
+\label{sect:sub-classing-example}
+
+We will concentrate on implementing the functionality related to the
+higher-order-accuracy capability first. To accomplish this, we will
+use Fortran's \texttt{extends} feature for derived types
+(i.e. sub-classing). We extend type \texttt{DerivF} by a child type,
+\texttt{HDerivF}, that contains a procedure \texttt{deriv2} to
+calculate also the higher (i.e. second) order derivative of $F$.
+\begin{lstlisting}[language=Fortran]
+type :: DerivF
+contains
+   procedure, nopass :: deriv1 => deriv1f
+end type DerivF
+
+type, extends(DerivF) :: HDerivF
+contains
+   procedure, nopass :: deriv2 => deriv2f
+end type HDerivF
+\end{lstlisting}
+We also extend the type \texttt{Taylor} by a child type,
+\texttt{HTaylor}, to deal with the evaluation of the higher order
+Taylor series:
+\begin{lstlisting}[language=Fortran]
+type :: Taylor
+   type(DerivF), allocatable :: calc
+contains
+   procedure :: term1
+   procedure :: evaluate
+end type Taylor
+
+type, extends(Taylor) :: HTaylor
+contains
+   procedure :: term2    => hterm2
+   procedure :: evaluate => hevaluate
+end type HTaylor
+\end{lstlisting}
+Here, we inherited method \texttt{term1} from the parent type, and
+added method \texttt{term2} to enable us to calculate also the
+second-order Taylor term. We also had to override the
+\texttt{evaluate} method of the parent type, since the higher-order
+evaluation of the complete series needs to account for this
+additional, i.e. second-order, term. We have thus implemented the
+skeleton of the high-order functionality, using types that make up two
+separate inheritance hierarchies. However, we are still bound to
+exclusive use of the function $F$. To implement the capability to use
+different functions, we are going to employ the strategy pattern
+\cite{Gamma_et_al_94}. We introduce a further inheritance hierarchy
+made up of two new types, \texttt{DerivG}, and \texttt{HDerivG}, to
+provide the same functionality for function $G$, as it was done above
+for function $F$. We also need to make these hierarchies, connected to
+$F$ and $G$, interchangeable, so that we can use either of them within
+the code that evaluates the Taylor series. For this purpose, we
+introduce the following abstract type
+\begin{lstlisting}[language=Fortran]
+type, abstract :: Deriv
+contains
+   procedure(pderiv), deferred, nopass ::  deriv1
+end type Deriv
+
+abstract interface
+   subroutine pderiv()
+   end subroutine pderiv      
+end interface
+\end{lstlisting}
+Now we can make both the inheritance hierarchies connected to $F$ and $G$
+derive from this abstract type, and hence merge them into a single
+hierarchy. Its $G$-related branch, for instance, looks as follows
+\begin{lstlisting}[language=Fortran]
+type, extends(Deriv) :: DerivG
+contains
+   procedure, nopass :: deriv1 => deriv1g
+end type DerivG
+
+type, extends(DerivG) :: HDerivG
+contains
+   procedure, nopass :: deriv2 => deriv2g
+end type HDerivG
+\end{lstlisting}
+whereas the $F$-related branch looks completely analogous. The last
+step, in implementing the strategy pattern, is to transform the variable
+\texttt{calc} in type \texttt{Taylor} into a polymorphic variable of
+\texttt{class(Deriv)}
+\begin{lstlisting}[language=Fortran]
+type :: Taylor
+   class(Deriv), allocatable :: calc
+contains
+\end{lstlisting}
+in order to accept \texttt{Deriv} types from either branch of our
+merged hierarchy. The complete code, that we end up with, is given
+in Appendix~\ref{sect:example1}. This code\footnote{compiled
+  with gfortran Version 9} produces the following output
+\begin{lstlisting}[language=Fortran]
+ Evaluating Taylor series using
+  1st derivative of function G!
+
+ Evaluating Taylor series using
+  1st derivative of function G!
+  2nd derivative of function G!
+\end{lstlisting}
+That is, the code calculates first the low-order approximation of $G$,
+and subsequently its high-order approximation, as intended. It works
+correctly. Yet, it is extremely bad, rigid code! The most conspicuous
+symptom of its rigidity is the appearance of the \texttt{select type}
+statement in the subroutine \texttt{hterm2}, that we reproduce here for
+illustration:
+\begin{lstlisting}[language=Fortran]
+subroutine hterm2(self)
+   class(HTaylor), intent(in) :: self
+   select type ( calc => self%calc )
+   class is ( HDerivF )
+      call calc%deriv2()
+   class is ( HDerivG )
+      call calc%deriv2()
+   class default
+      write(*,*) 'Unknown type!'
+   end select
+end subroutine hterm2
+\end{lstlisting}
+Obviously, this routine expects the \texttt{calc} instance to be of
+either type \texttt{HDerivF} or \texttt{HDerivG}, whereas this has
+been inherited from the parent type \texttt{Taylor} being of type
+\texttt{class(Deriv)},
+\begin{lstlisting}[language=Fortran]
+type :: Taylor
+   class(Deriv), allocatable :: calc
+contains
+\end{lstlisting}
+Our abstract type \texttt{Deriv} does not contain a declaration for
+the method \texttt{deriv2} that the subroutine needs. Since the
+compiler can't know at compile time whether at run-time \texttt{calc}
+will be of the right type-extension to contain the \texttt{deriv2}
+method, it will refuse to compile subroutine \texttt{hterm2} if the
+\texttt{select type} statement is omitted. By coupling two inheritance
+hierarchies (based on \texttt{Deriv} and \texttt{Taylor}) together, via
+object composition, we have created a (potential) type conflict that
+now requires a type check every time we run through the subroutine. If
+we had written a real production application along these lines, that
+would evaluate the Taylor series for a single scalar $x$ per call, the
+type-checking would have completely killed performance!
+
+Type extension (i.e. sub-classing) has locked us into a
+straight-jacket of rigid inheritance hierarchies that denies us the
+flexibility to provide our procedures with the right data types, and
+has thereby forced us to circumvent the static type system of the
+language, in order to get the code to work at all. But this is not the
+only problem. The entire code relies on concrete derived types,
+i.e. on concrete implementations. Except for type \texttt{Deriv}, it
+does not use any abstractions. Should the implementation of some
+concrete type need to be changed, all types that depend on it would
+need to be checked and possibly changed, too, in order not to break
+the program.
+
+\subsection{Extension by sub-typing and object composition}
+
+Now, let us go back to the point we were at at the end of
+Sect.~\ref{sect:basic_design}. Let us, furthermore, suppose that Fortran
+doesn't support sub-classing, and instead supports only object
+composition and sub-typing (via the features proposed in
+Sect.~\ref{sect:propositions}), akin to Rust or Go. We will again
+focus first on the extension of our application to higher order of
+accuracy. We still contemplate to introduce this functionality through
+four derived types \texttt{DerivF}, \texttt{HDerivF}, \texttt{Taylor},
+and \texttt{HTaylor}. But since we no longer have sub-classing at
+our disposal, the only way to make these types cooperate, on solving
+the task, is the following
+\begin{lstlisting}[language=Fortran]
+type :: Taylor
+   type(DerivF), allocatable :: calc
+contains
+   procedure :: term1
+   procedure :: evaluate
+end type Taylor
+   
+type :: HTaylor
+   type(HDerivF), allocatable :: calc
+contains
+   procedure :: term1    => hterm1
+   procedure :: term2    => hterm2
+   procedure :: evaluate => hevaluate
+end type HTaylor
+\end{lstlisting}
+that is, we need to employ object composition \emph{twice}, once in
+\texttt{Taylor} and once in \texttt{HTaylor}. This is already
+sufficient to avoid the appearance of a \texttt{select type} statement
+in subroutine \texttt{hterm2}, because now our instance of
+\texttt{calc} will be of type \texttt{HDerivF}, i.e. of the proper
+type for doing high-order calculations. We will, of course, see to
+it that it contains the procedure \texttt{deriv2} which calculates the
+second order derivative required by the high-order Taylor series term.
+
+The above code fragment still has a problem, though. It relies on the
+concrete types \texttt{DerivF} and \texttt{HDerivF}. Our copy of
+``Fortran 202y Explained'' tells us that we should rely on
+abstractions instead of concretions, and depend on polymorphic
+variables of abstract interfaces within our derived types, instead. We
+therefore think about the functionality that these two concrete types
+need to provide to their clients. We already mentioned that
+\texttt{HDerivF} will have to provide an implementation of subroutine
+\texttt{deriv2}. However, and as it was the case in
+Sect.~\ref{sect:sub-classing-example}, \texttt{HDerivF} also needs to
+implement procedure \texttt{deriv1}, while \texttt{DerivF} needs to
+implement \emph{only} the latter procedure. Hence, we distill the
+signatures of these methods into two abstract interfaces
+\begin{lstlisting}[language=Fortran]
+abstract interface :: IDeriv
+   subroutine deriv1()
+   end subroutine deriv1
+end interface IDeriv
+
+abstract interface, extends(IDeriv) :: IHDeriv
+   subroutine deriv2()
+   end subroutine deriv2
+end interface IHDeriv
+\end{lstlisting}
+and then make use of these interfaces to modify our code for the
+Taylor types as follows
+\begin{lstlisting}[language=Fortran]
+type :: Taylor
+   trait(IDeriv), allocatable :: calc
+contains
+   procedure :: term1
+   procedure :: evaluate
+end type Taylor
+   
+type :: HTaylor
+   trait(IHDeriv), allocatable :: calc
+contains
+   procedure :: term1    => hterm1
+   procedure :: term2    => hterm2
+   procedure :: evaluate => hevaluate
+end type HTaylor
+\end{lstlisting}
+With this single stroke, we have just solved our entire problem,
+including the requirement of being able to calculate the Taylor series
+of different functions! Moreover, we have accomplished this goal with
+ease. The only things that remain to be done are to make
+\texttt{DerivF} and \texttt{HDerivF} simply implement the two abstract
+interfaces, e.g. as follows
+\begin{lstlisting}[language=Fortran,
+    caption={Implementation of interfaces for derivatives of function $F$.},
+    label={listing:implderivf}]
+type, implements(IDeriv) :: DerivF
+contains
+   procedure, nopass :: deriv1 => deriv1f
+end type DerivF
+
+type, implements(IHDeriv) :: HDerivF
+contains
+   procedure, nopass :: deriv1 => deriv1f
+   procedure, nopass :: deriv2 => deriv2f
+end type HDerivF
+\end{lstlisting}
+and to add two more types, \texttt{DerivG}, and \texttt{HDerivG}, in
+exactly the same fashion, in order to provide implementations of the
+same functionality for function $G$.
+
+We are finished! Since both \texttt{DerivF} and \texttt{DerivG} now
+conform to the abstract \texttt{IDeriv} interface, we can easily swap
+instances of either of them into type \texttt{Taylor} at will, in
+order to calculate the Taylor series of either $F$ or $G$. Similar
+functionality is exhibited by the types that implement the high-order
+series. We didn't even have to spend a single thought on using the
+strategy pattern for these purposes. We used it naturally without
+thinking about it because it was encouraged by the features contained
+in the language.
+
+The complete code, that uses this sub-typing approach, is given in
+Appendix~\ref{sect:example2}. It is an almost literal translation of a
+Java code, that was used to test and verify the presented ideas. The
+code in Appendix~\ref{sect:example2} is vastly superior compared to
+the one that uses sub-classing and is given in
+Appendix~\ref{sect:example1}. Both codes have roughly the same number
+of lines, but in the one relying on sub-typing there are \emph{no}
+\texttt{select type} statements, \emph{no} sub-classing hierarchies,
+and \emph{no} dependencies on concrete types. We have inverted all the
+dependencies in the algorithm, i.e. the only dependencies are on
+abstract interfaces. We have thus attained the highest possible degree
+of decoupling. The \emph{only} part of the code that depends on
+concrete types is the main client program, whose sole purpose is to
+organize the entire process of injecting instances of the correct
+concrete types via (Fortran default) constructors into the lower level
+code.
+
+This decoupling of types leads to multiple benefits. For instance (and
+provided we have compiled the \texttt{interfaces} module), we gain the
+freedom to compile the \texttt{derivs} and \texttt{series} modules in
+any order we like, even in parallel if we wish to. We thereby
+neutralized the biggest drawback of a module system (like Fortran's)
+for separate compilation, namely serialization of the compilation
+process. We also avoid re-compilation cascades in case we need to
+change the implementation of some concrete type, as long as we leave
+its (abstract) interface intact. We are, moreover, free to take any of
+the aforementioned modules and reuse it in another application,
+without having to drag along numerous dependencies. In summary, using
+the new features we have not only accomplished to make the code more
+efficient, but also much more flexible, much more maintainable, and
+much more reusable.
+
+\subsection{Combination of the two inheritance types}
+
+The code given in Appendix~\ref{sect:example2} strictly conforms to
+the dependency inversion principle. By relaxing this requirement, and
+allowing for the use of both sub-typing and sub-classing, we could
+have written the code fragment in Listing~\ref{listing:implderivf}
+above somewhat more concise as
+\begin{lstlisting}[language=Fortran]
+type, implements(IDeriv) :: DerivF
+contains
+   procedure, nopass :: deriv1 => deriv1f
+end type DerivF
+
+type, extends(DerivF), implements(IHDeriv) :: HDerivF
+contains
+   procedure, nopass :: deriv2 => deriv2f
+end type HDerivF
+\end{lstlisting}
+This saves us the labor of providing an implementation for procedure
+\texttt{deriv1} within type \texttt{HDerivF}, at the significant cost
+of \texttt{HDerivF} depending now on a concretion, i.e. on type
+\texttt{DerivF}. In this particular, trivial, example, we have only
+saved a single line of code in this way. But had \texttt{DerivF}
+contained half a dozen or so methods, which we would have been forced
+to implement also in \texttt{HDerivF}, the convenience that the
+combination of \texttt{extends} and \texttt{implements} would have
+afforded us for reducing the number of code-lines could hardly have
+been passed up.
+
+\subsection{Summary}
+
+The features proposed in this document would significantly enhance
+Fortran's OOP capabilities without affecting backwards compatibility.
+Moreover, Fortran compilers that adhere to at least the Fortran 2003
+standard could implement them relatively easily, as most of the
+functionality required to support them is already present in some form
+in such compilers for the support of sub-classing, i.e. the extension
+of derived types.
+
+\bibliographystyle{plain}
+\bibliography{Fortran_OOP}
+
+
+\lstdefinestyle{mystyle}{
+%   backgroundcolor=\color{backcolour},   
+    commentstyle=\color{codegreen},
+%   keywordstyle=\color{magenta},
+    numberstyle=\tiny\color{codegray},
+    stringstyle=\color{codepurple},
+    basicstyle=\ttfamily\footnotesize,
+    breakatwhitespace=false,         
+    breaklines=true,                 
+    captionpos=b,                    
+    keepspaces=true,                 
+    numbers=left,                    
+    numbersep=5pt,                  
+    showspaces=false,                
+    showstringspaces=false,
+    showtabs=false,                  
+    tabsize=2
+}
+
+\lstset{style=mystyle}
+
+
+\begin{appendices}
+
+\section{Taylor series example based on sub-classing}
+\label{sect:example1}
+
+\begin{lstlisting}[language=Fortran]
+module derivs
+
+   type, abstract :: Deriv
+   contains
+      procedure(pderiv), deferred, nopass ::  deriv1
+   end type Deriv
+
+   abstract interface
+      subroutine pderiv()
+      end subroutine pderiv      
+   end interface
+   
+   type, extends(Deriv) :: DerivF
+   contains
+      procedure, nopass :: deriv1 => deriv1f
+   end type DerivF
+
+   type, extends(DerivF) :: HDerivF
+   contains
+      procedure, nopass :: deriv2 => deriv2f
+   end type HDerivF
+
+   type, extends(Deriv) :: DerivG
+   contains
+      procedure, nopass :: deriv1 => deriv1g
+   end type DerivG
+
+   type, extends(DerivG) :: HDerivG
+   contains
+      procedure, nopass :: deriv2 => deriv2g
+   end type HDerivG
+   
+contains
+
+   subroutine deriv1f()
+      write(*,*) ' 1st derivative of function F!'
+   end subroutine deriv1f
+
+   subroutine deriv2f()
+      write(*,*) ' 2nd derivative of function F!'
+   end subroutine deriv2f
+
+   subroutine deriv1g()
+      write(*,*) ' 1st derivative of function G!'
+   end subroutine deriv1g
+
+   subroutine deriv2g()
+      write(*,*) ' 2nd derivative of function G!'
+   end subroutine deriv2g
+
+end module derivs
+
+module series
+
+   use derivs, only: Deriv, HDerivF, HDerivG
+
+   type :: Taylor
+      class(Deriv), allocatable :: calc
+   contains
+      procedure :: term1
+      procedure :: evaluate
+   end type Taylor
+
+   type, extends(Taylor) :: HTaylor
+   contains
+      procedure :: term2    => hterm2
+      procedure :: evaluate => hevaluate
+   end type HTaylor
+
+contains
+
+   subroutine term1(self)
+      class(Taylor), intent(in) :: self
+      call self%calc%deriv1()
+   end subroutine term1
+
+   subroutine evaluate(self)
+      class(Taylor), intent(in) :: self
+      write(*,*) 'Evaluating Taylor series using'
+      call self%term1()
+   end subroutine evaluate
+      
+   subroutine hterm2(self)
+      class(HTaylor), intent(in) :: self
+      select type ( calc => self%calc )
+      class is ( HDerivF )
+         call calc%deriv2()
+      class is ( HDerivG )
+         call calc%deriv2()
+      class default
+         write(*,*) 'Unknown type!'
+      end select
+   end subroutine hterm2
+
+   subroutine hevaluate(self)
+      class(HTaylor), intent(in) :: self
+      write(*,*) 'Evaluating Taylor series using'
+      call self%term1()
+      call self%term2()
+   end subroutine hevaluate
+
+end module series
+
+program client
+
+   use derivs, only: DerivG, HDerivG, Deriv
+   use series, only: Taylor, HTaylor
+
+   class(Deriv),  allocatable :: derv
+   class(Taylor), allocatable :: teval
+   
+   derv  = DerivG()
+   teval = Taylor(derv)   
+   call teval%evaluate()   
+
+   write(*,*)
+   
+   derv  = HDerivG()
+   teval = HTaylor(derv)
+   call teval%evaluate()   
+
+end program client
+\end{lstlisting}
+
+
+\section{Taylor series example based on sub-typing}
+\label{sect:example2}
+
+\begin{lstlisting}[language=Fortran]
+module interfaces
+
+   abstract interface :: IDeriv
+      subroutine deriv1()
+      end subroutine deriv1
+   end interface IDeriv
+
+   abstract interface, extends(IDeriv) :: IHDeriv
+      subroutine deriv2()
+      end subroutine deriv2
+   end interface IHDeriv
+
+end module interfaces
+   
+module derivs
+
+   use interfaces, only: IDeriv, IHDeriv
+   
+   type, implements(IDeriv) :: DerivF
+   contains
+      procedure, nopass :: deriv1 => deriv1f
+   end type DerivF
+
+   type, implements(IHDeriv) :: HDerivF
+   contains
+      procedure, nopass :: deriv1 => deriv1f
+      procedure, nopass :: deriv2 => deriv2f
+   end type HDerivF
+   
+   type, implements(IDeriv) :: DerivG
+   contains
+      procedure, nopass :: deriv1 => deriv1g
+   end type DerivG
+
+   type, implements(IHDeriv) :: HDerivG
+   contains
+      procedure, nopass :: deriv1 => deriv1g
+      procedure, nopass :: deriv2 => deriv2g
+   end type HDerivG
+   
+contains
+
+   subroutine deriv1f()
+      write(*,*) " 1st derivative of function F!"
+   end subroutine deriv1f
+
+   subroutine deriv2f()
+      write(*,*) " 2nd derivative of function F!"
+   end subroutine deriv2f
+   
+   subroutine deriv1g()
+      write(*,*) " 1st derivative of function G!"
+   end subroutine deriv1g
+   
+   subroutine deriv2g()
+      write(*,*) " 2nd derivative of function G!"
+   end subroutine deriv2g
+
+end module derivs
+
+module series
+
+   use interfaces, only: IDeriv, IHDeriv
+
+   type :: Taylor
+      trait(IDeriv), allocatable :: calc
+   contains
+      procedure :: term1
+      procedure :: evaluate
+   end type Taylor
+   
+   type :: HTaylor
+      trait(IHDeriv), allocatable :: calc
+   contains
+      procedure :: term1    => hterm1
+      procedure :: term2    => hterm2
+      procedure :: evaluate => hevaluate
+   end type HTaylor
+ 
+contains
+
+    subroutine term1(self)
+       class(Taylor), intent(in) :: self
+       call self%calc%deriv1()
+    end subroutine term1
+    
+    subroutine evaluate(self)
+       class(Taylor), intent(in) :: self
+       write(*,*) 'Evaluating Taylor series using'
+       call self%term1()
+    end subroutine evaluate
+
+    subroutine hterm1(self)
+       class(HTaylor), intent(in) :: self
+       call self%calc%deriv1()
+    end subroutine hterm1
+    
+    subroutine hterm2(self)
+       class(HTaylor), intent(in) :: self
+       call self%calc%deriv2()
+    end subroutine hterm2
+
+    subroutine hevaluate(self)
+       class(HTaylor), intent(in) :: self
+       write(*,*) 'Evaluating Taylor series using'
+       call self%term1()
+       call self%term2()
+    end subroutine hevaluate
+
+end module series
+ 
+program client
+
+   use derivs, only: DerivG, HDerivG
+   use series, only: Taylor, HTaylor
+   
+   class(Taylor),  allocatable :: teval
+   class(HTaylor), allocatable :: hteval
+   
+   teval = Taylor( DerivG() )
+   call teval%evaluate()
+
+   write(*,*)
+
+   hteval = HTaylor( HDerivG() )
+   call hteval%evaluate()
+   
+end program client
+\end{lstlisting}
+
+\end{appendices}
+
+\end{document}
