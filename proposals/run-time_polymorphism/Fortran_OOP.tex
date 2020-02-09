@@ -156,7 +156,7 @@ In contrast to Java, C\#, D, Swift, Rust, Go and some other modern
 languages, Fortran does not offer a means to inherit specification
 directly from its ``abstract interfaces'', which --- though available,
 and guaranteed to be completely free of implementation detail --- play
-only a sub-ordinate, instead of a cardinal role in the language. Hence
+only a subordinate, instead of a cardinal role in the language. Hence
 it is not possible to enforce, at the language level, the strict
 separation of the implementation of an OO algorithm from its
 interface, that is required for adherence to the dependency inversion
@@ -247,9 +247,10 @@ section are
   enable these types to inherit specification from one or more named
   abstract interfaces.
 \item
-  A new \texttt{trait} declaration-type-specifier for sub-typing
-  polymorphism, in order to declare polymorphic variables of named
-  abstract interfaces.
+  An extension of Fortran's \texttt{class} declaration-type-specifier
+  for polymorphic variables, to accept named abstract interfaces. This
+  would enable one to declare polymorphic variables of named abstract
+  interfaces, in order to make use of sub-typing polymorphism.
 
 \end{itemize}
 
@@ -257,27 +258,25 @@ section are
 \label{sect:declare}
 
 The following listing shows an example of an extended syntax for
-interface declarations. In a module named \texttt{interfaces}, three
+interface declarations. In a module named \texttt{interfaces}, four
 named abstract interfaces are declared: \texttt{ISolver},
-\texttt{IPrinter}, and \texttt{IClient}. \texttt{ISolver} and
-\texttt{IPrinter} contain the declarations of function
-\texttt{solve\_system}, and subroutine \texttt{print\_result},
-respectively. \texttt{IClient} on the other hand contains declarations
-for \emph{two} procedures: function \texttt{solve\_system}, and
-subroutine \texttt{print\_result}, which it inherits from
-\texttt{ISolver} and \texttt{IPrinter}, respectively, by means of the
-\texttt{extends} attribute-specifier.
-
-\newpage
+\texttt{IPrinter}, \texttt{IClient}, and
+\texttt{IRelaxationSolver}. \texttt{ISolver} and \texttt{IPrinter}
+contain the declarations of subroutines \texttt{solve\_system}, and
+\texttt{print\_result}, respectively. Notice that \texttt{IClient}, on
+the other, hand contains declarations for \emph{two} procedures:
+subroutines \texttt{solve\_system}, \emph{and} \texttt{print\_result},
+which it inherits from \texttt{ISolver} and \texttt{IPrinter},
+respectively, by means of the \texttt{extends} attribute-specifier.
 
 \begin{lstlisting}[language=Fortran]
 module interfaces
   abstract interface :: ISolver
-      function solve_system(a,b) result(x)
+      subroutine solve_system(a,b,x)
          real, dimension(:,:), intent(in)  :: a
          real, dimension(:),   intent(in)  :: b
-         real, dimension(:),   allocatable :: x
-      end function solve_system
+         real, dimension(:),   intent(out) :: x
+      end subroutine solve_system
    end interface ISolver
 
    abstract interface :: IPrinter
@@ -288,20 +287,38 @@ module interfaces
    
    abstract interface, extends(ISolver,IPrinter) :: IClient
    end interface IClient
+
+   abstract interface :: IRelaxationSolver
+      import :: ISolver
+      subroutine driver(self,d,rhs,x)
+         class(IRelaxationSolver), intent(in)  :: self
+         real, dimension(:,:,:,:), intent(in)  :: d
+         real, dimension(:,:,:),   intent(in)  :: rhs
+         real, dimension(:,:,:),   intent(out) :: x
+      end subroutine driver
+      subroutine relax(blksolver,d,rhs,x)
+         class(ISolver),           intent(in)  :: blksolver
+         real, dimension(:,:,:,:), intent(in)  :: d
+         real, dimension(:,:,:),   intent(in)  :: rhs
+         real, dimension(:,:,:),   intent(out) :: x
+      end subroutine relax
+   end interface IRelaxationSolver
 end module interfaces
 \end{lstlisting}
 \label{list:interface}
-We remark here that a named abstract interface may depend on other
-named abstract interfaces, not only via an \texttt{extends}
-attribute-specifier, but also through the procedure declarations that
-it contains. Namely, the latter may contain polymorphic arguments that
-are declared with the help of the new \texttt{trait}
-declaration-type-specifier (see Sect.~\ref{sect:declarations}), much
-in the same way that procedures in Fortran~2018 can contain
-polymorphic arguments that are declared using the \texttt{class}
-specifier of sub-classing. In such cases, Fortran's \texttt{import}
-statement could be required in order to bring the names of other
-abstract interfaces into an abstract interface's scope.
+Finally, the declaration of the \texttt{IRelaxationSolver} interface
+illustrates that a named abstract interface may depend on other named
+abstract interfaces, not only via an \texttt{extends}
+attribute-specifier (as shown above), but also through the procedure
+declarations that it contains. Namely, the latter may contain
+polymorphic arguments that are declared with the help of the
+\texttt{class} declaration-type-specifier (see
+Sect.~\ref{sect:declarations}), to give these procedures access to
+either the data fields (variables) of the type that \emph{implements}
+the abstract interface (i.e. to the descendant of that interface) or
+to the descendants of \emph{other} abstract interfaces. In the latter
+case, Fortran's \texttt{import} statement would be required in order
+to bring such external names into the abstract interface's own scope.
 
 Other ways to express and implement the proposed functionality are
 possible, and need to be considered. The one discussed here has the
@@ -310,7 +327,7 @@ and are merely extended here by functionality that does not affect
 their other uses. It does, however, elevate their status in the
 language as it makes them central to expressing interface
 inheritance. This syntax also makes the distinction between sub-typing
-and sub-classing very obvious, which is a major plus. It has the further
+and sub-classing apparent, which is a major plus. It has the further
 advantage that named abstract interfaces could also be used in future
 extensions of the language, e.g. in connection with \emph{intrinsic}
 types, and with generics. This is the approach taken in the Swift
@@ -336,12 +353,12 @@ module lu_decomp
       procedure, nopass :: solve_system
    end type LUDecomposition
 contains
-   function solve_system(a,b) result(x)
+   subroutine solve_system(a,b,x)
       real, dimension(:,:), intent(in)  :: a
       real, dimension(:),   intent(in)  :: b
-      real, dimension(:),   allocatable :: x
+      real, dimension(:),   intent(out) :: x
       ! Implementation of LU decomposition goes here
-   end function solve_system   
+   end subroutine solve_system   
 end module lu_decomp
 \end{lstlisting}
 In case the derived type is abstract, it is allowed to provide an only
@@ -354,17 +371,15 @@ however, provide a full implementation.
 
 To make actual use of the sub-typing polymorphism that we have just
 set up, polymorphic variables of named abstract interfaces would then
-be declared with the help of the \texttt{trait}
+be declared with the help of the (extended) \texttt{class}
 declaration-type-specifier; for instance, as arguments of a procedure,
 or within another derived type. They could then be used in the actual
-implementation of this derived type's bound procedures, much in the
-same fashion as it is presently possible using variables of derived
-types that are declared with the \texttt{class} specifier (of
-sub-classing):
+implementation of this derived type's bound procedures, e.g. as
+follows:
 \begin{lstlisting}[language=Fortran]
 type, implements(IClient) :: Client
-   trait(ISolver),  allocatable :: solver
-   trait(IPrinter), pointer     :: printer => null()
+   class(ISolver),  allocatable :: solver
+   class(IPrinter), pointer     :: printer => null()
 contains
    procedure, nopass :: solve_system
    procedure, nopass :: print_result
@@ -387,13 +402,56 @@ provide an implementation much as in the last example, but would use
 the \texttt{implements} specifier as follows
 \begin{lstlisting}[language=Fortran]
 type, implements(ISolver,IPrinter) :: Client
-   trait(ISolver),  allocatable :: solver
-   trait(IPrinter), pointer     :: printer => null()
+   class(ISolver),  allocatable :: solver
+   class(IPrinter), pointer     :: printer => null()
 contains
    procedure, nopass :: solve_system
    procedure, nopass :: print_result
 end type Client
 \end{lstlisting}
+
+The next example shows, in detail, how sub-typing polymorphism would
+be used together with delegation, and also how type-bound procedures
+with the \texttt{pass} attribute would be handled
+\begin{lstlisting}[language=Fortran]
+module jacobi
+   use interfaces, only: IRelaxationSolver, ISolver
+   type, implements(IRelaxationSolver) :: BlockJacobi
+      class(ISolver), allocatable :: blksolver
+   contains
+      procedure, pass   :: driver
+      procedure, nopass :: relax
+   end type BlockJacobi
+contains
+   subroutine driver(self,d,rhs,x)
+      class(BlockJacobi),       intent(in)  :: self
+      real, dimension(:,:,:,:), intent(in)  :: d
+      real, dimension(:,:,:),   intent(in)  :: rhs
+      real, dimension(:,:,:),   intent(out) :: x
+      call self%relax(self%blksolver,d,rhs,x)
+   end subroutine driver
+   subroutine relax(blksolver,d,rhs,x)
+      class(ISolver),           intent(in)  :: blksolver
+      real, dimension(:,:,:,:), intent(in)  :: d
+      real, dimension(:,:,:),   intent(in)  :: rhs
+      real, dimension(:,:,:),   intent(out) :: x
+      integer :: i, j
+      do j = 1, size(x,3)
+         do i = 1, size(x,2)
+            call blksolver%solve_system(d(:,:,i,j),rhs(:,i,j),x(:,i,j))
+         end do
+      end do
+   end subroutine relax
+end module jacobi
+\end{lstlisting}
+Notice that \texttt{BlockJacobi} is an implementor (i.e. descendant)
+of \texttt{IRelaxationSolver} and that therefore the above signature
+of method \texttt{driver} is in accordance with its declaration in
+module \texttt{interfaces}. To use \texttt{BlockJacobi}, one would
+have to simply inject into it, via a constructor, an instance of
+\texttt{LUDecomposition} (or any other object that implements the
+\texttt{ISolver} interface) in order to intialize the allocatable,
+polymorphic variable \texttt{blksolver}.
 
 \subsection{Combination of sub-classing with sub-typing}
 
@@ -405,7 +463,7 @@ implementation from some other derived type (e.g. the procedure
 the following example):
 \begin{lstlisting}[language=Fortran]
 type, extends(LUDecomposition), implements(ISolver,IPrinter) :: Client
-   trait(IPrinter), pointer :: printer => null()
+   class(IPrinter), pointer :: printer => null()
 contains
    procedure, nopass :: solve_system
    procedure, nopass :: print_result
@@ -484,7 +542,9 @@ end module series
 Our client application would then set up an object \texttt{teval} of
 type \texttt{Taylor} in order to evaluate the Taylor series
 approximation it needs, e.g. as follows
+
 \newpage
+
 \begin{lstlisting}[language=Fortran]
 program client
    use derivs, only: DerivF
@@ -724,14 +784,14 @@ and then make use of these interfaces to modify our code for the
 Taylor types as follows
 \begin{lstlisting}[language=Fortran]
 type :: Taylor
-   trait(IDeriv), allocatable :: calc
+   class(IDeriv), allocatable :: calc
 contains
    procedure :: term1
    procedure :: evaluate
 end type Taylor
    
 type :: HTaylor
-   trait(IHDeriv), allocatable :: calc
+   class(IHDeriv), allocatable :: calc
 contains
    procedure :: term1    => hterm1
    procedure :: term2    => hterm2
@@ -774,9 +834,9 @@ in the language.
 
 The complete code, that uses this sub-typing approach, is given in
 Appendix~\ref{sect:example2}. It is an almost literal translation of a
-Java code, that was used to test and verify the presented ideas. The
-code in Appendix~\ref{sect:example2} is vastly superior compared to
-the one that uses sub-classing and is given in
+Java as well as a Rust code, that were used to test and verify the
+presented ideas. The code in Appendix~\ref{sect:example2} is vastly
+superior compared to the one that uses sub-classing and is given in
 Appendix~\ref{sect:example1}. Both codes have roughly the same number
 of lines, but in the one relying on sub-typing there are \emph{no}
 \texttt{select type} statements, \emph{no} sub-classing hierarchies,
@@ -1069,14 +1129,14 @@ module series
    use interfaces, only: IDeriv, IHDeriv
 
    type :: Taylor
-      trait(IDeriv), allocatable :: calc
+      class(IDeriv), allocatable :: calc
    contains
       procedure :: term1
       procedure :: evaluate
    end type Taylor
    
    type :: HTaylor
-      trait(IHDeriv), allocatable :: calc
+      class(IHDeriv), allocatable :: calc
    contains
       procedure :: term1    => hterm1
       procedure :: term2    => hterm2
@@ -1120,8 +1180,8 @@ program client
    use derivs, only: DerivG, HDerivG
    use series, only: Taylor, HTaylor
    
-   class(Taylor),  allocatable :: teval
-   class(HTaylor), allocatable :: hteval
+   type(Taylor),  allocatable :: teval
+   type(HTaylor), allocatable :: hteval
    
    teval = Taylor( DerivG() )
    call teval%evaluate()
