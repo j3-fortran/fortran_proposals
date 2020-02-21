@@ -166,6 +166,21 @@ intent(out) variable is initially undefined, meaning the logic of
 present() might still be necessary in this case. Furthermore, the behavior
 suggested above where present() = .true. always for variables with a
 specified default would not be desired for intent(out) variables.
+A possible use case for this behavior could be:
+
+    integer function open(filename, mode, iostat) result(u)
+      character(*), intent(in) :: filename
+      character(*), intent(in), optional :: mode
+      integer, intent(out), optional :: iostat = 0
+      character(3) :: mode_
+      character(:),allocatable :: action_, position_, status_, access_, form_
+     !some code
+     !....
+     open(newunit=u, file=filename, &
+         action = action_, position = position_, status = status_, &
+         access = access_, form = form_, &
+         iostat = iostat)
+end function
 
 A third option is that optional intent(out) variables with a specified
 default are always initialized to that default, even when present,
