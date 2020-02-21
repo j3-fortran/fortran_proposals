@@ -102,7 +102,47 @@ This addition to the language would not break any existing standard
 conforming Fortran program, and thus preserves Fortran's backward
 compatibility.
 
-4. Further discussion
+4. Related intrinsic functions
+
+4.1 present()
+
+There are two possible behaviors of the function present() when an
+initializer is provided.
+
+The first behavior would be that the function present() always returns
+.true. when the optional dummy argument has an initializer, and
+independently of the fact that an actual argument is passed or not
+by the caller. Therefore, with such a behavior, the function present()
+becomes useless for optional arguments with a default value.
+
+Example:
+
+    real function foo(a, b)
+      real, intent(in), optional :: a
+      real, intent(in), optional :: b = 0
+      print*, present(a)  !.true. if an actual argument is provided
+                          !by the caller, .false. otherwise
+      print*, present(b)  !always .true. due to the initializer
+    end function foo
+
+The second behavior would be that the function present() returns
+.true. or .false. when an actual argument is passed or not by the
+caller, and independently of the fact that the optional dummy
+argument has, or hasn't an initializer.
+
+A use case of this behavior of the function present() could be:
+
+    real function foo(a, b)
+      real, intent(in) :: a
+      real, intent(in), optional :: b = 1.234
+      if (present(b)) then
+       ... !expensive input validation  here
+      end if
+      ...
+    end function foo
+
+
+5. Further discussion
 
 Online discussion that led to this proposal can be found at
 https://github.com/j3-fortran/fortran_proposals/issue/22.
