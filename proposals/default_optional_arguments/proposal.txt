@@ -163,7 +163,7 @@ intent(out) variables would be usable regardless of whether the value
 is actually passed back to the caller, removing the need for present()
 and "temporary" variables. The complication is that a present
 intent(out) variable is initially undefined, meaning the logic of
-present() is still necessary in this case. Furthermore, the behavior
+present() might still be necessary in this case. Furthermore, the behavior
 suggested above where present() = .true. always for variables with a
 specified default would not be desired for intent(out) variables.
 
