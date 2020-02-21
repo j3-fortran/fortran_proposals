@@ -1,28 +1,32 @@
 To: J3                                                     J3/XX-XXX
-From: Milan Curcic
+From: Milan Curcic, Jeremie Vandenplas, Zach Jibben
 Subject: Default value for optional arguments
 Date: 2020-January-10
-
-Proposal for Fortran Standard: 202y (NOT 202x)
-
-
-Prior art: https://j3-fortran.org/doc/year/18/18-136r1.txt
+Reference: 18-136r1, 18-122r1
 
 
-1. Problem
+1. Introduction
 
-Currently, standard Fortran does not allow setting a default value
-for optional arguments. Default value of an optional argument is 
-the value that the dummy argument would take if the corresponding 
-actual argument is not present. If declaring a dummy argument as 
-optional, the user must:
+This paper contains a proposal for Fortran 202y, to allow a programmer
+to specify a default value for optional dummy arguments. This would
+allow the programmer to then safely reference such variables in
+expressions regardless of whether the actual argument is present or
+not.
 
-  * Explicitly test for the presence of the actual argument using 
-    the intrinsic function present();
+2. Problem
+
+Currently, standard Fortran does not allow setting a default value for
+optional arguments. Default value of an optional argument is the value
+that the dummy argument would take if the corresponding actual argument
+is not present. If declaring a dummy argument as optional, the user
+must:
+
+  * Explicitly test for the presence of the actual argument using the
+    intrinsic function present();
   * Use a separate variable inside the procedure to assign the value
-    because the optional dummy argument that is not present must not
-    be referenced in expressions other than as actual argument to 
-    the intrinsic function present().
+    because the optional dummy argument that is not present must not be
+    referenced in expressions other than as actual argument to the
+    intrinsic function present().
 
 This example function illustrates the problem:
 
@@ -37,36 +41,34 @@ This example function illustrates the problem:
       quadratic = a + b * x + c_tmp * x**2
     end function quadratic
 
-For any dummy argument with the optional attribute, the programmer 
-must use the intrinsic function present() to check for the presence 
-of the argument. Furthermore, if the optional dummy argument is 
-meant to be used in multiple places in the procedure, the programmer 
-is likely to use the pattern from the example above, where a 
-"temporary" variable is declared and used in place of the dummy 
-argument, which disconnects the implementation from the user 
-interface. Furthermore, this requires at least 3 lines of code
-(declaration of c_tmp, initialization of c_tmp, and testing for the 
-presence of c) only to handle the scenario of a missing optional
-argument.
+For any dummy argument with the optional attribute, the programmer must
+use the intrinsic function present() to check for the presence of the
+argument. Furthermore, if the optional dummy argument is meant to be
+used in multiple places in the procedure, the programmer is likely to
+use the pattern from the example above, where a "temporary" variable is
+declared and used in place of the dummy argument, which disconnects the
+implementation from the user interface. Furthermore, this requires at
+least 3 lines of code (declaration of c_tmp, initialization of c_tmp,
+and testing for the presence of c) only to handle the scenario of a
+missing optional argument.
 
-This proposal seeks to address the issue that explicitly checking 
-for presence of the optional dummy argument and using a helper 
-variable is cumbersome and error-prone. The primary benefit of this 
-feature is the reduction in source code needed to handle optional 
-arguments. This benefit is even greater in scenarios where the 
-optional argument is used in many places in the procedure, and a 
-helper variable is used for its value instead. Reduction in needed 
-source code would result in more readable and more correct programs. 
-The secondary benefit of this is programmer happiness, as working 
-with optional arguments would require less typing.
+This proposal seeks to address the issue that explicitly checking for
+presence of the optional dummy argument and using a helper variable is
+cumbersome and error-prone. The primary benefit of this feature is the
+reduction in source code needed to handle optional arguments. This
+benefit is even greater in scenarios where the optional argument is
+used in many places in the procedure, and a helper variable is used for
+its value instead. Reduction in needed source code would result in more
+readable and more correct programs.  The secondary benefit of this is
+programmer happiness, as working with optional arguments would require
+less typing.
 
-2. Proposed solution
+3. Proposed solution
 
-As suggested by Van Snyder in 18-136r1, the problem could be solved 
-by allowing an optional argument to be initialized using a constant 
-expression. The optional argument would then only be initialized if 
-the corresponding actual argument is not provided by the caller. 
-Example:
+As suggested by Van Snyder in 18-136r1, the problem could be solved by
+allowing an optional argument to be initialized using a constant
+expression. The optional argument would then only be initialized if the
+corresponding actual argument is not provided by the caller. Example:
 
     real function quadratic(x, a, b, c)
       ! returns a + b * x + c * x**2 if c is present 
@@ -77,34 +79,33 @@ Example:
     end function quadratic
 
 In this snippet, we use the assignment operator (=) to specify the
-default value of the optional dummy argument. 
+default value of the optional dummy argument.
 
 Like initializer, the optional argument can be assigned any constant 
-expression, as defined in Section 10.1.12 of 18-007r1. 
+expression, as defined in Section 10.1.12 of 18-007r1.
 
-While there may be concerns that the same syntax is used to 
-implicitly set the save attribute for variables in procedures, there 
-is no conflict because the language prohibits dummy arguments 
-from having an initializer, or the save attribute. The change to the 
-standard to allow this feature would thus be to allow an optional 
-dummy argument to have an initializer, which would be triggered only 
-when corresponding actual argument is not passed by the caller. 
+While there may be concerns that the same syntax is used to implicitly
+set the save attribute for variables in procedures, there is no
+conflict because the language prohibits dummy arguments from having an
+initializer, or the save attribute. The change to the standard to allow
+this feature would thus be to allow an optional dummy argument to have
+an initializer, which would be triggered only when corresponding actual
+argument is not passed by the caller.
 
-This improvement has already been suggested by Van Snyder in 
-18-136r1, has received votes in the user survey for 202X (see
-https://isotc.iso.org/livelink/livelink?func=ll&objId=19530634&objAction=Open&viewType=1), 
-and appeared on Data subgroup's wishlist at meeting 215 (see 
-https://j3-fortran.org/doc/year/18/18-122r1.txt).
+This improvement has already been suggested by Van Snyder in 18-136r1,
+has received votes in the user survey for 202X (see
+https://isotc.iso.org/livelink/livelink?func=ll&objId=19530634&objAction=Open),
+and appeared on Data subgroup's wishlist at meeting 215 (see 18-122r1).
 
-3. Backward compatibility
+4. Backward compatibility
 
 This addition to the language would not break any existing standard
 conforming Fortran program, and thus preserves Fortran's backward
 compatibility.
 
-4. Related intrinsic functions
+5. Related behavior
 
-4.1 present()
+5.1. present()
 
 There are two possible behaviors of the function present() when an
 initializer is provided.
@@ -141,8 +142,51 @@ A use case of this behavior of the function present() could be:
       ...
     end function foo
 
+5.2. intent(out)
 
-5. Further discussion
+There are several different possible behaviors for intent(out)
+variables. One option is to disallow default values on optional
+intent(out) variables. However, there are use cases where it is
+desirable to return the value of a variable if a caller requests it,
+without requiring the added logic of present() and "temporary"
+variables described above.
+
+Alternatively, we might treat intent(in) and intent(out) variables
+identically, so that the following would be valid:
+
+    real function foo(a)
+      real, intent(out), optional :: a = 0
+    end function foo
+
+The benefit is that, just like proposed for intent(in) variables,
+intent(out) variables would be usable regardless of whether the value
+is actually passed back to the caller, removing the need for present()
+and "temporary" variables. The complication is that a present
+intent(out) variable is initially undefined, meaning the logic of
+present() might still be necessary in this case. Furthermore, the behavior
+suggested above where present() = .true. always for variables with a
+specified default would not be desired for intent(out) variables.
+A possible use case for this behavior could be:
+
+    integer function open(filename, mode, iostat) result(u)
+      character(*), intent(in) :: filename
+      character(*), intent(in), optional :: mode
+      integer, intent(out), optional :: iostat = 0
+      character(3) :: mode_
+      character(:),allocatable :: action_, position_, status_, access_, form_
+     !some code
+     !....
+     open(newunit=u, file=filename, &
+         action = action_, position = position_, status = status_, &
+         access = access_, form = form_, &
+         iostat = iostat)
+end function
+
+A third option is that optional intent(out) variables with a specified
+default are always initialized to that default, even when present,
+rather than leaving them undefined.
+
+6. Further discussion
 
 Online discussion that led to this proposal can be found at
 https://github.com/j3-fortran/fortran_proposals/issue/22.
