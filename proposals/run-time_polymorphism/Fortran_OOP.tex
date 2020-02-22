@@ -289,14 +289,15 @@ module interfaces
    end interface IClient
 
    abstract interface :: IRelaxationSolver
-      import :: ISolver
       subroutine driver(self,d,rhs,x)
+         import :: IRelaxationSolver
          class(IRelaxationSolver), intent(in)  :: self
          real, dimension(:,:,:,:), intent(in)  :: d
          real, dimension(:,:,:),   intent(in)  :: rhs
          real, dimension(:,:,:),   intent(out) :: x
       end subroutine driver
       subroutine relax(blksolver,d,rhs,x)
+         import :: ISolver
          class(ISolver),           intent(in)  :: blksolver
          real, dimension(:,:,:,:), intent(in)  :: d
          real, dimension(:,:,:),   intent(in)  :: rhs
@@ -316,9 +317,10 @@ polymorphic arguments that are declared with the help of the
 Sect.~\ref{sect:declarations}), to give these procedures access to
 either the data fields (variables) of the type that \emph{implements}
 the abstract interface (i.e. to the descendant of that interface) or
-to the descendants of \emph{other} abstract interfaces. In the latter
-case, Fortran's \texttt{import} statement would be required in order
-to bring such external names into the abstract interface's own scope.
+to the descendants of \emph{other} abstract interfaces. In these
+cases, Fortran's \texttt{import} statement would be required in order
+to bring such external names into the procedure declarations' own
+scope.
 
 Other ways to express and implement the proposed functionality are
 possible, and need to be considered. The one discussed here has the

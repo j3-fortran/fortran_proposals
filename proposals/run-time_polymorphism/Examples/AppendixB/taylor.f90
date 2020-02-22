@@ -8,7 +8,7 @@ module interfaces
    abstract interface :: IDeriv
       subroutine deriv1()
       end subroutine deriv1
-   end interface
+   end interface IDeriv
 
    abstract interface, extends(IDeriv) :: IHDeriv
       subroutine deriv2()
