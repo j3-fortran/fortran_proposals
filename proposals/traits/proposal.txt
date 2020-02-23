@@ -1,7 +1,7 @@
-To: J3
+To: J3                                                     J3/20-xxx
 From: Brad Richardson
 Subject: Traits for Types
-Date: 2020-January-27
+Date: 2020-February-23
 
 Proposal for Fortran Standard: 202y (NOT 202x)
 
