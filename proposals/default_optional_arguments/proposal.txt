@@ -94,7 +94,7 @@ argument is not passed by the caller.
 
 This improvement has already been suggested by Van Snyder in 18-136r1,
 has received votes in the user survey for 202X (see
-https://isotc.iso.org/livelink/livelink?func=ll&objId=19530634&objAction=Open),
+isotc.iso.org/livelink/livelink?func=ll&objId=19530634&objAction=Open),
 and appeared on Data subgroup's wishlist at meeting 215 (see 18-122r1).
 
 4. Backward compatibility
@@ -173,7 +173,8 @@ variables. A possible use case for this behavior could be:
       character(*), intent(in), optional :: mode
       integer, intent(out), optional :: iostat = 0
       character(3) :: mode_
-      character(:),allocatable :: action_, position_, status_, access_, form_
+      character(:),allocatable :: action_, position_, status_, access_
+      character(:),allocatable :: form_
       !some code
       !....
       open(newunit=u, file=filename, &
@@ -239,7 +240,7 @@ for the behavior in the following instances:
 
 In each case, the size of the array is not determined if an actual
 argument is not provided. One option is of course to forbid defaults
-for arrays. This isn’t preferable, but allowing defaults for scalars
+for arrays. This isn't preferable, but allowing defaults for scalars
 only may still address the majority of use cases. Another option is to
 forbid array broadcasting as a default specifier. That is, allow only
 defaults such as [0,0] for arrays, where the length is clear.

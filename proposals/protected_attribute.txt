@@ -1,4 +1,4 @@
-To: J3
+To: J3                                                     J3/##-###
 From: Balint Aradi
 Subject: Protected attribute for derived type components
 Date: 2019-October-21
@@ -19,29 +19,30 @@ derived types. Example:
 
 2. Motivation
 
-Data hiding using derived types with private components allows programmer to
-provide robust types, where internals can only be changed in controlled
-fashion. The usual implementation is to provide setter and getter routines for
-writing and reading components. Both operations involve copying the passed data,
-which can be inefficient when storing large arrays in the derived type
-instance. While in the setter routine the copying serves robustness by
-"disentangling" the data stored in the derived type from the original data, the
-getter routine and the connected copy operation might be superfluous, when the
-consumer only wants to read but not modify the data stored in the derived type
-intance.
+Data hiding using derived types with private components allows programmer
+to provide robust types, where internals can only be changed in controlled
+fashion. The usual implementation is to provide setter and getter routines
+for writing and reading components. Both operations involve copying the
+passed data, which can be inefficient when storing large arrays in the
+derived type instance. While in the setter routine the copying serves
+robustness by "disentangling" the data stored in the derived type from the
+original data, the getter routine and the connected copy operation might be
+superfluous, when the consumer only wants to read but not modify the data
+stored in the derived type intance.
 
-By allowing for a direct read-only access, one could enhance efficiency in those
-cases without sacrificing the consistency of the encapsulated data. Direct
-access is possible with current Fortran already, but only if the respective
-derived type component is public. This would jeopardize data consistency,
-though, as a consumer could change the respective component arbitrarily, without
-using the provided setter routine.
+By allowing for a direct read-only access, one could enhance efficiency in
+those cases without sacrificing the consistency of the encapsulated
+data. Direct access is possible with current Fortran already, but only if
+the respective derived type component is public. This would jeopardize data
+consistency, though, as a consumer could change the respective component
+arbitrarily, without using the provided setter routine.
 
 This proposal suggests to allow the "protected" attribute already used for
-module variables being used for derived type components as well. It would also
-remedy the asymmetry between the attributes "private"/"public" and the attribute
-"protected", as the former two can be applied to both, module variables and
-derived type components, while the latter only for module variables so far.
+module variables being used for derived type components as well. It would
+also remedy the asymmetry between the attributes "private"/"public" and the
+attribute "protected", as the former two can be applied to both, module
+variables and derived type components, while the latter only for module
+variables so far.
 
 
 3. Use Cases
@@ -97,3 +98,8 @@ operation:
     !storage%array(1) = -1
 
   end program use_data
+
+4. Online discussion
+
+This proposal derived from the discussion on the j3-fortran github page:
+https://github.com/j3-fortran/fortran_proposals/issues/16
