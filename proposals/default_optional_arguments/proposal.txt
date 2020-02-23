@@ -59,7 +59,7 @@ reduction in source code needed to handle optional arguments. This
 benefit is even greater in scenarios where the optional argument is
 used in many places in the procedure, and a helper variable is used for
 its value instead. Reduction in needed source code would result in more
-readable and more correct programs.  The secondary benefit of this is
+readable and more correct programs. The secondary benefit of this is
 programmer happiness, as working with optional arguments would require
 less typing.
 
@@ -163,10 +163,10 @@ intent(out) variables would be usable regardless of whether the value
 is actually passed back to the caller, removing the need for present()
 and "temporary" variables. The complication is that a present
 intent(out) variable is initially undefined, meaning the logic of
-present() might still be necessary in this case. Furthermore, the behavior
-suggested above where present() = .true. always for variables with a
-specified default would not be desired for intent(out) variables.
-A possible use case for this behavior could be:
+present() might still be necessary in this case. Furthermore, the
+behavior suggested above where present() = .true. always for variables
+with a specified default would not be desired for intent(out)
+variables. A possible use case for this behavior could be:
 
     integer function open(filename, mode, iostat) result(u)
       character(*), intent(in) :: filename
@@ -174,17 +174,75 @@ A possible use case for this behavior could be:
       integer, intent(out), optional :: iostat = 0
       character(3) :: mode_
       character(:),allocatable :: action_, position_, status_, access_, form_
-     !some code
-     !....
-     open(newunit=u, file=filename, &
-         action = action_, position = position_, status = status_, &
-         access = access_, form = form_, &
-         iostat = iostat)
-end function
+      !some code
+      !....
+      open(newunit=u, file=filename, &
+          action = action_, position = position_, status = status_, &
+          access = access_, form = form_, &
+          iostat = iostat)
+    end function
 
 A third option is that optional intent(out) variables with a specified
 default are always initialized to that default, even when present,
 rather than leaving them undefined.
+
+5.3 intent(inout)
+
+Dummy arguments with intent(inout) or no specified intent follow from
+the behavior for intent(in) and intent(out). If an optional
+intent(inout) variable is present, the existing behavior is
+followed. The dummy variable has the value of the actual argument on
+invocation of the procedure, its data may be used or manipulated during
+the scope of the procedure, then it is returned to the scoping unit. If
+an actual argument is not provided for an optional dummy argument with
+a specified default and intent(inout), the variable recieves the
+default value and may be used or modified throughout the procedure. The
+data is then not returned to the scoping unit, since no actual argument
+was provided.
+
+This would allow the following routine:
+
+    subroutine foo(x)
+      integer, intent(inout), optional :: x = 0
+
+      ! do stuff that could use or assign to x
+    end subroutine foo
+
+This would be equivalent to:
+
+    subroutine foo(x)
+      integer, intent(inout), optional :: x
+
+      integer :: x_
+
+      if (present(x)) then
+          x_ = x
+      else
+          x_ = 0
+      end if
+
+      ! do stuff that could use or assign to x_
+
+      if (present(x)) x = x_
+    end subroutine foo
+
+
+5.4 Arrays
+
+Default values for array dummy arguments present a difficulty,
+particularly expressions involving a scalar. Some decision must be made
+for the behavior in the following instances:
+
+    real, intent(in), optional :: a(:) = 0
+    real, intent(inout), optional :: b(:) = 0
+    real, intent(inout), allocatable, optional :: c(:) = 0
+
+In each case, the size of the array is not determined if an actual
+argument is not provided. One option is of course to forbid defaults
+for arrays. This isn’t preferable, but allowing defaults for scalars
+only may still address the majority of use cases. Another option is to
+forbid array broadcasting as a default specifier. That is, allow only
+defaults such as [0,0] for arrays, where the length is clear.
 
 6. Further discussion
 
