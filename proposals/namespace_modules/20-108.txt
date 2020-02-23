@@ -1,7 +1,7 @@
-To: J3                                                     J3/19-246
+To: J3                                                     J3/20-108
 From: Ondrej Certik
 Subject: Namespace For Modules
-Date: 2019-October-16
+Date: 2020-February-23
 
 Proposal for Fortran Standard: 202y (NOT 202x)
 
@@ -110,3 +110,5 @@ can just call it, without having to modify the `use` statement.
 4. References
 
 [1] https://github.com/j3-fortran/fortran_proposals/issues/1
+
+
