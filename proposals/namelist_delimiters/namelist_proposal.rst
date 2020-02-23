@@ -41,7 +41,7 @@ interpretation is at the discretion of the interpreter.
 Without delimiters, many character arrays become unparseable.  If a character
 array contains any lexical tokens, then it is likely that non-delimited values
 will be misinterpreted as part of the namelist object structure.  For example,
-any character array containing a backslash ``/`` may abruptly terminate the
+any character array containing a slash ``/`` may abruptly terminate the
 current namelist group.  Note 13.36 also recognizes the challenges of
 distinguishing between non-delimited character arrays and object names.
 
