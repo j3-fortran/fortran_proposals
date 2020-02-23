@@ -1,0 +1,108 @@
+To: J3                                                     J3/19-246
+From: Ondrej Certik
+Subject: Namespace For Modules
+Date: 2019-October-16
+
+Proposal for Fortran Standard: 202y (NOT 202x)
+
+
+1. Introduction
+
+The proposal is to allow import a module as a namespace and access its
+members using the % operator. Example:
+
+    use, namespace :: utils
+    ...
+    call utils%savetxt(...)
+
+Where `utils` is the only name that is imported in the local namespace.
+`savetxt` is not accesible directly, only via `utils%`.
+
+2. Motivation
+
+Fortran module usage is equivalent to Python:
+
+    Python                                   Fortran
+
+    from A import foo                        use A, only: foo
+    from A import foo as Afoo                use A, only: Afoo => foo
+    from A import *                          use A
+
+Except:
+
+    Python                                   Fortran
+
+    import A                                 N/A
+    import A as B                            N/A
+
+This proposal proposes to fill in the missing functionality as follows:
+
+    Python                                   Fortran
+
+    import A                                 use, namespace :: A
+    import A as B                            use, namespace :: B => A
+
+3. Use Cases
+
+3.1 Same function names in multiple modules
+
+In Python a very common idiom is:
+
+    import math
+    import numpy as np
+    import sympy as sym
+    ...
+    e1 = np.sin(np.pi)      # NumPy expression
+    e2 = math.sin(math.pi)  # Built-in Python math expression
+    e3 = sym.sin(sym.pi)    # SymPy expression
+
+In Fortran currently one has to do:
+
+    use math, only: math_sin => sin, math_pi => pi
+    use numpy, only: np_sin => sin, np_pi => pi
+    use sympy, only: sym_sin => sin, sym_pi => pi
+    ...
+    e1 = np_sin(np_pi)      ! NumPy expression
+    e2 = math_sin(math_pi)  ! Built-in Python math expression
+    e3 = sym_sin(sym_pi)    ! SymPy expression
+
+With this proposal one could also do:
+
+    use, namespace :: math
+    use, namespace :: np => numpy
+    use, namespace :: sym => sympy
+    ...
+    e1 = np%sin(np%pi)      ! NumPy expression
+    e2 = math%sin(math%pi)  ! Built-in Python math expression
+    e3 = sym%sin(sym%pi)    ! SymPy expression
+
+
+3.2 Need to import lots of functions from a module
+
+Exising code (https://github.com/certik/fortran-utils/blob/
+b43bd24cd421509a5bc6d3b9c3eeae8ce856ed88/src/linalg.f90):
+
+    use lapack, only: dsyevd, dsygvd, ilaenv, zgetri, zgetrf, zheevd, &
+        dgeev, zgeev, zhegvd, dgesv, zgesv, dgetrf, dgetri, dgelsy, &
+        zgelsy, dgesvd, zgesvd, dgeqrf, dorgqr, dpotrf, dtrtrs
+    ...
+    call dgeev('N', 'V', n, At, lda, wr, wi, vl, ldvl, vr, ldvr, &
+     work, lwork, info)
+    ...
+    call dgetrf(n, n, Amt, lda, ipiv, info)
+    ...
+
+Instead, one can write it as:
+
+    use, namespace :: lapack
+    ...
+    call lapack%dgeev('N', 'V', n, At, lda, wr, wi, vl, ldvl, vr, ldvr, &
+     work, lwork, info)
+    ...
+    call lapack%dgetrf(n, n, Amt, lda, ipiv, info)
+    ...
+
+Then when another subroutine must be called from the `lapack` module, one
+can just call it, without having to modify the `use` statement.
+
+
