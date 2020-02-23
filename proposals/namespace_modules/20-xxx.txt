@@ -79,7 +79,7 @@ With this proposal one could also do:
 
 3.2 Need to import lots of functions from a module
 
-Exising code (https://github.com/certik/fortran-utils/blob/
+Existing code (https://github.com/certik/fortran-utils/blob/
 b43bd24cd421509a5bc6d3b9c3eeae8ce856ed88/src/linalg.f90):
 
     use lapack, only: dsyevd, dsygvd, ilaenv, zgetri, zgetrf, zheevd, &
@@ -104,5 +104,3 @@ Instead, one can write it as:
 
 Then when another subroutine must be called from the `lapack` module, one
 can just call it, without having to modify the `use` statement.
-
-
