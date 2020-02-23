@@ -1,0 +1,79 @@
+To: J3                                                     J3/20-109
+From: Brad Richardson
+Subject: Traits for Types
+Date: 2020-February-23
+
+Proposal for Fortran Standard: 202y (NOT 202x)
+
+1. Problem
+
+Currently, in order to pass a derived type to some library expected a type
+derived from it's own abstract type requires the addition of a "wrapper"
+type to be used. This requires a cumbersome amount of boiler plate code and
+is not conducive to the type of "generic" code one would like to be able to
+write.
+
+This proposal seeks to address the issue that writing "generic" libraries
+is either not possible, or places undue burden on its users. The main
+benefits are the reduction in repeated logic or boiler plate wrapper types
+required for generic libraries, thereby enabling more code reuse and easier
+to maintain code bases.
+
+2. Proposed Solution
+
+The solution would require the addition of a few attributes and variable
+declaration capabilities. First is the addition of the `trait` attribute to
+a type specification. This requires that the type be abstract, and contain
+no components. I.e.
+
+    type, abstract, trait :: Show_t
+    contains
+      procedure(show_i), deferred :: show
+    end type Show_t
+
+    abstract interface
+      function show_i(self) result(string)
+        class(Show_t), intent(in) :: self
+        character(len=:), allocatable :: string
+      end function show_i
+    end interface
+
+Second is the addition of the `implements` attribute for a type
+specification. The `implements` attribute requires a list of at least one
+trait the type is to implement, requiring the type to contain the
+procedures with the interfaces defined by the trait(s). I.e.
+
+    type, implements(Show_t) :: Thing_t
+      character(len=:), allocatable :: the_string
+    contains
+      procedure :: show
+    end type Thing_t
+
+    function show(self) result(string)
+      class(Thing_t), intent(in) :: self
+      character(len=:), allocatable :: string
+
+      string = self%the_string
+    end function show
+
+Third is the addition of a variable declaration form using `trait`, in a
+similar fashion to `class`. The `trait` specification would require a list
+of at least one trait, and must either be allocatable, or a dummy argument
+of a procedure. In a similar manner that the instantiated value of a class
+variable must be of that type, or an extended type, the instantiated value
+of a trait variable must be of a type which implements the given trait(s).
+Thus, no components of the instantiated value are accessible, only the
+procedures defined by the trait(s).
+
+3. Backward compatibility
+
+This addition to the language would not break any existing standard
+conforming Fortran program, and thus preserves Fortran's backward
+compatibility.
+
+4. Further discussion
+
+Online discussion that led to this proposal can be found at
+https://github.com/j3-fortran/fortran_proposals/issues/125
+
+
