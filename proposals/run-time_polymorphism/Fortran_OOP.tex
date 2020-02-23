@@ -460,14 +460,13 @@ polymorphic variable \texttt{blksolver}.
 The new features need to be inter-operable also with type extension
 (i.e. sub-classing). They need to enable one to declare derived types
 that conform to some interfaces, and inherit at the same time
-implementation from some other derived type (e.g. the procedure
+implementation from some other derived type, e.g. the procedure
 \texttt{solve\_system} implemented by type \texttt{LUDecomposition} in
-the following example):
+the following example:
 \begin{lstlisting}[language=Fortran]
 type, extends(LUDecomposition), implements(ISolver,IPrinter) :: Client
    class(IPrinter), pointer :: printer => null()
 contains
-   procedure, nopass :: solve_system
    procedure, nopass :: print_result
 end type Client
 \end{lstlisting}
