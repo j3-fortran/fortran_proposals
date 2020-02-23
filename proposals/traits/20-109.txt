@@ -1,4 +1,4 @@
-To: J3                                                     J3/20-xxx
+To: J3                                                     J3/20-109
 From: Brad Richardson
 Subject: Traits for Types
 Date: 2020-February-23
@@ -75,3 +75,5 @@ compatibility.
 
 Online discussion that led to this proposal can be found at
 https://github.com/j3-fortran/fortran_proposals/issues/125
+
+
