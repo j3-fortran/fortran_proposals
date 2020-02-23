@@ -18,6 +18,8 @@ members using the % operator. Example:
 Where `utils` is the only name that is imported in the local namespace.
 `savetxt` is not accesible directly, only via `utils%`.
 
+This proposal originated at the J3 GitHub repository at [1].
+
 2. Motivation
 
 Fortran module usage is equivalent to Python:
@@ -104,3 +106,7 @@ Instead, one can write it as:
 
 Then when another subroutine must be called from the `lapack` module, one
 can just call it, without having to modify the `use` statement.
+
+4. References
+
+[1] https://github.com/j3-fortran/fortran_proposals/issues/1
