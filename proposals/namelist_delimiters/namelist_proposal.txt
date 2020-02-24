@@ -148,7 +148,7 @@ shown below.
  INPUT="some/path/to/file   ",
  /
 
-This namelist above produced by GNU Fortran 9.2.1.
+This namelist above was produced by GNU Fortran 9.2.1.
 
 
 4. Proposal
