@@ -1,0 +1,107 @@
+:To: J3
+:From: Marshall Ward
+:Subject: Require delimiters for character arrays in namelist output
+:Date: 19 November 2019
+
+.. sectnum::
+
+Proposal for Fortran Standard: 202y
+
+
+Introduction
+============
+
+According to the current standard, a WRITE statement can write a namelist file
+that does not conform to the namelist specification.  This happens when the
+namelist group contains a character array and the DELIM specifier has a value
+of NONE.  In particular, this is the default behavior of a WRITE statement
+whose input is a namelist.
+
+Our proposal is to require delimiters when using WRITE to write a namelist to a
+file, by either requiring a value of DELIM which is namelist-compliant, or by
+overriding a value of NONE when the input is a namelist.
+
+
+Motivation
+==========
+
+The namelist format is described in section 13.11 of the standard, and
+13.11.3.3p7 requires that character arrays in namelist groups must be delimited
+with single or double quotes.
+
+   When the next effective item is of type character, the input form consists
+   of a sequence of zero or more rep-chars whose kind type parameter is implied
+   by the kind of the corresponding list item, delimited by apostrophes or
+   quotes.
+
+Any namelist whose character arrays are non-delimited is non-conformant.  Any
+parsing of this output is therefore considered to be unformatted, and the
+interpretation is at the discretion of the interpreter.
+
+Without delimiters, many character arrays become unparseable.  If a character
+array contains any lexical tokens, then it is likely that non-delimited values
+will be misinterpreted as part of the namelist object structure.  For example,
+any character array containing a slash ``/`` may abruptly terminate the
+current namelist group.  Note 13.36 also recognizes the challenges of
+distinguishing between non-delimited character arrays and object names.
+
+The standard acknowledges the limitations of non-delimited character array
+parsing, and specifically directs the interpreter to ignore the value of DELIM
+when reading a namelist (12.5.6.8).
+
+   The scalar-default-char-expr shall evaluate to APOSTROPHE, QUOTE, or NONE.
+   The DELIM= specifier is permitted only for a connection for formatted
+   input/output. It specifies the delimiter mode (12.6.2.8) for list-directed
+   (13.10.4) and namelist (13.11.4.2) output for the connection. This mode has
+   no effect on input.
+
+However, despite the acknowledgement of the issues above, the default behavior
+of a WRITE command is to produce non-delimited character arrays.  From
+13.11.4.2p1,
+
+   Values in namelist output records are edited as for list-directed output
+   (13.10.4).
+
+This is done despite the fact that list-directed output follows different I/O
+rules for character arrays.  From 13.10.3.1p7 (my emphasis),
+
+   When the next effective item is of type character, the input form consists
+   of a **possibly** delimited sequence of zero or more rep-chars whose kind
+   type parameter is implied by the kind of the effective item.
+
+The namelist specification 13.11.3.3p7 deliberately omits "possibly" from its
+description.
+
+In other words, list-directed output permits non-delimited arrays, whereas
+namelists do not.  In addition, the default value of DELIM is to revert back to
+its value in the OPEN call.  From 12.5.6.8p1,
+
+   If this specifier is omitted in an OPEN statement that initiates a
+   connection, the default value is NONE.
+
+The default behavior of a WRITE call using namelist data is therefore to
+produce an output which is non-conformant with the namelist standard.
+
+
+Proposal
+========
+
+We propose one of the following additions to the *io-control-spec-list*,
+detailed in 12.6.2.1.
+
+A. If *namelist-group-name* appears, then a DELIM= specifier with the value
+   of either APOSTROPHE or QUOTE shall also appear.
+
+Option A would take the current recommended advice to always use DELIM when
+writing namelist output and turn it into an explicit rule.  However, it would
+cause currently compliant code to be non-compliant, and may require
+modifications if used by future interpreters.
+
+B. If *namelist-group-name* appears and a DELIM= specifier has the value of
+   NONE, then this value is ignored and the data transfer uses a value of
+   APOSTROPHE.
+
+Option B would change the behavior of existing standard-compliant interpreters,
+in that non-delimited character arrays would be replaced with
+apostrophe-delimited arrays.  But existing source code would otherwise remain
+compliant and continue to compile on both older and newer interpreters.
