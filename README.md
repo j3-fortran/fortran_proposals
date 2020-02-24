@@ -15,6 +15,10 @@ This repository contains proposals for the Fortran Standard Committee in the [Is
 
 4. Getting the proposal through the Committee is a long process, with multiple approvals, formal requirements, specifications, edits to the standard, etc. We will document this step in more detail. During this process, we can document the latest status at the issue.
 
+### Proposal Format
+
+Proposals should be text files, using [proposal-template.txt](proposal-template.txt) as a template. The reference line is optional, and is used reference previous J3 papers (e.g. 12-345r6, not a full link). The top line should not be modified--the XX-XXX is automatically modified when uploaded. Proposals are limited to 75 characters per line, and are generally around 50 - 350 lines of text. Proposals benefit from minimal code examples and use cases. While J3 will accept PDF proposals, such detailed documents are usually be better suited as a reference, so the proposal itself can be concise.
+
 ## Plan For This Repository
 
 Currently this repository is maintained by
