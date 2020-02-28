@@ -108,7 +108,7 @@ means that `input` is formatted with no delimiter.  A
 standard-conforming output would be
 
    &SAMPLE_NML
-   INPUT   = some/path/to/file
+   INPUT   = some/path/to/file   
    /
 
 For this example, we have used the output produced by the Intel Fortran
@@ -160,7 +160,7 @@ This namelist above was produced by GNU Fortran 9.2.1.
 
 4. Proposal
 
-We propose the following additions to the *io-control-spec-list*,
+We propose the following addition to the *io-control-spec-list*,
 detailed in 12.6.2.1.
 
    If *namelist-group-name* appears and a DELIM= specifier has the value
