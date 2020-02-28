@@ -8,19 +8,26 @@ Proposal for Fortran Standard: 202y
 
 1. Introduction
 
-According to the current standard, a WRITE statement can write a
-namelist file that does not conform to the namelist specification.  This
-happens when the namelist group contains a character array and the DELIM
-specifier has a value of NONE.  In particular, this is the default
-behavior of a WRITE statement whose input is a namelist.
+According to the current standard, a WRITE statement applied to a
+namelist group containing a character array will produce a namelist file
+whose character arrays have no delimiters (i.e. space-delimited) when the
+DELIM specifier has its default value of NONE.  In this case, the
+namelist output does not conform to the namelist specification.
 
-Our proposal is to require delimiters when using WRITE to write a
-namelist to a file, by either requiring a value of DELIM which is
-namelist-compliant, or by overriding a value of NONE when the input is a
-namelist.
+The following straightforward use case outlined below
+
+   open(*io-unit*, file=*file-name-expr*)
+   write(*io-unit*, [nml=]*namelist-group-name*) *output-item-list*
+
+does not produce a valid namelist when *namelist-group-name* contains a
+character array.
+
+Our proposal is to override the default value of DELIM when a WRITE
+statement is applied to a namelist group.  Other formatted output such
+as list-directed output would be unaffected by this proposal.
 
 
-2. Motivation
+2. Interpretation
 
 The namelist format is described in section 13.11 of the standard, and
 13.11.3.3p7 requires that character arrays in namelist groups must be
@@ -101,7 +108,7 @@ means that `input` is formatted with no delimiter.  A
 standard-conforming output would be
 
    &SAMPLE_NML
-   INPUT   = some/path/to/file   
+   INPUT   = some/path/to/file
    /
 
 For this example, we have used the output produced by the Intel Fortran
@@ -153,35 +160,23 @@ This namelist above was produced by GNU Fortran 9.2.1.
 
 4. Proposal
 
-We propose one of the following additions to the *io-control-spec-list*,
+We propose the following additions to the *io-control-spec-list*,
 detailed in 12.6.2.1.
 
-A. If *namelist-group-name* appears, then a DELIM= specifier with the
-   value of either APOSTROPHE or QUOTE shall also appear.
-
-Option A would take the current recommended advice to always use DELIM
-when writing namelist output and turn it into an explicit rule.  The
-following statement would constitute an error
-
-   write(unit, nml=filename)
-
-and would require the user to include a DELIM argument, e.g.
-
-   write(unit, nml=filename, delim="quote")
-
-This would also mean that currently compliant code missing a DELIM would
-be non-compliant, and may require modifications if used by future
-interpreters.
-
-B. If *namelist-group-name* appears and a DELIM= specifier has the value
+   If *namelist-group-name* appears and a DELIM= specifier has the value
    of NONE, then this value is ignored and the data transfer uses a
    value of APOSTROPHE.
 
-Option B would change the behavior of existing standard-compliant
-interpreters, in that non-delimited character arrays would be replaced
-with apostrophe-delimited arrays.  But existing source code would
-otherwise remain compliant and continue to compile on both older and
-newer interpreters.
+This modification would change the behavior of existing standard-compliant
+interpreters, in that non-delimited character arrays of namelists would
+be replaced with apostrophe-delimited arrays.  That is, non-compliant
+namelists would be replaces with compliant namelists.  But existing
+source code would otherwise remain compliant and continue to compile on
+both older and newer interpreters.
+
+This change is not intended to affect list-directed output, which would
+continue to respect the default DELIM as specified elsewhere in the
+standard.
 
 
 5. Reference
