@@ -121,8 +121,8 @@ subset of the expressions that are well defined in this context.
 
 All of the languages we are aware of, place the default assignment in
 the equivalent of the FUNCTION or SUBROUTINE statement and not the
-specification part. However most of the languages, Ada is an
-exception, do not have an equivalent to Fortran's specification part.
+specification part. However the languages do not have an equivalent
+to Fortran's specification part.
 
 
 4. Requirements
