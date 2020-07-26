@@ -1,7 +1,7 @@
 To: J3                                                     J3/XX-XXX
 From: M. Curcic & J. Vandenplas & Z. Jibben & W. Clodius 
-Subject: Default values for arguments with INTENT(IN), VALUE, or no
-         intent attributes
+Subject: Default values for arguments with INTENT(IN), or VALUE,
+         attributes
 Date: 2020-January-10
 Reference: 18-122r1, 18-136r1, 20-107
 
@@ -20,8 +20,8 @@ argument is present or not.
 Fortran 2018 does not allow setting a default value for optional
 arguments. A default value is the value that the dummy argument
 would take if the corresponding actual argument is not present. If a
-dummy argument of INTENT(IN) or VALUE, or no intent is declared as
-optional, the user must:
+dummy argument of INTENT(IN) or VALUE is declared as optional, the
+user must:
 
   * Explicitly test for the presence of the actual argument using the
     intrinsic function present();
@@ -45,12 +45,12 @@ This example function illustrates the problem:
 
 For any dummy argument with the optional attribute, the programmer
 must use the intrinsic function present() to check for the presence of
-the argument. Furthermore, for INTENT(IN) or VALUE or no intent
-arguments, if the optional dummy argument is meant to be used in
-multiple places in the procedure, the programmer is likely to use the
-above pattern, where a "temporary" variable is declared and used in
-place of the dummy argument, disconnecting the implementation from the
-user interface. Furthermore, this requires at least 3 lines of code
+the argument. Furthermore, for INTENT(IN) or VALUE arguments, if the
+optional dummy argument is meant to be used in multiple places in the
+procedure, the programmer is likely to use the above pattern, where a
+"temporary" variable is declared and used inplace of the dummy
+argument, disconnecting the implementation from the user
+interface. Furthermore, this requires at least 3 lines of code
 (declaration of c_tmp, initialization of c_tmp, and testing for the
 presence of c) to handle the scenario of a missing optional argument.
 
@@ -76,25 +76,25 @@ usage:
 	...
     end subroutine do_stuff
 
-This differs from the INTENT(IN), VALUE, and no intent case: first,
-because one assigns the default value with INTENT(OUT) when the actual
-argument is present, not when it is absent; and second, because the
-assignment of a default involves only one statement rather than the
-three statements for the helper variable of INTENT(IN), VALUE, and no
-intent. For INTENT(INOUT), one typically makes the argument optional
-to avoid the computational expense of calculating the out result, but
-having a default value makes it awkward to determine the presence of
-an optional argument, so the primary purpose of having it be optional
+This differs from the INTENT(IN), and VALUE, case: first, because one
+assigns the default value with INTENT(OUT) when the actual argument
+is present, not when it is absent; and second, because the assignment
+of a default involves only one statement rather than the three
+statements for the helper variable of INTENT(IN), and VALUE. For 
+INTENT(INOUT), one typically makes the argument optional to avoid the
+computational expense of calculating the out result, but having a
+default value makes it awkward to determine the presence of an
+optional argument, so the primary purpose of having it be optional
 is defeated.
 
-This proposal addresses the issue for INTENT(IN), VALUE, and no intent
-arguments that checking for the presence of the optional dummy
-argument and using a helper variable is cumbersome and error-prone. We
-will not address default values for INTENT(OUT) OR INTENT(INOUT)
-arguments. The primary benefit of this feature is the  reduction in
-source code needed to handle optional arguments. This benefit is
-greatest in scenarios where the optional argument is used in many
-places in the procedure, and a helper variable is used for its value
+This proposal addresses the issue for INTENT(IN), and VALUE that
+checking for the presence of the optional dummy argument and using
+a helper variable is cumbersome and error-prone. We will not address
+default values for INTENT(OUT) OR INTENT(INOUT) arguments. The
+primary benefit of this feature is the  reduction in source code
+needed to handle optional arguments. This benefit is greatest in
+scenarios where the optional argument is used in many places in the
+procedure, and a helper variable is used for its value
 instead. Reduction in needed source code would result in more readable
 and more correct programs.
 
@@ -128,9 +128,9 @@ to Fortran's specification part.
 4. Requirements
 
 The language should provide a way for programmers to specify default
-arguments for INTENT(IN), VALUE, and no intent arguments, without
-affecting the use of the PRESENT function in unmodified existing code,
-and providing PRESENT with a simple definition. Ideally the use of
+arguments for INTENT(IN), and VALUE arguments, without affecting the
+use of the PRESENT function in unmodified existing code, and
+providing PRESENT with a simple definition. Ideally the use of
 default arguments will be as flexible as possible.
 
 
@@ -325,6 +325,20 @@ arguments should be either allowed or disallowed in restricted
 expressions. They would be allowed in restricted expressions with the
 current definition of restricted expressions. We believe it would be
 safe to allow them in restricted expressions.
+
+6.6 No intent arguments
+
+Optional dummy arguments need not have the INTENT or VALUE attribute
+specified. Such arguments can behave like any combination of
+INTENT(IN), INTENT(OUT), or INTENT(INOUT). It can therefore sometimes
+be useful for them to have default values, but usually it is not
+useful. If the decision is made to allow default values for arguments
+of no intent, then the constraint on the DEFAULT attribute should be
+that entities with that attribute must not have the INTENT(INOUT) or
+INTENT(OUT) attribute. If the decision is made to not allow default
+values for arguments of no intent, then the constraint on the
+DEFAULT attribute should be that entities with that attribute must
+have the INTENT(IN) or VALUE attribute.
 
 
 7. Backward compatibility
