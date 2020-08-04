@@ -185,7 +185,7 @@ REQUIRE and ENSURES can be thought of as either sub-program attributes
 or executable statements. If treated as sub-program attributes then
 the syntax could be something like
 
-  requires-stmt is EEQUIRES :: requires-expr-list
+  requires-stmt is REQUIRES :: requires-expr-list
   ensures-stmt is ENSURES :: ensures-expr-list
 
   requires-expr is logical-expr
