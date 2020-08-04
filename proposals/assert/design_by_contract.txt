@@ -196,7 +196,7 @@ Constraint: requires-expr shall be a restricted expression.
 If thought of as run time expressions then the appropriate syntax may
 be
 
-  requires-stmt is EEQUIRES( requires-expr-list )
+  requires-stmt is REQUIRES( requires-expr-list )
   ensures-stmt is ENSURES( ensures-expr-list )
 
 In all of the syntactical forms each item in the effective
