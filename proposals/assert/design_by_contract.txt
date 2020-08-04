@@ -1,0 +1,243 @@
+To: J3                                                     J3/XX-XXX
+From: William B. Clodius
+Subject: Facilitate design by contract
+Date: August 1, 2020
+#Reference: 04-142.txt, 04-143.txt, 04-144.txt, 04-212.txt,
+04-219.txt, 04-376.txt, 04-414.txt
+
+Proposal for Fortran Standard: 202y (NOT 202x)
+
+1. Introduction
+
+This paper contains a proposal to allow programmers to use "Design by
+Contract". Inspired by languages such as C++, Java, and Ada, Fortran
+is considering incorporating exception handling into the language. In
+contrast, C++'s standard committees have decided that its users have
+been overusing exception handling, and has been seeking to incorporate
+other, simpler, error handing systems.[1] One approach, that has been
+incorporated into C++ 2020, is design by contract.[2,3] I believe
+Fortran would benefit by incorporating design by contract into the
+language, at a cost much less than would be incurred by incorporating
+exception handling.
+
+Design by contract (DbC) is intended to address programmer errors and
+only those errors. The idea is to specify: first the logical
+preconditions the inputs to a procedure are required to satisfy for
+its correct operation; second, the conditions the code is asserted to
+satisfy at various stages of its logic if the code logic is correct,
+and finally, the post-conditions the code ensures it will satisfy if
+the pre-conditions are met. To implement these checks, C++ 2020 has
+defined the attributes: expects, assert, and ensures,
+respectively. During the debugging phase of development these serve to
+detect when the conditions are not satisfied, stop processing when
+they are not satisfied, and report errors in a consistent format. In
+code deployment the expects attribute documents the pre-conditions the
+calling code must satisfy, and the ensures attribute documents the
+post-conditions the calling code can expect will be satisfied,
+providing a "contract" between the calling code and the
+callee. Normally the processor provides flags such that the logical
+tests can be active during testing, and inactive on deployment.
+
+DbC can be met with a minimum of one new statement, for testing
+anywhere in the code body, say ASSERT, but ideally there would be
+three new statements: one to be used at the start of the procedure to
+test pre-conditions, say REQUIRES, and one to be used immediately
+before the procedure's return to test post-conditions, say
+ENSURES. All three statements would be simple in form and have simple
+semantics. 
+
+
+2. Problem
+
+Currently a programmer typically tests for user errors using one of:
+
+    1. Hardcoding the tests for errors using IF or SELECT CASE blocks;
+    2. Writing the equivalent of an ASSERT subroutine: or
+    3. Writing the equivalent of an ASSERT macro.
+
+The first is the most natural for single checks, but requires care to
+give a consistent response to the user, and adds an overhead in
+deployment unless commented or edited out. The second allows a
+consistent response to the user, but has a larger overhead than the
+first, that can only be removed by being commented or edited out. The
+third allows a consistent response to the user that can be clearer
+about the problem location, and can have zero overhead on deployment
+with appropriate pre-processor flags, but does require a dependence
+on a preprocessor. None document for the user the pre and post
+conditions the user can expect for properly working code.
+
+3. Use cases
+
+A simple function that requires non-negative integer arguments.
+
+  REAL FUNCTION FACTORIAL( n )
+    INTEGER, INTENT(IN) :: N
+    INTEGER :: I
+    REQUIRES( N >= 0 )
+    FACTORIAL = 1
+    DO I=1, N
+      FACTORIAL = FACTORIAL * I
+    END DO
+    ENSURES (FACTORIAL >= N )
+    RETURN
+  END FUNCTION FACTORIAL
+
+A simple subroutine that swaps targets.
+
+  SUBROUTINE TARGET_SWAP( A, B )
+    TYPE(EXAMPLE), POINTER, INTENT(INOUT) :: A, B
+    TYPE(EXAMPLE), POINTER :: C
+    REQUIRES( ASSOCIATED(A) )  ! Requires pointer status of A be
+                               ! defined 
+    REQUIRES( ASSOCIATED(B) )  ! Requires pointer status of B be
+                               ! defined
+    C => A
+    A => B
+    B => C
+    ENSURES( ASSOCIATED(A) )
+    ENSURES( ASSOCIATED(B) )
+    RETURN
+  END SUBROUTINE TARGET_SWAP
+
+A procedure that requires one optional argument to be present if the
+other optional argument is present.
+
+  SUBROUTINE OPTIONALS( A, B )
+    TYPE(EXAMPLE), OPTIONAL, INTENT(IN) :: A, B
+    REQUIRES( PRESENT(A) .EQUIV. PRESENT(B) )
+    ...
+    RETURN
+  END SUBROUTINE OPTIONALS
+
+A test of a problematic procedure call
+
+  SUBROUTINE PROBLEM_CALL ( ..., A, ... )
+    ...
+    TYPE(EXAMPLE), POINTER :: A
+    ...
+    CALL PROBLEM( A )
+    ASSERT( ASSOCIATED( A ) )
+    ...
+    RETURN
+  END SUBROUTINE PROBLEM_CALL
+
+
+4. Prior art
+
+The term design by contract as applied to programming languages has
+its origins in the language Eiffel.[4,5] Since then, in addition to
+C++ it has been adopted by Ada,[6] D[7] and Fortress. The C standard
+library comes with the assert macro so C can be said to partially
+support DbC. To our knowledge no Fortran compiler has implemented
+anything to support DbC. Many users implement their own equivalent of
+an ASSERT subroutine or macro so there is some demand for these
+capabilities.
+
+
+5. Specification
+
+All three statements will have similar behavior. All three will take
+as their sole argument a scalar logical expression, that if
+.TRUE. does nothing, and if .FALSE. writes output to the ERROR_UNIT of
+ISO_FORTRAN_ENV and stops as if ERROR STOP was invoked. The writes
+will all indicate the location of the executed statement: either the
+procedure name with the name of the enclosing module, or the name of
+the file including the statement and the line number of the statement,
+or both. All three will write out the text of the logical expression
+that failed, with a prefix. The prefix will differ between the three
+statements. Example prefixes for the REQUIRES statement is
+"PRE-CONDITION FAILED: ", for the ASSERTS statement is "ASSERTION
+FAILED: ". and for the ENSURES statement is "POST-CONDITION
+FAILED: ".
+
+The semantics of all three statements are similar. They all should
+respond the same to compiler flags that invoke different behavior in
+development versus in deployment. In development, they each perform a
+logical test with the .FALSE. branch writing to ERROR_UNIT, and then
+stopping with an stop code, and the other branch a null operation
+that continues processing. In deployment they are as if they were
+commented out. These semantics are similar to a logical test with one
+branch invoking ERROR STOP and the other branch continuing
+processing. They should have restrictions similar to those of ERROR
+STOP, being allowed in PURE procedures, but not in ELEMENTAL
+procedures.
+
+4. Syntactic options
+
+The syntax for the statements depend on whether they should be
+considered executable statements, and should go in the executable
+part, or attributes of the sub-programs, and should go in the
+specification part. It is difficult to think of ASSERTS as any thing
+other than an executable statement. For ASSERTS I think the following
+syntax is appropriate 
+
+  asserts-stmt is ASSERTS( assertion-list )
+
+where
+
+  assertion is logical-expr
+
+REQUIRE and ENSURES can be thought of as either sub-program attributes
+or executable statements. If treated as sub-program attributes then
+the syntax could be something like
+
+  requires-stmt is EEQUIRES :: requires-expr-list
+  ensures-stmt is ENSURES :: ensures-expr-list
+
+  requires-expr is logical-expr
+  ensures-expr is logical-expr
+
+Constraint: requires-expr shall be a restricted expression. 
+
+If thought of as run time expressions then the appropriate syntax may
+be
+
+  requires-stmt is EEQUIRES( requires-expr-list )
+  ensures-stmt is ENSURES( ensures-expr-list )
+
+In all of the syntactical forms each item in the effective
+logical-expr-list shall be tested in sequence, and a error message
+will be generated for the first item in the list that tests as
+.FALSE. that shows the logical expression that failed the test.
+
+
+5. Backward compatibility
+
+The three proposed statements do not match statements implemented by
+any processor that I am aware of, and so their addition should not
+change the meaning of any directly supported application. It is
+likely, however, that some users already have an ASSERT macro, that
+approximates the ASSERT statement's semantics. I suspect they will
+welcome the new ASSERT, but cannot be certain. This problem could be
+minimized by using a name other than ASSERT, say CHECK.
+
+
+6. Impact on the standard
+
+My guess is that describing each statement will take about half a page
+of main text, plus a half page note describing for all three
+statements the semantics of a quality of implementation, plus a few
+sentences to describe changes from the previous standard and define
+terms. Maybe three pages total.
+
+
+References
+
+[1] Herb Sutter, "Zero-overhead deterministic exceptions: Throwing
+values",
+http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2019/p0709r4.pdf
+[2] G. Dos Reis, J. D. Garcia, J. Lakos, A. Meredith, N. Myers,
+and B. Stroustrup, "A Contract Design"
+http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2016/p0380r1.pdf
+[3] G. Dos Reis, J. D. Garcia, J. Lakos, A. Meredith, N. Myers, and
+B. Stroustrup, "Support for contract based programming in C++"
+http://www.open-std.org/jtc1/sc22/wg21/docs/papers/2018/p0542r5.html
+[4] B. Meyer, "Eiffel: The Language," Prentice Hall, second printing,
+1992.
+[5] B. Meyer, "Applying 'Design by Contract'," in Computer (IEEE) 25,
+pp. 40-51, Oct. 1992.
+http://se.ethz.ch/~meyer/publications/computer/contract.pdf
+[6] R. Dewar, "Ada 2012: Ada with Contracts", Dr. Dobb's, Apr. 9,
+2013. https://www.drdobbs.com/architecture-and-design/ada-2012-ada-with-contracts/240150569
+[7] W. Bright, "D Programming Language, Contract Programming", Digital
+Mars. https://dlang.org/spec/contracts.html
