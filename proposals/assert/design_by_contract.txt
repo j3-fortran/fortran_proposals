@@ -5,7 +5,9 @@ Date: August 1, 2020
 #Reference: 04-142.txt, 04-143.txt, 04-144.txt, 04-212.txt,
 04-219.txt, 04-376.txt, 04-414.txt
 
+
 Proposal for Fortran Standard: 202y (NOT 202x)
+
 
 1. Introduction
 
@@ -40,11 +42,11 @@ tests can be active during testing, and inactive on deployment.
 
 DbC can be met with a minimum of one new statement, for testing
 anywhere in the code body, say ASSERT, but ideally there would be
-three new statements: one to be used at the start of the procedure to
-test pre-conditions, say REQUIRES, and one to be used immediately
-before the procedure's return to test post-conditions, say
-ENSURES. All three statements would be simple in form and have simple
-semantics. 
+three new statements: one the equivalent of ASSERT, one to be used at
+the start of the procedure to test pre-conditions, say REQUIRES, and
+one to be used immediately before the procedure's return to test
+post-conditions, say ENSURES. All three statements would be simple in
+form and have simple semantics. 
 
 
 2. Problem
@@ -65,6 +67,7 @@ about the problem location, and can have zero overhead on deployment
 with appropriate pre-processor flags, but does require a dependence
 on a preprocessor. None document for the user the pre and post
 conditions the user can expect for properly working code.
+
 
 3. Use cases
 
@@ -104,7 +107,7 @@ other optional argument is present.
 
   SUBROUTINE OPTIONALS( A, B )
     TYPE(EXAMPLE), OPTIONAL, INTENT(IN) :: A, B
-    REQUIRES( PRESENT(A) .EQUIV. PRESENT(B) )
+    REQUIRES( PRESENT(A) .EQV. PRESENT(B) )
     ...
     RETURN
   END SUBROUTINE OPTIONALS
@@ -126,7 +129,7 @@ A test of a problematic procedure call
 
 The term design by contract as applied to programming languages has
 its origins in the language Eiffel.[4,5] Since then, in addition to
-C++ it has been adopted by Ada,[6] D[7] and Fortress. The C standard
+C++ it has been adopted by Ada,[6] D,[7] and Fortress. The C standard
 library comes with the assert macro so C can be said to partially
 support DbC. To our knowledge no Fortran compiler has implemented
 anything to support DbC. Many users implement their own equivalent of
@@ -137,17 +140,17 @@ capabilities.
 5. Specification
 
 All three statements will have similar behavior. All three will take
-as their sole argument a scalar logical expression, that if
-.TRUE. does nothing, and if .FALSE. writes output to the ERROR_UNIT of
-ISO_FORTRAN_ENV and stops as if ERROR STOP was invoked. The writes
-will all indicate the location of the executed statement: either the
-procedure name with the name of the enclosing module, or the name of
-the file including the statement and the line number of the statement,
-or both. All three will write out the text of the logical expression
-that failed, with a prefix. The prefix will differ between the three
-statements. Example prefixes for the REQUIRES statement is
-"PRE-CONDITION FAILED: ", for the ASSERTS statement is "ASSERTION
-FAILED: ". and for the ENSURES statement is "POST-CONDITION
+as their arguments a list of scalar logical expressions, that if all
+.TRUE. does nothing, and if one is .FALSE. writes output to the
+ERROR_UNIT of ISO_FORTRAN_ENV and stops as if ERROR STOP was
+invoked. The writes will all indicate the location of the executed
+statement: either the procedure name with the name of the enclosing
+module, or the name of the file including the statement and the line
+number of the statement, or both. All three will write out the text of
+the logical expression that failed, with a prefix. The prefix will
+differ between the three statements. Example prefixes for the REQUIRES
+statement is "PRE-CONDITION FAILED: ", for the ASSERTS statement is
+"ASSERTION FAILED: ". and for the ENSURES statement is "POST-CONDITION
 FAILED: ".
 
 The semantics of all three statements are similar. They all should
@@ -161,6 +164,7 @@ branch invoking ERROR STOP and the other branch continuing
 processing. They should have restrictions similar to those of ERROR
 STOP, being allowed in PURE procedures, but not in ELEMENTAL
 procedures.
+
 
 4. Syntactic options
 
