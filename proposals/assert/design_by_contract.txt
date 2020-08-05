@@ -43,9 +43,9 @@ tests can be active during testing, and inactive on deployment.
 DbC can be met with a minimum of one new statement, for testing
 anywhere in the code body, say ASSERT, but ideally there would be
 three new statements: one the equivalent of ASSERT, one to be used at
-the start of the procedure to test pre-conditions, say REQUIRES, and
+the start of the procedure to test pre-conditions, say REQUIRE, and
 one to be used immediately before the procedure's return to test
-post-conditions, say ENSURES. All three statements would be simple in
+post-conditions, say ENSURE. All three statements would be simple in
 form and have simple semantics. 
 
 
@@ -76,12 +76,12 @@ A simple function that requires non-negative integer arguments.
   REAL FUNCTION FACTORIAL( n )
     INTEGER, INTENT(IN) :: N
     INTEGER :: I
-    REQUIRES( N >= 0 )
+    REQUIRE( N >= 0 )
     FACTORIAL = 1
     DO I=1, N
       FACTORIAL = FACTORIAL * I
     END DO
-    ENSURES (FACTORIAL >= N )
+    ENSURE (FACTORIAL >= N )
     RETURN
   END FUNCTION FACTORIAL
 
@@ -90,15 +90,15 @@ A simple subroutine that swaps targets.
   SUBROUTINE TARGET_SWAP( A, B )
     TYPE(EXAMPLE), POINTER, INTENT(INOUT) :: A, B
     TYPE(EXAMPLE), POINTER :: C
-    REQUIRES( ASSOCIATED(A) )  ! Requires pointer status of A be
-                               ! defined 
-    REQUIRES( ASSOCIATED(B) )  ! Requires pointer status of B be
-                               ! defined
+    REQUIRE( ASSOCIATED(A) )  ! Requires pointer status of A be
+                              ! defined 
+    REQUIRE( ASSOCIATED(B) )  ! Requires pointer status of B be
+                              ! defined
     C => A
     A => B
     B => C
-    ENSURES( ASSOCIATED(A) )
-    ENSURES( ASSOCIATED(B) )
+    ENSURE( ASSOCIATED(A) )
+    ENSURE( ASSOCIATED(B) )
     RETURN
   END SUBROUTINE TARGET_SWAP
 
@@ -107,7 +107,7 @@ other optional argument is present.
 
   SUBROUTINE OPTIONALS( A, B )
     TYPE(EXAMPLE), OPTIONAL, INTENT(IN) :: A, B
-    REQUIRES( PRESENT(A) .EQV. PRESENT(B) )
+    REQUIRE( PRESENT(A) .EQV. PRESENT(B) )
     ...
     RETURN
   END SUBROUTINE OPTIONALS
@@ -148,9 +148,9 @@ statement: either the procedure name with the name of the enclosing
 module, or the name of the file including the statement and the line
 number of the statement, or both. All three will write out the text of
 the logical expression that failed, with a prefix. The prefix will
-differ between the three statements. Example prefixes for the REQUIRES
-statement is "PRE-CONDITION FAILED: ", for the ASSERTS statement is
-"ASSERTION FAILED: ". and for the ENSURES statement is "POST-CONDITION
+differ between the three statements. Example prefixes for the REQUIRE
+statement is "PRE-CONDITION FAILED: ", for the ASSERT statement is
+"ASSERTION FAILED: ". and for the ENSURE statement is "POST-CONDITION
 FAILED: ".
 
 The semantics of all three statements are similar. They all should
@@ -171,17 +171,17 @@ procedures.
 The syntax for the statements depend on whether they should be
 considered executable statements, and should go in the executable
 part, or attributes of the sub-programs, and should go in the
-specification part. It is difficult to think of ASSERTS as any thing
-other than an executable statement. For ASSERTS I think the following
+specification part. It is difficult to think of ASSERT as any thing
+other than an executable statement. For ASSERT I think the following
 syntax is appropriate 
 
-  asserts-stmt is ASSERTS( assertion-list )
+  assert-stmt is ASSERT( assertion-list )
 
 where
 
   assertion is logical-expr
 
-REQUIRE and ENSURES can be thought of as either sub-program attributes
+REQUIRE and ENSURE can be thought of as either sub-program attributes
 or executable statements. If treated as sub-program attributes then
 the syntax could be something like
 
@@ -196,8 +196,8 @@ Constraint: requires-expr shall be a restricted expression.
 If thought of as run time expressions then the appropriate syntax may
 be
 
-  requires-stmt is REQUIRES( requires-expr-list )
-  ensures-stmt is ENSURES( ensures-expr-list )
+  require-stmt is REQUIRE( require-expr-list )
+  ensure-stmt is ENSURE( ensure-expr-list )
 
 In all of the syntactical forms each item in the effective
 logical-expr-list shall be tested in sequence, and a error message
