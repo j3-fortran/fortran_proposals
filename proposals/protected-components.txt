@@ -232,6 +232,7 @@ K. Can modify (or allocate/deallocate) the *components* of a protected type
      finalization outside the module where it's defined, but would not
      impose any restrictions on the components. Component protection
      (above) would be used to enforce both.
+   - This allows for the use case 2.3 presented in 19-135r1.
 
 L2. Polymorphic allocatable assignment of a parent type without a protected
     attribute is permitted even when the dynamic type has a protected
