@@ -50,4 +50,6 @@ Edits to 21-007
   16.9.194 SPLIT (STRING, SET, TOKENS [, SEPARATOR]) or
            SPLIT (STRING, SET, FIRST, LAST)
 
-2. Remove paragraph 16.9.194p3.
+2. Remove lines 20-35 in paragraph 16.9.194p3.
+
+3. Remove lines 3-19 in paragraph 16.9.194p4.
