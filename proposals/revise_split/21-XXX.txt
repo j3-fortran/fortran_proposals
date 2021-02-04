@@ -1,0 +1,53 @@
+To: J3                                                     J3/21-XXX
+From: Milan Curcic
+Subject: Revise SPLIT
+Date: 2021-February-4
+
+Reference: 21-007, 20-139
+
+21-007 defines the SPLIT intrinsic in 16.9.194 as:
+
+SPLIT (STRING, SET, TOKENS [, SEPARATOR]) or
+SPLIT (STRING, SET, FIRST, LAST) or
+SPLIT (STRING, SET, POS [, BACK])
+
+The first form returns a CHARACTER array that contains tokens
+separated by characters in SET. The second form returns INTEGER
+arrays FIRST and LAST that correspond to first and last indices,
+respectively, of each token. Both forms can be easily interpreted
+and explained as "Parse a string into tokens", as stated in the
+description. The third form, however, assigns to POS the position
+of the leftmost (or rightmost, depending on the presence and value
+of BACK) token delimiter whose position is greater (or less than)
+than the input value of POS.
+
+While the first two forms can be easily interpreted and explained as
+"Parse a string into tokens", as stated in the description, the
+third form does not do this. Instead, the third form performs an
+operation that is more easily described as searching or finding
+(although, invoking this form of SPLIT multiple times allows the
+programmer to incrementally delimit a string into tokens). The third
+form is thus not intuitive. Defining SPLIT like this may make it
+more difficult to learn. It may also lead to code that is more
+difficult to understand to a reader.
+
+This paper recommends to exclude the third form of SPLIT from the
+definition of SPLIT in 21-007. This form may be appropriate to
+include in a later revision (F202Y), under a different name, perhaps
+FIND_TOKEN_DELIMITER.
+
+Edits to 21-007
+---------------
+
+1. In 16.9.194, replace
+
+  16.9.194 SPLIT (STRING, SET, TOKENS [, SEPARATOR]) or
+           SPLIT (STRING, SET, FIRST, LAST) or
+           SPLIT (STRING, SET, POS [, BACK])
+
+  with
+
+  16.9.194 SPLIT (STRING, SET, TOKENS [, SEPARATOR]) or
+           SPLIT (STRING, SET, FIRST, LAST)
+
+2. Remove paragraph 16.9.194p3.
