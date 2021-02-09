@@ -1,7 +1,7 @@
 To: J3                                                     J3/21-XXX
 From: Milan Curcic
 Subject: Revise SPLIT
-Date: 2021-February-4
+Date: 2021-February-9
 
 Reference: 21-007, 20-139
 
@@ -26,15 +26,49 @@ While the first two forms can be easily interpreted and explained as
 third form does not do this. Instead, the third form performs an
 operation that is more easily described as searching or finding
 (although, invoking this form of SPLIT multiple times allows the
-programmer to incrementally delimit a string into tokens). The third
-form is thus not intuitive. Defining SPLIT like this may make it
-more difficult to learn. It may also lead to code that is more
-difficult to understand to a reader.
+programmer to incrementally delimit a string into tokens). The name
+"SPLIT" for the third form is thus not intuitive. Defining SPLIT like
+this may make it more difficult to learn for newcomers to the
+language. It may also lead to code that is more difficult to
+understand to a reader.
 
-This paper recommends to exclude the third form of SPLIT from the
-definition of SPLIT in 21-007. This form may be appropriate to
-include in a later revision (F202Y), under a different name, perhaps
-FIND_TOKEN_DELIMITER.
+This paper does not challenge the usefulness of the third form of
+SPLIT, but only its name. To illustrate, consider these invocations
+of SPLIT:
+
+call split(string, set, tokens)
+call split(string, set, first, last)
+call split(string, set, pos)
+
+First, the reader cannot distinguish what SPLIT does solely based on
+its name. This is because three different functionalities are packed
+into one name. The reader thus needs to inspect the number and type
+of actual arguments. The second form of SPLIT can be unambiguosly
+distinguished from the other two solely based on the number of
+actual arguments. However, to unambiguosly distinguish the first and
+second form, the reader must inspect the type of the third actual
+argument.
+
+Second, the first and second form of SPLIT are similar in what they
+do--parse the whole string at once. One returns the tokens and the
+other returns the bounds. However, the third form is significantly
+different in functionality than the other two. Conflating two
+different functionalities into the same name removes the usefulness
+of that name being a differentiator of functionality.
+
+If still possible considering the F202X schedule, this paper
+recommends to rename the third form of SPLIT and make it its own
+intrinsic. Otherwise, this paper recommends to exclude the third
+form of SPLIT from the definition of SPLIT in 21-007. The downside to
+this is that the third form, which brings a useful and important
+functionality to the language, would be delayed until F202Y.
+Costs and benefits of all three scenarios--keep SPLIT as is, rename
+the third form, and exclude the third form--should be discussed.
+
+For reference, I preserve the suggestion for edits below (introduced
+in an earlier draft of this proposal), that would apply in the
+scenarios of renaming or excluding the third form of SPLIT be
+considered.
 
 Edits to 21-007
 ---------------
