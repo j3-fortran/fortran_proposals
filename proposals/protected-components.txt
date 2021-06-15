@@ -54,10 +54,10 @@ derived type to expose a large dataset for reading, but does not want the
 client to modify the data except through provided procedures. They may also
 want the client to be able to store copies of these objects or deallocate
 them, while still controlling their internal consistency. Furthermore, a
-"getter" routine would require an expensive copy of the data. Protected
-components allow the programmer to design a derived type API which reflects
-the intended use of certain objects -- exposing components without also
-giving the ability to modify them directly.
+"getter" routine would require an expensive copy of the data, thus is
+suboptimal. Protected components allow the programmer to design a derived
+type API which reflects the intended use of certain objects -- exposing
+components without also giving the ability to modify them directly.
 
 For example, a CFD application's mesh may contain a large connectivity
 dataset:
@@ -81,7 +81,7 @@ directly. To summarize:
       print *, m%nbr ! reading protected components allowed
       allocate(history(1)) ! local allocation allowed
       history(1) = m ! intrinsic assignment allowed
-      call safe(m%nbr) ! passing protected component as intent(in) allowed
+      call read(m%nbr) ! passing protected component as intent(in) allowed
       call new_mesh(m) ! passing object as intent(out) or intent(inout)
                        ! allowed
 
@@ -317,6 +317,12 @@ independently control the access specifier of each component.
       real, protected :: c
     end type foo
 
+
+5. Comments
+===========
+
+5.1 Alternative keywords
+
 The PROTECTED keyword meaning different things in these contexts may be
 confusing. It's worth considering different keywords (e.g.,
 readonly/visible components, persistent/restricted/controlled types, etc).
@@ -325,5 +331,31 @@ readonly/visible components, persistent/restricted/controlled types, etc).
       protected
       type(foo), protected :: a
     end type bar
+
+
+5.2 Is an unprotected type with only protected components the same as a
+protected type?
+
+A: No, an unprotected type with all protected components may be copied via
+intrinsic assignment, allocated, deallocated, and automatically deallocated
+outside the module wherein that type is defined. A protected type disables
+all of these "type-level" definition contexts, and thus is more
+restrictive.
+
+This distinction is the motivation for having both protected components and
+protected types. In some cases a user may want to protect data in a type
+from any outside tampering, in which case a protected type is warranted. In
+other cases, the user wants to ensure internal consistency in a derived
+type, but doesn't want to prevent the user from creating or destroying the
+type altogether. A user might also want to avoid expensive copies in getter
+procedures, which would be needed for private components. See the use-cases
+above.
+
+
+5.3 Is a public component of a protected type any different from a
+protected component of a protected type?
+
+A: I believe the answer here is no. A public component of a protected type
+has all the same restrictions as a protected component of the same type.
 
 ===END===
