@@ -355,7 +355,9 @@ above.
 5.3 Is a public component of a protected type any different from a
 protected component of a protected type?
 
-A: I believe the answer here is no. A public component of a protected type
-has all the same restrictions as a protected component of the same type.
+A: I believe the answer here is yes. Specification K allows modification of
+the components of a protected type; i.e. the protection of a type really
+only restricts what can be done to the type as a whole. This is up for
+discussion, though, and could be changed.
 
 ===END===
