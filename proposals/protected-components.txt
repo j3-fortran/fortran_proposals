@@ -43,7 +43,7 @@ and by example, not by BNF, to aid comprehension.
 
 The use cases for both features have been presented in previous papers
 (protected components 18-265, 20-106, 19-214r1; protected types 19-135r1).
-Here is presented two possible use-cases. For more, refer to the above
+Here are presented two possible use-cases. For more, refer to the above
 papers.
 
 
