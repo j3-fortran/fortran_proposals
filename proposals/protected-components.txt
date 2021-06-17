@@ -91,7 +91,7 @@ directly. To summarize:
       m = mesh(nbr = [huge(1)]) ! FAIL: setting protected component
                                 ! via structure constructor not allowed
       allocate(m%nbr(1)) ! FAIL
-      deallocate(m%nbr(1)) ! FAIL
+      deallocate(m%nbr)  ! FAIL
 
       ! automatic deallocation & finalization allowed
       ! even without a user-defined finalizer
@@ -110,7 +110,7 @@ the author the ability to provide custom alternatives to only those
 features they intend to allow.
 
 One example is a linked list, in which one may wish to disallow intrinsic
-assignment entirely. Otherwise, a client could inadvertantly produce a
+assignment entirely. Otherwise, a client could inadvertently produce a
 shallow-copy.
 
 
@@ -355,9 +355,9 @@ above.
 5.3 Is a public component of a protected type any different from a
 protected component of a protected type?
 
-A: I believe the answer here is yes. Specification K allows modification of
-the components of a protected type; i.e. the protection of a type really
-only restricts what can be done to the type as a whole. This is up for
+A: The answer here is yes. Specification K allows modification of the
+components of a protected type; i.e. the protection of a type really only
+restricts what can be done to the type as a whole. This is up for
 discussion, though, and could be changed.
 
 ===END===
