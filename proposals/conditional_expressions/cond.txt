@@ -28,3 +28,7 @@ Examples:
       ifthen(x >= 0.0, sqrt(x), -0.0)
 
       ifthen(present(x), a, ifthen(present(b), b, 0))
+
+References:
+
+[1] https://fortran-lang.discourse.group/t/poll-fortran-202x-conditional-expressions-syntax/1425
