@@ -1,0 +1,30 @@
+To: J3                                                     J3/XXX
+From: Ondrej Certik
+Subject: Conditional expressions using intrinsic function
+References: 21-157, 21-159
+Date: 2021-June-26
+
+Paper 21-157 proposes two syntactic forms for
+conditional expressions. The paper 21-159 proposes
+an alternative form. This paper proposes to implement
+conditional expressions using intrinsic functions
+
+The syntactics forms in 21-157 is too verbose, as argued in 21-159. The form in
+21-159 is concise, but based on the poll [1], it is not the most popular
+either.
+
+We propose the following syntactic form
+
+   <cond-expr> is ifthen( predicate, consequent,
+                      [ ifthen( predicate, consequent, ]*
+                      alternative) [)]*
+
+where the predicates are scalar logical expressions
+and the consequents and alternative are compatible
+expressions. The `)` must match the number of `ifthen(` used.
+
+Examples:
+
+      ifthen(x >= 0.0, sqrt(x), -0.0)
+
+      ifthen(present(x), a, ifthen(present(b), b, 0))
