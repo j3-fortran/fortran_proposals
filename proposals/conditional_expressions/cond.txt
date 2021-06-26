@@ -21,7 +21,7 @@ We propose the following syntactic form
 
 where the predicates are scalar logical expressions
 and the consequents and alternative are compatible
-expressions. The `)` must match the number of `ifthen(` used.
+expressions. The number of `)` must match the number of `ifthen(` used.
 
 Examples:
 
