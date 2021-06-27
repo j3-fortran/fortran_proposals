@@ -45,7 +45,7 @@ confusing
 There is a precedent in optional arguments, where the argument is not evaluated
 but passed through through nested functions until it hits the function
 `present`. In a similar way, the arguments to `ifthen` are not evaluated ahead
-of time, but rather passes into the function `ifthen` itself, similar to how
+of time, but rather passed into the function `ifthen` itself, similar to how
 `present(x)` works. Both `ifthen` and `present` must be implemented by the
 compiler itself, they cannot be implemented in standard Fortran code.
 
