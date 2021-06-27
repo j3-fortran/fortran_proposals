@@ -1,5 +1,5 @@
 To: J3                                                     J3/XXX
-From: Ondrej Certik
+From: Ondrej Certik, Milan Curcic, Zach Jibben
 Subject: Conditional expressions using intrinsic function
 References: 21-157, 21-159
 Date: 2021-June-26
@@ -17,15 +17,37 @@ We propose the following syntactic form
 
    <cond-expr> is ifthen( predicate, consequent, alternative )
 
-where the predicates are scalar logical expressions
-and the consequents and alternative are compatible
-expressions. The number of `)` must match the number of `ifthen(` used.
+where the `predicate` are scalar logical expressions
+and the `consequent` and `alternative` are compatible
+expressions. The `alternative` can be another `ifthen` as shown in an example
+below.
 
 Examples:
 
       res = ifthen(x >= 0.0, sqrt(x), -0.0)
 
       res = ifthen(present(x), a, ifthen(present(b), b, 0))
+
+Objections raised in the past:
+
+1) It is harder to do chaining due to the extra parenthesis at the end.
+
+Answer: it seems in practice it is not too bad, as in the second example above.
+Here is a longer chain:
+
+      res = ifthen(present(x), x, ifthen(present(y), y,
+                     ifthen(present(z), z, 0)))
+
+2) `ifthen` does not behave like a regular function, it is effectively new
+syntax, so we might as well actually introduce new syntax, to make it less
+confusing
+
+There is a precedent in optional arguments, where the argument is not evaluated
+but passed through through nested functions until it hits the function
+`present`. In a similar way, the arguments to `ifthen` are not evaluated ahead
+of time, but rather passes into the function `ifthen` itself, similar to how
+`present(x)` works. Both `ifthen` and `present` must be implemented by the
+compiler itself, they cannot be implemented in standard Fortran code.
 
 References:
 
