@@ -15,9 +15,7 @@ either.
 
 We propose the following syntactic form
 
-   <cond-expr> is ifthen( predicate, consequent,
-                      [ ifthen( predicate, consequent, ]*
-                      alternative) [)]*
+   <cond-expr> is ifthen( predicate, consequent, alternative )
 
 where the predicates are scalar logical expressions
 and the consequents and alternative are compatible
