@@ -17,7 +17,7 @@ We propose the following syntactic form
 
    <cond-expr> is ifthen( predicate, consequent, alternative )
 
-where the `predicate` are scalar logical expressions
+where the `predicate` is a scalar logical expression
 and the `consequent` and `alternative` are compatible
 expressions. The `alternative` can be another `ifthen` as shown in an example
 below.
