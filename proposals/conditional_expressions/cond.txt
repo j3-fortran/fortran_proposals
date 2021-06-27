@@ -25,9 +25,9 @@ expressions. The number of `)` must match the number of `ifthen(` used.
 
 Examples:
 
-      ifthen(x >= 0.0, sqrt(x), -0.0)
+      res = ifthen(x >= 0.0, sqrt(x), -0.0)
 
-      ifthen(present(x), a, ifthen(present(b), b, 0))
+      res = ifthen(present(x), a, ifthen(present(b), b, 0))
 
 References:
 
