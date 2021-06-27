@@ -1,8 +1,8 @@
-To: J3                                                     J3/XXX
+To: J3                                                     J3/##-###
 From: Ondrej Certik, Milan Curcic, Zach Jibben
 Subject: Conditional expressions using intrinsic function
-References: 21-157, 21-159
 Date: 2021-June-26
+Reference: 21-157, 21-159
 
 Paper 21-157 proposes two syntactic forms for
 conditional expressions. The paper 21-159 proposes
