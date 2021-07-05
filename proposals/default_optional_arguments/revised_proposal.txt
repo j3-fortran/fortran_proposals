@@ -1,0 +1,370 @@
+To: J3                                                     J3/XX-XXX
+From: M. Curcic & J. Vandenplas & Z. Jibben & W. Clodius 
+Subject: Default values for arguments with INTENT(IN), or VALUE,
+         attributes
+Date: 2020-January-10
+Reference: 18-122r1, 18-136r1, 20-107
+
+
+1. Introduction
+
+This paper contains a proposal for Fortran 202y, to allow a programmer
+to specify a default value for a subset of optional dummy
+arguments. This would allow the programmer to then safely reference 
+such arguments in expressions regardless of whether the actual
+argument is present or not.
+
+
+2. Problem
+
+Fortran 2018 does not allow setting a default value for optional
+arguments. A default value is the value that the dummy argument
+would take if the corresponding actual argument is not present. If a
+dummy argument of INTENT(IN) or VALUE is declared as optional, the
+user must:
+
+  * Explicitly test for the presence of the actual argument using the
+    intrinsic function present();
+  * Use a separate variable inside the procedure to assign the value
+    because the optional dummy argument that is not present must not
+    be referenced in expressions other than as actual argument to the
+    intrinsic function present().
+
+This example function illustrates the problem:
+
+    real function quadratic(x, a, b, c)  
+      ! returns a + b * x + c * x**2 if c is present 
+      ! and a + b * x otherwise
+      real, intent(in) :: x, a, b
+      real, intent(in), optional :: c
+      real :: c_tmp ! use another var. to reference the missing arg
+      c_tmp = 0 ! default value if c is not present
+      if (present(c)) c_tmp = c
+      quadratic = a + b * x + c_tmp * x**2
+    end function quadratic
+
+For any dummy argument with the optional attribute, the programmer
+must use the intrinsic function present() to check for the presence of
+the argument. Furthermore, for INTENT(IN) or VALUE arguments, if the
+optional dummy argument is meant to be used in multiple places in the
+procedure, the programmer is likely to use the above pattern, where a
+"temporary" variable is declared and used inplace of the dummy
+argument, disconnecting the implementation from the user
+interface. Furthermore, this requires at least 3 lines of code
+(declaration of c_tmp, initialization of c_tmp, and testing for the
+presence of c) to handle the scenario of a missing optional argument.
+
+The situation for other intents is different. For INTENT(OUT) one
+might like to have a default value, but there is no need for a
+temporary variable to hold it. The example subroutine shows a typical
+usage:
+
+    subroutine do_stuff( ..., status )
+	...
+	integer, intent(out), optional :: status
+	...
+	if (present(status)) status = 0 ! the desired default
+	...
+	if (bad_stuff_happened) then
+	    if (present(status)) then
+	        status = 1 ! Flag that bad stuff happened
+		return
+	    else
+	        error stop 'Bad Stuff Happened in DO_STUFF'
+            end if
+	end if
+	...
+    end subroutine do_stuff
+
+This differs from the INTENT(IN), and VALUE, case: first, because one
+assigns the default value with INTENT(OUT) when the actual argument
+is present, not when it is absent; and second, because the assignment
+of a default involves only one statement rather than the three
+statements for the helper variable of INTENT(IN), and VALUE. For 
+INTENT(INOUT), one typically makes the argument optional to avoid the
+computational expense of calculating the out result, but having a
+default value makes it awkward to determine the presence of an
+optional argument, so the primary purpose of having it be optional
+is defeated.
+
+This proposal addresses the issue for INTENT(IN), and VALUE that
+checking for the presence of the optional dummy argument and using
+a helper variable is cumbersome and error-prone. We will not address
+default values for INTENT(OUT) OR INTENT(INOUT) arguments. The
+primary benefit of this feature is the  reduction in source code
+needed to handle optional arguments. This benefit is greatest in
+scenarios where the optional argument is used in many places in the
+procedure, and a helper variable is used for its value
+instead. Reduction in needed source code would result in more readable
+and more correct programs.
+
+
+3. Prior art
+
+We are not aware of any Fortran compiler that has implemented default
+arguments. However it is a very common feature of other languages. Of
+interpreted languages widely used in the scientific community:
+Python, IDL, R, and Matlab all have default arguments. Of compiled
+languages C++ and Ada may be the best known with default arguments. Of
+these languages, Ada may be the most pertinent as it has INTENT
+arguments similar to Fortran's. Ada has only defined default arguments
+useful for INTENT(IN), and has not defined it for INTENT(OUT) or
+INTENT(INOUT).
+
+While the majority of default argument usages in the code we have
+seen use the equivalent of constant expressions for the default
+assignment, all of the above languages with default arguments allow
+some form of non-constant expressions for default arguments. For the
+interpreted languages it is up to the user to ensure that the
+expression is well defined. C++[1] and Ada[2] restrict the usage to a
+subset of the expressions that are well defined in this context.
+
+All of the languages we are aware of, place the default assignment in
+the equivalent of the FUNCTION or SUBROUTINE statement and not the
+specification part. However the languages do not have an equivalent
+to Fortran's specification part.
+
+
+4. Requirements
+
+The language should provide a way for programmers to specify default
+arguments for INTENT(IN), and VALUE arguments, without affecting the
+use of the PRESENT function in unmodified existing code, and
+providing PRESENT with a simple definition. Ideally the use of
+default arguments will be as flexible as possible.
+
+
+5. Proposed solution
+
+At first glance it would appear that the problem could be solved by
+allowing an optional argument to be initialized in a type declaration
+statement using a constant expression. The optional argument would
+then only be initialized if the corresponding actual argument is not
+provided by the caller. Example:
+
+    real function quadratic(x, a, b, c)
+      ! returns a + b * x + c * x**2 if c is present 
+      ! and a + b * x otherwise
+      real, intent(in) :: x, a, b
+      real, intent(in), optional :: c = 0
+      quadratic = a + b * x + c * x**2
+    end function quadratic
+
+In this example, we use the assignment operator (=) to specify the
+default value of the optional dummy argument.
+
+However this approach has several problems. The definition of the
+PRESENT function, for optional arguments with default values, becomes
+awkward. The initialization with a constant expression is too
+limiting. Finally it may be more "natural" to define the default in
+the subprogram statement rather than in the type declaration
+statement.
+
+If a default value is provided for an argument, then the PRESENT
+function is meaningless for such an argument. With a default
+value the argument will basically always be present. This requires
+an awkward definition for the PRESENT function. We believe the
+best way to deal with this is to define a new keyword, DEFAULT is the
+most obvious, that indicates an optional argument with a default
+value, and not allow its use with the OPTIONAL attribute. The example
+then becomes:
+
+    real function quadratic(x, a, b, c)
+      ! returns a + b * x + c * x**2 if c is present 
+      ! and a + b * x otherwise
+      real, intent(in) :: x, a, b
+      real, intent(in), default :: c = 0
+      quadratic = a + b * x + c * x**2
+    end function quadratic
+
+Then the use of PRESENT remains restricted to any argument with the
+OPTIONAL attribute.
+
+The majority of uses of the default argument can be met by allowing
+assignment of any constant expression, as defined in Section 10.1.12
+of 18-007r1, but it would be useful to allow more general assignments
+for the default assignment expression. The restricted expression used
+to define integer specification expressions in Section 10.1.11, could
+be generalized to non-integer expressions, and appears to be safe
+to use for default expressions. However this complicates the
+definition of the type declaration statement, as there would need to
+be a distinction between contexts where only constant expressions are
+allowed in initializations, and default assignments, where restricted
+expressions are allowed.
+
+One way to distinguish restricted expressions for default
+initialization from constant initializations would be to have the
+default assignment be in the FUNCTION or SUBROUTINE statement, and not
+the type declaration statement. The FUNCTION and SUBROUTINE statement
+are where those used to default arguments in other languages would
+expect to place the default assignment. If this option is chosen then
+the example subprogram becomes:
+
+    real function quadratic(x, a, b, c=0)
+      ! returns a + b * x + c * x**2 if c is present 
+      ! and a + b * x otherwise
+      real, intent(in) :: x, a, b
+      real, intent(in), default :: c
+      quadratic = a + b * x + c * x**2
+    end function quadratic
+
+This assignment location avoids using the same syntax as is used to
+implicitly set the SAVE attribute for variables in procedures.
+
+Note that if the DEFAULT keyword is added to the language, then to be
+consistent with the rest of the language a DEFAULT statement would
+also be added to the language. This, to be consistent with the
+PARAMETER statement, would likely allow assignment in the form:
+
+    DEFAULT (c=0)
+
+
+6. Related Behavior
+
+6.1 The PRESENT function
+
+With default arguments required to have the DEFAULT attribute and
+forbidden to have the OPTIONAL attribute, the definition of the
+PRESENT function should be changed from "A shall be the name of an
+optional dummy argument..." to "A shall be the name of a dummy
+argument with the OPTIONAL attribute...", and all current uses of the
+PRESENT function remain standard conforming with their same
+interpretation. 
+
+6.2 Arrays
+
+Default values for array dummy arguments present complications. The
+assignment must involve compatible sizes and shapes. In particular a
+scalar assignment to an assumed shape or size array is undefined. For
+such arrays the default assignment must be an array expression of
+known shape, e.g. the equivalent of the statement:
+
+    real, intent(in), default :: a(:) = 0
+
+is not well defined and should be illegal, but the equivalent of the
+statements
+
+    real, intent(in), default :: a(:) = [ 0., 0. ]
+
+or
+
+    real, intent(in), default:: a(:,:) = reshape([ 1., 0., 0., 1. ],&
+                                                 [ 2, 2 ])
+
+or
+
+    subroutine example( n, ..., a=0.)
+      integer, intent(in) :: n
+      ...
+      real, intent(in), default :: a(n)
+      ...
+    end subroutine example
+
+or
+
+    subroutine example( b, ..., a=b)
+        real, intent(in) :: b(:)
+	...
+	real, intent(in), default :: a(:)
+	...
+    end subroutine example
+
+should be legal. These size and shape compatibilities appear to be
+guaranteed by the constraints on intrinsic assignment, 10.2.1.2, their
+interpretation, 10.2.1.3, and the constraints on defined assignment,
+10.2.1.4, and their interpretation, 10.2.1.5. All of the examples we
+have thought of appear to be covered by these constraints.
+
+6.3 Pointers
+
+Pointer arguments with INTENT(IN) or VALUE have limited uses, but for
+completeness we will also consider them. Data pointers pose the same
+problems as arrays, with the additional complication that they do not
+have the equivalent of a restricted expression defined in the
+standard. The pointer must be consistent in its shape with its target,
+but this appears to be guaranteed by the constraints on the
+pointer-assignment-stmt, 10.2.2.2, and its interpretation,
+10.2.2.3. The main non-array constraints that they must satisfy is
+that their target must not be an INTENT(OUT) or OPTIONAL argument, or
+be an internal variable of a procedure. We suggest a restricted
+data-target definition of the form: 
+
+    A restricted data-target is
+    (1) an object-designator with a base object that is a dummy
+        argument with the TARGET or POINTER attribute that has neither
+        the OPTIONAL or INTENT(OUT) attribute,
+    (2) an object-designator with the TARGET or POINTER attribute with
+        a base object that is in a common block,
+    (3) an object-designator with the TARGET or POINTER attribute with
+        a base object that is made accessible by use or host
+        association, or
+    (4) a reference to the intrinsic function NULL().
+
+Default procedure pointers must have a target that satisfies the
+constraints of 10.2.2.2 and their interpretation, 10.2.2.4.
+
+6.4 TARGET attribute
+
+If the argument with the DEFAULT attribute also has the TARGET
+attribute, then the object associated with the argument, whether or
+not it is the default, may be the target of a pointer assignment. If
+it is INTENT(IN), it should not be modified through modification of
+the pointer's target while associated with the pointer.
+
+6.4 ASYNCHRONOUS and VOLATILE attributes
+
+It appears that restricted expressions allow expressions with object
+designators with the ASYNCHRONOUS or VOLATILE attributes. Arguments
+with the default assignment with object designators with those
+attributes may also need those attributes.
+
+6.5 Interaction with restricted expressions
+
+In addition to potentially using restricted expressions, default
+arguments should be either allowed or disallowed in restricted
+expressions. They would be allowed in restricted expressions with the
+current definition of restricted expressions. We believe it would be
+safe to allow them in restricted expressions.
+
+6.6 No intent arguments
+
+Optional dummy arguments need not have the INTENT or VALUE attribute
+specified. Such arguments can behave like any combination of
+INTENT(IN), INTENT(OUT), or INTENT(INOUT). It can therefore sometimes
+be useful for them to have default values, but usually it is not
+useful. If the decision is made to allow default values for arguments
+of no intent, then the constraint on the DEFAULT attribute should be
+that entities with that attribute must not have the INTENT(INOUT) or
+INTENT(OUT) attribute. If the decision is made to not allow default
+values for arguments of no intent, then the constraint on the
+DEFAULT attribute should be that entities with that attribute must
+have the INTENT(IN) or VALUE attribute.
+
+
+7. Backward compatibility
+
+No existing compiler supports a DEFAULT attribute, or default
+assignment to an optional argument. Further the proposed syntax
+doesn't change the semantics of PRESENT. As a result, this addition to
+the language should not break any existing Fortran program, and should
+thus preserve Fortran's backward compatibility.
+
+
+8. Proposed Implementation
+
+The caller should provide the default value, rather doing the
+equivalent of the test and branch in the callee. This would make the
+implementation slightly more efficient than the current programer's
+setting the dummy variable's value through a hardcoded test and
+branch.
+
+
+9. Further discussion
+
+Online discussion that led to this proposal can be found at
+https://github.com/j3-fortran/fortran_proposals/issue/22.
+
+[1] A set of C++ examples
+https://en.cppreference.com/w/cpp/language/default_arguments
+[2] A couple of Ada examples
+https://perso.telecom-paristech.fr/pautet/Ada95/chap18.htm
