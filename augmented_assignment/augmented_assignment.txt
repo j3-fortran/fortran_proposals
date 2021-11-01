@@ -1,0 +1,45 @@
+To: J3                                                     J3/XX-XXX
+From: Leonard Reuter 
+Subject: Augmented Assignment Operators
+Date: 2021-November-1
+
+Proposal for Fortran Standard: 202y
+
+
+1. Introduction
+
+The proposal is to introduce augmented assignment operators. Example:
+
+    i +.= 1
+
+Here, `i` is incremented by 1.
+
+In the same manner, the operators `-.=`, `*.=`, `/.=`, `**.=` are proposed
+to be defined as well as the operator `.op.=` for a user-defined operator
+`.op.`.
+
+This proposal originated at the J3 GitHub repository at [1].
+
+2. Motivation
+
+Augmented assignment operators improve the readability of code in making
+immediately clear to the reader, that the new value of the variable
+depends on the old one.
+
+Furthermore, if a function is called during the evaluation of the
+left-hand side, the augmented assignment operators show, that this
+function is only called once:
+
+    real :: A(n)
+    ...
+    A(get_index()) +.= x
+
+If the above example were to be written without augmented assigment, how
+often `get_index` is called would depend on the compiler.
+
+The dot is added between the operator and `=`, since `/=` is already in
+use.
+
+3. References
+
+[1] https://github.com/j3-fortran/fortran_proposals/issues/113
