@@ -1,0 +1,287 @@
+To: J3                                                     J3/XX-XXX
+From: Peter Hill
+Subject: Scoped Enumerators
+Date: 2022-05-13
+#Reference:
+
+Overview
+========
+
+The authors _strongly_ believe that the current proposal for typed
+enumerators, as described in J3/21-120 and subsequent revisions, be
+amended so that enumerator names are class two names. That is,
+enumerator names must be local to each `enumeration type` and not in
+the surrounding scope. Some suggestions for syntax are made.
+
+The rationale for making enumerator names class one (defined in the
+enclosing scope) is that this is "simpler". This is unfortunately too
+simple, and, unlike many of the other proposed and withdrawn features,
+if this becomes standardised it will be irrevocable. Extensible enums,
+arbitrary enumerator values, and underlying types could all be added
+to future standard versions, but unscoped enums are forever. Code
+written using unscoped typed enums would not be compatible with a
+future standard that introduced scoped typed enums (or worse, a third
+type of enum).
+
+Requiring enumerator names to be class two (defined local to the
+type), and the values accessed through some sort of namespace (for
+example, `<type> % <value>`), will provide benefits consistent with
+typed enums while still keeping open the possibility of a mechanism to
+"hoist" names into the enclosing scope (for example, see the C++
+"Using enum" paper P1099R5 which introduced this mechanism into C++20:
+https://atomgalaxy.github.io/using-enum/using-enum.html).
+
+As an additional benefit, introducing a syntax for
+type-namespace-access (for example the familiar component access `%`)
+leaves open the future possibility of a syntax for accessing
+`parameter` components or `nopass` type-bound procedures without the
+need for an instance of the type (usually called "static access" or
+similar in other programming languages).
+
+The rest of this paper will briefly review enums in other languages,
+the history of the typed enum proposal in Fortran, and the
+justification for changing to class two names.
+
+A brief review of `enum` in other programming languages
+=======================================================
+
+Enumerated types appear in many high-level programming languages, from
+Ada to Python. Of the most popular languages with a built-in `enum`
+facility, the majority introduce enumerator names within a unique
+scope for each enumeration type, so that referring to a particular
+enumerator value requires a namespace or class prefix.
+
+Languages which use global or enclosing scope:
+
+- Ada
+- C
+- Go
+- Pascal (some implementations enable local scopes instead)
+- Raku
+
+
+Languages which use local or own scope:
+
+- C#
+- C++ (with `enum class` in C++11)
+- D
+- Dart
+- Java
+- PHP
+- Python
+- Rust
+- Swift
+- Typescript
+
+
+Of the two above lists, it is notable that all of the languages that
+use a local scope are strongly typed, with the exception of PHP. While
+Ada, Go, and Pascal are also strongly typed, Ada provides a facility
+for resolving conflicting enumerator names, and the Free Pascal
+implementation supports scoped enums.
+
+Some of these languages go even further and make their enums be
+fully-fledged sum or algebraic types, where each enumerator may have a
+different type.
+
+Other languages, such as Javascript and CommonLisp, do not have a
+language-level enum but have other mechanisms for emulating them.
+
+Modern strongly typed languages that have enums have almost uniformly
+made them scoped enums, where enumerators must be accessed through the
+enum type. Some languages also provide mechanisms for abbreviated
+access: C++ has `using enum`, Swift allows dropping the type name in
+certain contexts where it is unambiguous.
+
+
+History and current status of scoped enumerations in Fortran
+============================================================
+
+`enum` was introduced in Fortran 2003 to enable interoperability
+between constants defined in Fortran and C. Similar to `enum` in C,
+the enumerators in Fortran's `enum` are defined in the enclosing
+scope.
+
+The following proposals (and their revisions) discuss enhanced `enum`s
+in some fashion:
+
+- 18-114: Enumeration types
+- 18-256: enums
+- 19-216: Enumeration types [US21]
+- 19-230: Formal Requirements for True Enumeration types
+- 19-231: Formal Requirements for True Enumeration types
+- 19-232: Formal Syntax for True Enumeration types
+- 19-239: Consider extended scope for enumeration types?
+- 19-249: Syntax for True Enumeration types
+- 21-110: Enumeration types discussion specs and syntax
+- 21-111: US-21 Typed enumerators
+- 21-120: Simpler enumeration types specs and syntax
+- 21-121: Enum types edits
+- 21-132: Simpler enumeration types, edits
+- 21-179: Enumerator accessibility and constructor
+- 21-182: US 21 Enumeration type.
+- 21-183: US 21 Enum type name.
+- 21-186: <enumeration-type-def> is not connected to high-level
+  syntax
+- 21-189: Interoperable enum types, additional specs/syntax/edits
+- 21-190: Editorial/technical fixes, mostly for enum types
+- 22-114: First Enumerator in an enumeration type should allow a
+  value.
+- 22-122: Enumeration type constructor
+
+The first paper, 18-114, suggests that enumerator names are introduced
+into the enclosing scope but provides a mechanism for resolving conflicts:
+
+> Example:
+>
+>   ENUMERATION, ORDERED :: COLORS
+>     ENUMERATOR :: WHITE, BROWN, GREEN
+>   END ENUMERATION COLORS
+>
+>   ENUMERATION, ORDERED :: NAMES
+>     ENUMERATOR :: GREEN, BROWN, WHITE
+>   END ENUMERATION NAMES
+>
+>   NAMES(GREEN) is a value of type NAMES.  COLORS(GREEN) is a value of
+>   type COLORS.  Their numeric representations are different.  GREEN
+>   alone is prohibited because its type is ambiguous.
+
+19-230r2 has a looser requirement:
+
+> F.  The name of an enumerator must be unique within the enumeration type,
+>     but may be the same as the name of an enumerator of another type.
+>     Some mechanism shall allow access to both enumerators from a
+>     scope.
+
+19-231r2 goes further and recommends scoped enumerators:
+
+> 13. [F]   An enumerator is a constant expression.
+>
+> 14. [F]   Accessing the name of an enumeration type by use association does
+>           not make any of its enumerator names available (because
+>           enumerator names are not class (1) names).
+>
+> 15. [F]   The syntax for denoting an enumerator shall involve the
+>           enumeration type name and no other class (1) name. If the
+>           enumeration type name is inaccessible, this syntax shall not
+>           be available.
+
+19-232 suggests some syntax:
+
+> (e) Syntax for "qualified denotation", i.e. specifying an enumerator within
+>     a specific named enumeration type. As the enumerators live inside the
+>     type, just use the type name followed by the type-access token %
+>     and the enumerator name, e.g.
+>         MY_ENUM % HIDDEN_ENUMERATOR_NAME
+>
+> ALTERNATIVE SYNTAX:
+> (e1) Use a new token instead of reusing %; e.g.
+>         MY_ENUM ` HIDDEN_ENUMERATOR_NAME
+>
+> (e2) Use the type constructor with the inaccessible enumerator name as its
+>      argument, e.g.
+>         MY_ENUM ( HIDDEN_ENUMERATOR_NAME )
+>
+> COMMENT: e2 syntax is ambiguous if MY_ENUM is to be treated as a generic
+>          function, as we do with derived types since Fortran 2003. Even if
+>          there is no ambiguity in a particular example, it promulgates
+>          confusion between local entity names and names inside a type.
+
+The withdrawn paper 19-249 notes that, in regard to the `MY_ENUM %
+HIDDEN_ENUMERATOR_NAME` syntax:
+
+> {We do not ever use "<type-name> %" for anything.}
+
+Then in 21-120r3, the scope requirement is removed:
+
+> (g) Enumerators come without any enhanced namespace management, i.e. their
+>    names are normal class one names.
+
+with the following comments:
+
+> (13) I note that enumerators as class one names is not only simpler
+>      but what WG5 asked us to do in the first place.
+> (13) Fortran already has basic namespace management (USE ONLY and
+>      renaming). Some ideas for extensions to that have already been
+>      floated (for a future revision, possibly F202y); we should not
+>      preempt that with a complicated feature here.
+
+21-179r2 has proposed specification wording for name conflicts:
+
+> [529:20 19.2.1p3 Classes of local identifiers] After (7.5.10) insert
+> "and enumerators of different enumeration types may have the same
+> name.  If enumerators of different enumeration types that have the
+> same name are accessible in a scoping unit, they shall not appear
+> within that scoping unit except as the <enum-expr> in an
+> <enumeration-constructor>."
+
+This is the current state of scope of enumerator names.
+
+Why enumerator names must be class two in F202X
+===============================================
+
+Consider the following example:
+
+```
+module integration
+  enumeration type :: integration_result_t
+    enumerator :: ok, unconverged, too_many_iterations
+  end enumeration type integration_result_t
+
+  enumeration type :: io_result_t
+    enumerator :: ok, no_directory, wrong_permission
+  end enumeration type io_result_t
+
+contains
+  subroutine write_integration(array)
+    real, intent(inout), dimension(:) :: array
+    type(integration_result_t) :: integration_result
+    type(io_result_t) :: io_result
+
+    integration_result = integrate(array)
+    ! Not possible with current specification
+    if (integration_result /= ok) error stop "Bad integration"
+
+    io_result = write_array(array)
+    ! Not possible with current specification
+    if (io_result /= ok) error stop "Couldn't write file"
+  end subroutine write_integration
+
+  :
+end module integration
+```
+
+With the current proposed specification, these two enums cannot be
+used within the module that defines them. The second comment (13) on
+21-120r3 says that `USE ONLY` and renaming are sufficient, which
+suggests a workaround would be to put the definitions of
+`integration_result_t` and `io_result_t` in separate modules to each
+other.
+
+This, however, has at least two downsides: enums would have to be
+physically separated from where they logically belong; renaming would
+have to be done in every scope where they are used. Both impose
+burdens on the code maintainers and readers, complicating code
+structure and allowing for inconsistent renaming in different
+locations.
+
+Another workaround would be for the enumerators to have globally
+unique names, and this is indeed the advice for C developers. This
+again imposes additional burdens on the maintainers to ensure names
+really are unique.
+
+A further downside of making enumerator names be class one is that
+using them in another module would require naming each one in a `USE
+ONLY` statement. Using the enums defined in the above example, we
+would have:
+
+```
+module time_solver
+  use integration, only : integration_result_t, ok, unconverged, &
+                          too_many_iterations
+  :
+```
+
+while class two names, only the enum type itself would need to be
+imported and its values would be accessible through the enum type
+name.
