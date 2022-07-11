@@ -1,7 +1,7 @@
 To: J3                                                     J3/XX-XXX
 From: Leonard Reuter 
 Subject: Augmented Assignment Operators
-Date: 2021-November-1
+Date: 2022-July-11
 
 Proposal for Fortran Standard: 202y
 
@@ -18,7 +18,11 @@ In the same manner, the operators `-.=`, `*.=`, `/.=`, `**.=` are proposed
 to be defined as well as the operator `.op.=` for a user-defined operator
 `.op.`.
 
-This proposal originated at the J3 GitHub repository at [1].
+The intrinsic interpretation of e.g. '+.=' can not be overridden but should
+always call 'operator(+)' and 'assignment(=)'.
+
+This proposal originated at the J3 GitHub repository at [1]. The proposed
+syntax originated from a comment by Reinhold Bader in the J3 mail list [2].
 
 2. Motivation
 
@@ -38,8 +42,51 @@ If the above example were to be written without augmented assigment, how
 often `get_index` is called would depend on the compiler.
 
 The dot is added between the operator and `=`, since `/=` is already in
-use.
+use as an alias to the '.ne.' relational operator.
 
-3. References
+3. Discussing Objections
+
+3.1. Conflict with '/=' [4]
+
+This is circumvented by introducing the dot, i.e. '/.='
+
+3.2. The compiler can optimize 'a = a + b*c' better than 'a +.= b*c' [5]
+
+"What happens to 'a += b * c' is often optimized to an FMA if the compiler
+flags or defaults allow ISO/IEEE violation" [6].
+
+3.3. Instead of augmented assignment, an additional symbol can be
+     introduced to replace the LHS [7,8]
+
+If this symbol were '.LHS.', it would allow for further simplification:
+
+    real :: a
+    ...
+    a = LOG(a)
+
+could be replaced with
+
+    real :: a
+    ...
+    a = LOG(.LHS.)
+
+While discussing this may prove worthwhile, it lacks the intuitivity of
+simple augmented assignment and should be discussed independent of it.
+
+3.4 Cognitive load [9]
+
+Most programmers are used to augmented assignment from other languages,
+it is more cognitive load to remember, that this is not possible in 
+Fortran than to actually use it.
+
+4. References
 
 [1] https://github.com/j3-fortran/fortran_proposals/issues/113
+[2] https://mailman.j3-fortran.org/pipermail/j3/2021-August/013261.html
+[3] https://mailman.j3-fortran.org/pipermail/j3/2021-August/013251.html
+[4] https://mailman.j3-fortran.org/pipermail/j3/2021-August/013254.html
+[5] https://mailman.j3-fortran.org/pipermail/j3/2021-August/013262.html
+[6] https://mailman.j3-fortran.org/pipermail/j3/2021-August/013279.html
+[7] https://mailman.j3-fortran.org/pipermail/j3/2021-August/013287.html
+[8] https://wg5-fortran.org/N1951-N2000/N1972.pdf
+[9] https://mailman.j3-fortran.org/pipermail/j3/2021-August/013277.html
