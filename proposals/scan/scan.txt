@@ -1,0 +1,364 @@
+To: J3                                                     J3/##-###
+From: Brad Richardson
+Subject: SCAN_INCLUSIVE and SCAN_EXCLUSIVE
+Date: 06-Jan-2023
+
+#Reference:
+
+Introduction
+============
+
+SCAN is a common operation closely related to REDUCE. Both SCAN and
+REDUCE apply a binary operation to a sequence. SCAN returns the
+sequence of results of the operations, where REDUCE returns only the
+final result. Whether a SCAN is INCLUSIVE or EXCLUSIVE determines
+whether an element in the resulting sequence includes the result of
+the binary operation with the corresponding element in the input
+sequence or not, respectively.
+
+Typical applications that make us of scan operations include
+design of binary adders, polynomial interpolation, simulation of
+parallel algorithms that assume the ability for multiple processors
+to access the same memory cell at the same time, on parallel machines
+that forbid simultaneous access. Additional applications can be found
+on the Wikipedia page for "Prefix sum":
+https://en.wikipedia.org/wiki/Prefix_sum
+
+Proposal
+========
+
+Provide SCAN_INCLUSIVE and SCAN_EXCLUSIVE intrinsic functions and
+CO_SCAN_INCLUSIVE and CO_SCAN_EXCLUSIVE collective subroutines. These
+functions and subroutines shall implement inclusive and exclusive
+scan operations analogous to the REDUCE function and CO_REDUCE
+subroutine.
+
+Descriptions
+============
+
+SCAN_INCLUSIVE(ARRAY, OPERATION[, MASK, ORDERED]) or
+SCAN_INCLUSIVE(ARRAY, OPERATION, DIM[, ORDERED])
+
+Description. Generalized inclusive scan of an array.
+
+Class. Transformational function
+
+Arguments.
+ARRAY     shall be an array of any type.
+OPERATION shall be a pure function with exactly two arguments; each
+          argument shall be a scalar, nonallocatable, nonpointer,
+          nonpolymorphic, nonoptional dummy data object with the same
+          declared type and type parameters as ARRAY. If one argument
+          has the ASYNCHRONOUS, TARGET, or VALUE attribute, the other
+          shall have that attribute. Its result shall be a
+          nonpolymorphic scalar and have the same declared type and
+          type parameters as ARRAY. OPERATION should implement a
+          mathematically associative operation. It need not be
+          commutative.
+DIM       shall be an integer scalar with a value in the range
+          1 <= DIM <= n, where n is the rank of ARRAY.
+MASK (optional) shall be of type logical and shall be conformable
+          with ARRAY.
+ORDERED (optional) shall be a logical scalar.
+
+Result Characteristics. The result is of the same declared type and
+type parameters as ARRAY. If DIM is present, it has the same rank and
+shape as ARRAY, otherwise it has rank 1. If MASK is present and an
+array, the result has the size of the number of .true. elements in
+MASK. If Mask is present and a scalar with the value .false., the
+result has size 0. If MASK is present and a scalar with the value
+.true., or is not present, the result has size equal to the size of
+ARRAY.
+
+Result Value.
+Case (i):   The result of SCAN_INCLUSIVE(ARRAY, OPERATION[, ORDERED])
+            has values obtained by applying OPERATION to the previous
+            element in the result and the corresponding element in
+            ARRAY, taken in array element order. The first element
+            has the value of the first element in ARRAY. If ORDERED
+            is present with the value true, the values of the
+            elements of the result are calculated in array element
+            order.
+Case (ii):  The result of
+            SCAN_INCLUSIVE(ARRAY, OPERATION, MASK = MASK[, ORDERED])
+            is as for Case (i) except that the sequence is only for
+            those elements of ARRAY for which the corresponding
+            elements of MASK are true. I.e.
+                  SCAN_INCLUSIVE(ARRAY,
+                                 OPERATION,
+                                 MASK = MASK[,
+                                 ORDERED]) ==
+                  SCAN_INCLUSIVE(PACK(ARRAY, MASK=MASK),
+                                 OPERATION[,
+                                 ORDERED]).
+Case (iii): If ARRAY has rank one,
+            SCAN_INCLUSIVE(ARRAY, OPERATION, DIM = DIM[, ORDERED])
+            has a value equal to that of
+            SCAN_INCLUSIVE(ARRAY, OPERATION[, ORDERED]). Otherwise,
+            the values of the section
+            (s1, s2, ..., sDIM-1, :, sDIM+1, ..., sn) of
+            SCAN_INCLUSIVE(ARRAY, OPERATION, DIM = DIM[, ORDERED])
+            are equal to
+                  SCAN_INCLUSIVE(ARRAY(s1,
+                                       s2,
+                                       ...,
+                                       sDIM-1,
+                                       :,
+                                       sDIM+1,
+                                       ...,
+                                       sn),
+                                 OPERATION[,
+                                 ORDERED])
+
+Examples. The following examples all use the function MY_MULT, which
+returns the product of its two integer arguments.
+Case (i):   The value of SCAN_INCLUSIVE([1, 2, 3], MY_MULT)
+            is [1, 2, 6].
+Case (ii):  If B is the array [1, 2, 3, 4], the value of
+            SCAN_INCLUSIVE(B, MY_MULT, MASK = mod(B, 2)==0) is
+            [2, 8].
+                              | 1 2 3 |
+Case (iii): If C is the array | 4 5 6 |,
+                              | 7 8 9 |
+                                                 |  1   2   3  |
+            SCAN_INCLUSIVE(C, MY_MULT, DIM=1) is |  4   10  18 |,
+                                                 |  28  80 162 |
+                                                     | 1 2   6  |
+            and SCAN_INCLUSIVE(C, MY_MULT, DIM=2) is | 4 20 120 |.
+                                                     | 7 56 504 |
+
+
+SCAN_EXCLUSIVE(ARRAY, OPERATION, IDENTITY[, MASK, ORDERED]) or
+SCAN_EXCLUSIVE(ARRAY, OPERATION, IDENTITY, DIM[, ORDERED])
+
+Description. Generalized exclusive scan of an array.
+
+Class. Transformational function
+
+Arguments.
+ARRAY     shall be an array of any type.
+OPERATION shall be a pure function with exactly two arguments; each
+          argument shall be a scalar, nonallocatable, nonpointer,
+          nonpolymorphic, nonoptional dummy data object with the same
+          declared type and type parameters as ARRAY. If one argument
+          has the ASYNCHRONOUS, TARGET, or VALUE attribute, the other
+          shall have that attribute. Its result shall be a
+          nonpolymorphic scalar and have the same declared type and
+          type parameters as ARRAY. OPERATION should implement a
+          mathematically associative operation. It need not be
+          commutative.
+IDENTITY  shall be a scalar with the same declared type and type
+          parameters as ARRAY.
+DIM       shall be an integer scalar with a value in the range
+          1 <= DIM <= n, where n is the rank of ARRAY
+MASK (optional) shall be of type logical and shall be conformable
+          with ARRAY
+ORDERED (optional) shall be a logical scalar.
+
+Result Characteristics. The result is of the same declared type and
+type parameters as ARRAY. If DIM is present, it has the same rank and
+shape as ARRAY, otherwise it has rank 1. If MASK is present and an
+array, the result has the size of the number of .true. elements in
+MASK. If Mask is present and a scalar with the value .false., the
+result has size 0. If MASK is present and a scalar with the value
+.true., or is not present, the result has size equal to the size of
+ARRAY.
+
+Result Value.
+Case (i):   The result of
+            SCAN_EXCLUSIVE(ARRAY, OPERATION, IDENTITY[, ORDERED]) has
+            values obtained by applying OPERATION to the previous
+            element in the result and the corresponding previous
+            element in ARRAY, taken in array element order. The first
+            element has the value IDENTITY. If ORDERED is present with
+            the value true, the values of the elements of the result
+            are calculated in array element order.
+Case (ii):  The result of
+            SCAN_EXCLUSIVE(ARRAY, OPERATION, IDENTITY, MASK = MASK[,
+            ORDERED]) is as for Case (i) except that the sequence is
+            only for those elements of ARRAY for which the
+            corresponding elements of MASK are true. I.e.
+                  SCAN_EXCLUSIVE(ARRAY,
+                                 OPERATION,
+                                 IDENTITY,
+                                 MASK = MASK[,
+                                 ORDERED]) ==
+                  SCAN_EXCLUSIVE(PACK(ARRAY, MASK=MASK),
+                                 OPERATION,
+                                 IDENTITY[,
+                                 ORDERED]).
+Case (iii): If ARRAY has rank one,
+                  SCAN_EXCLUSIVE(ARRAY,
+                                 OPERATION,
+                                 IDENTITY,
+                                 DIM = DIM[,
+                                 ORDERED])
+            has a value equal to that of
+                  SCAN_EXCLUSIVE(ARRAY,
+                                 OPERATION,
+                                 IDENTITY[,
+                                 ORDERED]).
+            Otherwise, the values of the section
+            (s1, s2, ..., sDIM-1, :, sDIM+1, ..., sn) of
+                  SCAN_EXCLUSIVE(ARRAY,
+                                 OPERATION,
+                                 IDENTITY,
+                                 DIM = DIM[,
+                                 ORDERED])
+            are equal to
+                  SCAN_EXCLUSIVE(ARRAY(s1,
+                                       s2,
+                                       ...,
+                                       sDIM-1,
+                                       :,
+                                       sDIM+1,
+                                       ...,
+                                       sn),
+                                 OPERATION,
+                                 IDENTITY[,
+                                 ORDERED])
+
+Examples. The following examples all use the function MY_MULT, which
+returns the product of its two integer arguments.
+Case (i):   The value of SCAN_EXCLUSIVE([1, 2, 3], MY_MULT, 1) is
+            [1, 1, 2].
+Case (ii):  If B is the array [1, 2, 3, 4], the value of
+            SCAN_EXCLUSIVE(B, MY_MULT, 1, MASK = mod(B, 2)==0) is
+            [1, 2].
+                              | 1 2 3 |
+Case (iii): If C is the array | 4 5 6 |,
+                              | 7 8 9 |
+                                                    | 1  1  1 |
+            SCAN_EXCLUSIVE(C, MY_MULT, 1, DIM=1) is | 1  2  3 |,
+                                                    | 4 10 18 |
+                                                         | 1 1 2  |
+             and SCAN_EXCLUSIVE(C, MY_MULT, 1, DIM=2) is | 1 4 20 |.
+                                                         | 1 7 56 |
+
+NOTE X
+If OPERATION is not computationally associative, SCAN_INCLUSIVE and
+SCAN_EXCLUSIVE without ORDERED=.TRUE. with the same argument values
+might not always produce the same result, as the processor can apply
+the associative law to the evaluation.
+
+
+CO_SCAN_INCLUSIVE(A, OPERATION[, STAT, ERRMSG])
+
+Description. Generalized inclusive scan across images.
+
+Class. Collective subroutine.
+
+Arguments.
+A         shall not be polymorphic. It shall have the same shape,
+          type, and type parameter values in corresponding
+          references. It shall not be a coindexed object. It is an
+          INTENT(INOUT) argument. If A is scalar, the computed value
+          is the result of the inclusive scan operation of applying
+          OPERATION to the values of A in all corresponding
+          references. If A is an array, each element of the computed
+          value is equal to the result of the scan operation of
+          applying OPERATION to corresponding elements of A in all
+          corresponding references.
+
+          The value assigned to an element of A is the element of the
+          computed result corresponding to the image number of the
+          executing image.
+OPERATION shall be a pure function with exactly two arguments; the
+          result and each argument shall be a scalar, nonallocatable,
+          nonpointer, nonpolymorphic data object with the same type
+          and type parameters as A. The arguments shall not be
+          optional. If one argument has the ASYNCHRONOUS, TARGET, or
+          VALUE attribute, the other shall have that attribute.
+          OPERATION shall implement a mathematically associative
+          operation. OPERATION shall be the same function on all
+          images in the corresponding references.
+
+          The computed values of an inclusive scan operation over a
+          set of values are obtained by applying OPERATION to the
+          previous element in the result and the value from the
+          corresponding image. The value on image 1 is unchanged.
+STAT (optional) shall be a noncoindexed integer scalar with a decimal
+          exponent range of at least four. It is an INTENT(OUT)
+          argument.
+ERRMSG (optional) shall be a noncoindexed default scalar. It is an
+          INTENT(INOUT) argument.
+
+The semantics of STAT and ERRMSG are described in 16.6.
+
+Example. If the function MY_MULT returns the product of its two
+integer arguments, the number of images in the current team is two,
+and A is the array [1, 3, 5] on image 1, and [2, 4, 6] on image 2,
+the value of A after executing the statement
+CALL CO_SCAN_INCLUSIVE(A, MY_MULT)
+is [1, 3, 5] on image 1, and [2, 12, 30] on image 2.
+
+
+CO_SCAN_EXCLUSIVE(A, OPERATION, IDENTITY[, STAT, ERRMSG])
+
+Description. Generalized exclusive scan across images.
+
+Class. Collective subroutine.
+
+Arguments.
+A         shall not be polymorphic. It shall have the same shape,
+          type, and type parameter values in corresponding references.
+          It shall not be a coindexed object. It is an INTENT(INOUT)
+          argument. If A is scalar, the computed value is the result
+          of the exclusive scan operation of applying OPERATION to the
+          values of A in all corresponding references. If A is an
+          array, each element of the computed value is equal to the
+          result of the scan operation of applying OPERATION to
+          corresponding elements of A in all corresponding references.
+
+          The value assigned to an element of A is the element of the
+          computed result corresponding to the image number of the
+          executing image.
+OPERATION shall be a pure function with exactly two arguments; the
+          result and each argument shall be a scalar, nonallocatable,
+          nonpointer, nonpolymorphic data object with the same type
+          and type parameters as A. The arguments shall not be
+          optional. If one argument has the ASYNCHRONOUS, TARGET, or
+          VALUE attribute, the other shall have that attribute.
+          OPERATION shall implement a mathematically associative
+          operation. OPERATION shall be the same function on all
+          images in the corresponding references.
+
+          The computed values of an exclusive scan operation over a
+          set of values are obtained by applying OPERATION to the
+          previous element in the result and the value from the
+          corresponding previous image. The value on image 1 is
+          IDENTITY.
+IDENTITY  shall be a scalar with the same declared type and type
+          parameters as ARRAY. It shall not be a coindexed object. Its
+          value shall be the same in all corresponding references.
+STAT (optional) shall be a noncoindexed integer scalar with a decimal
+          exponent range of at least four. It is an INTENT(OUT)
+          argument.
+ERRMSG (optional) shall be a noncoindexed default scalar. It is an
+          INTENT(INOUT) argument.
+
+The semantics of STAT and ERRMSG are described in 16.6.
+
+Example. If the function MY_MULT returns the product of its two
+integer arguments, the number of images in the current team is three,
+and A is the array [1, 3, 5] on image 1, [2, 4, 6] on image 2,
+and [7, 8, 9] on image 3, the value of A after executing the statement
+CALL CO_SCAN_EXCLUSIVE(A, MY_MULT, 1)
+is [1, 1, 1] on image 1, [1, 3, 5] on image 2,
+and [2, 12, 30] on image 3.
+
+NOTE X
+If the OPERATION function is not mathematically commutative, the result
+of calling CO_SCAN_INCLUSIVE or CO_SCAN_EXCLUSIVE can depend on the order
+of evaluations.
+
+Straw Vote
+==========
+
+How should SCAN be spelled?
+
+A. SCAN_INCLUSIVE and SCAN_EXCLUSIVE
+B. INCLUSIVE_SCAN and EXCLUSIVE_SCAN
+C. PREFIX_SUM and POSTFIX_SUM
+D. INSCAN and EXSCAN
+E. Other
