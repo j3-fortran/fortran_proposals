@@ -1,0 +1,292 @@
+To: J3                                                     J3/##-###
+From: Brad Richardson
+Subject: IEEE-754 Recommended Math Functions
+Date: 11-Jan-2023
+
+#Reference:
+
+Introduction
+============
+
+IEEE-754 provides a table of recommended operations that languages
+should provide. Specifically it states:
+
+> Language standards should define, to be implemented according to
+> this subclause, as many of the operations in Table 9.1 as is
+> appropriate to the language.
+
+In an effort to make Fortran as fully compliant with IEEE-754 as
+possible, the intrinsic functions listed in this paper are proposed as
+additions to the standard. Fortran already has many of the
+operations available, and a table is provided to illustrate which are
+already available and which are missing. Of note however:
+
+> the names of the operations in Table 9.1 do not necessarily
+> correspond to the names that any particular programming language
+> would use.
+
+Table of Operations
+===================
+
+IEEE-754 Operation | Fortran Operation | Status
+--------------------------------------------------
+exp                | EXP               | available
+expm1              | EXPM1             | proposed
+exp2               | 2**x              | available
+exp2m1             | EXP2M1            | proposed
+exp10              | 10**x             | available
+exp10m1            | EXP10M1           | proposed
+log                | LOG               | available
+log2               | LOG2              | proposed
+log10              | LOG10             | available
+logp1              | LOGP1             | proposed
+log2p1             | LOG2P1            | proposed
+log10p1            | LOG10P1           | proposed
+hypot              | HYPOT             | available
+rsqrt              | RSQRT             | proposed
+compound           | COMPOUND          | proposed
+rootn              | ROOTN             | proposed
+pown               | x**n              | available
+pow                | x**y              | available
+powr               | POWR              | proposed
+sin                | SIN               | available
+cos                | COS               | available
+tan                | TAN               | available
+sinPi              | SINPI             | available
+cosPi              | COSPI             | available
+tanPi              | TANPI             | available
+asin               | ASIN              | available
+acos               | ACOS              | available
+atan               | ATAN              | available
+atan2              | ATAN2             | available
+asinPi             | ASINPI            | available
+acosPi             | ACOSPI            | available
+atanPi             | ATANPI            | available
+atan2Pi            | ATAN2PI           | available
+sinh               | SINH              | available
+cosh               | COSH              | available
+tanh               | TANH              | available
+asinh              | ASINH             | available
+acosh              | ACOSH             | available
+atanh              | ATANH             | available
+
+Descriptions
+============
+
+EXPM1(X)
+
+Description. Exponential function of X, less 1.
+
+Class. Elemental function.
+
+Argument. X shall be of type real or complex.
+
+Result Characteristics. Same as X.
+
+Result Value. The result has a value equal to a processor dependent
+approximation to $e^{X}-1$. If X is of type complex, its imaginary
+part is regarded as a value in radians.
+
+Example. EXPM1(1.0E-11) has the value 1.0E-11 (approximately).
+
+NOTE X
+It is recommended that the result be calculated using a method that
+does not incur loss of precision by forming $e^X$ and then
+subtracting 1.
+
+EXP2M1(X)
+
+Description. 2 raised to the power X, less 1.
+
+Class. Elemental function.
+
+Argument. X shall be of type real.
+
+Result Characteristics. Same as X.
+
+Result Value. The result has a value equal to a processor dependent
+approximation to $2^{X}-1$.
+
+Example. EXP2M1(-2.0) has the value -0.75 (approximately).
+
+NOTE X
+It is recommended that the result be calculated using a method that
+does not incur loss of precision by forming $2^X$ and then
+subtracting 1.
+
+EXP10M1(X)
+
+Description. 10 raised to the power X, less 1.
+
+Class. Elemental function.
+
+Argument. X shall be of type real.
+
+Result Characteristics. Same as X.
+
+Result Value. The result has a value equal to a processor dependent
+approximation to $10^{X}-1$.
+
+Example. EXP10M1(-2.0) has the value -0.99 (approximately).
+
+NOTE X
+It is recommended that the result be calculated using a method that
+does not incur loss of precision by forming $10^X$ and then
+subtracting 1.
+
+LOG2(X)
+
+Description. Logarithm with base 2.
+
+Class. Elemental function
+
+Argument. X shall be of type real. The value of X shall be greater
+than zero.
+
+Result Characteristics. Same as X.
+
+Result Value. The result has a value equal to a processor-dependent
+approximation to $\log_2{X}$.
+
+Example. LOG2(4.0) has the value 2.0 (approximately).
+
+LOGP1(X)
+
+Description. Natural logarithm of X+1.
+
+Class. Elemental function.
+
+Argument. X shall be of type real or complex. If X is real, its value
+shall be greater than minus one. If X is complex, its value shall not
+be (-1.0, 0.0). A result of type complex is the principal value with
+imaginary part ω in the range −π ≤ ω ≤ π. If the real part of X is less
+than minus one and the imaginary part of X is zero, then the imaginary
+part of the result is approximately π if the imaginary part of X is
+positive real zero or the processor does not distinguish between
+positive and negative real zero, and approximately −π if the imaginary
+part of X is negative real zero.
+
+Result Characteristics. Same as X.
+
+Result Value. The result has a value equal to a processor dependent
+approximation to $\log_e{X+1}$.
+
+Example. LOGP1(1.0E-11) has the value 1.0E-11 (approximately).
+
+NOTE X
+It is recommended that the result be calculated using a method that
+does not incur loss of precision by forming X+1.
+
+LOG2P1(X)
+
+Description. Logarithm with base 2 of X+1.
+
+Class. Elemental function.
+
+Argument. X shall be of type real.
+
+Result Characteristics. Same as X.
+
+Result Value. The result has a value equal to a processor dependent
+approximation to $\log_2{X+1}$.
+
+Example. LOG2P1(3.0) has the value 2.0 (approximately).
+
+NOTE X
+It is recommended that the result be calculated using a method that
+does not incur loss of precision by forming X+1.
+
+LOG10P1(X)
+
+Description. Common logarithm of X+1.
+
+Class. Elemental function.
+
+Argument. X shall be of type real.
+
+Result Characteristics. Same as X.
+
+Result Value. The result has a value equal to a processor dependent
+approximation to $\log_{10}{X+1}$.
+
+Example. LOG10P1(9.0) has the value 1.0 (approximately).
+
+NOTE X
+It is recommended that the result be calculated using a method that
+does not incur loss of precision by forming X+1.
+
+RSQRT(X)
+
+Description. Reciprocal of the square root.
+
+Class. Elemental function.
+
+Argument. X shall be of type real or complex. If X is real, its value
+shall be greater than or equal to zero.
+
+Result Characteristics. Same as X
+
+Result Value. The result has a value equal to a processor-dependent
+approximation to the square root of X. A result of type complex is the
+principal value with the real part greater than or equal to zero. When
+the real part of the result is zero, the imaginary part has the same
+sign as the imaginary part of X.
+
+Example. RSQRT(4.0) has the value 0.5 (approximately).
+
+NOTE X
+It is recommended that the result be calculated using a method that
+does not incur loss of precision by forming SQRT(X) and then dividing
+one by the result.
+
+COMPOUND(X, N)
+
+Description. One plus X raised to the power N.
+
+Class. Elemental function.
+
+Arguments.
+X         shall be of type real with value greater than or equal to
+          negative one.
+N         shall be of type integer.
+
+Result Characteristics. Same as X.
+
+Result Value. The result has a value equal to a processor-dependent
+approximation to the expression (1+X)**n.
+
+Example. COMPOUND(1.0, 2) has the value 4.0 (approximately).
+
+ROOTN(X, N)
+
+Description. The principal Nth root of X.
+
+Class. Elemental function.
+
+Arguments.
+X         shall be of type real.
+N         shall be of type integer.
+
+Result Characteristics. Same as X.
+
+Result Value. The result has a value equal to a processor-dependent
+approximation to X**(1.0/n).
+
+Example. ROOTN(27.0, 3) has the value 3.0 (approximately).
+
+POWR(X, Y)
+
+Description. X raised to the power Y as EXP(Y * LOG(X)).
+
+Class. Elemental function.
+
+Arguments.
+X         shall be of type real
+Y         shall be of type real with the same kind type parameter as X.
+
+Result Characteristics. Same as X.
+
+Result Value. The result has a value equal to a processor-dependent
+approximation to the expression EXP(Y * LOG(X)).
+
+Example. POWR(2.0, 3.0) has the value 8.0 (approximately).
