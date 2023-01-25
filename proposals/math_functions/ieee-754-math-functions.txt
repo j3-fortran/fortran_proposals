@@ -159,12 +159,12 @@ Class. Elemental function.
 Argument. X shall be of type real or complex. If X is real, its value
 shall be greater than minus one. If X is complex, its value shall not
 be (-1.0, 0.0). A result of type complex is the principal value with
-imaginary part ω in the range −π ≤ ω ≤ π. If the real part of X is less
-than minus one and the imaginary part of X is zero, then the imaginary
-part of the result is approximately π if the imaginary part of X is
-positive real zero or the processor does not distinguish between
-positive and negative real zero, and approximately −π if the imaginary
-part of X is negative real zero.
+imaginary part $\omega$ in the range $-\pi \leq \omega \leq \pi$. If
+the real part of X is less than minus one and the imaginary part of X
+is zero, then the imaginary part of the result is approximately $\pi$
+if the imaginary part of X is positive real zero or the processor does
+not distinguish between positive and negative real zero, and
+approximately $-\pi$ if the imaginary part of X is negative real zero.
 
 Result Characteristics. Same as X.
 
