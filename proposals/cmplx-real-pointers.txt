@@ -17,76 +17,78 @@ When working in the Fourier domain, it is common to use in-place real to complex
 For instance, consider a code the performs an FFT based convolution at some point:
 
     program foo
-	real, allocatable :: r1(:), r2(:), r3(:)
-	integer, parameter :: n = 100000
-	! ...
-	allocate( r1(n), r2(n), r3(n) )
-	! ... some computations on r1(:) and r2(:) as reals
-	call rfft(r1)
-	call rfft(r2)
-	call fftconvol(r1,r2,r3,n/2)   ! called without any interface
-	call irfft(r3)
-	! ... some computations on r3(:) as real
-	end program
-	
-	subroutine fftconvol(c1,c2,c3,n)
-	integer, intent(in) :: n
-	complex, intent(in)  :: c1(n), c2(n)
-	complex, intent(out) :: c3(n)
-	c3(:) = c1(:) * c2(:)
-	end subroutine
+    real, allocatable :: r1(:), r2(:), r3(:)
+    integer, parameter :: n = 100000
+    ! ...
+    allocate( r1(n), r2(n), r3(n) )
+    ! ... some computations on r1(:) and r2(:) as reals
+    call rfft(r1)
+    call rfft(r2)
+    call fftconvol(r1,r2,r3,n/2)   ! called without any interface
+    call irfft(r3)
+    ! ... some computations on r3(:) as real
+    end program
+
+    subroutine fftconvol(c1,c2,c3,n)
+    integer, intent(in) :: n
+    complex, intent(in)  :: c1(n), c2(n)
+    complex, intent(out) :: c3(n)
+    c3(:) = c1(:) * c2(:)
+    end subroutine
 	
 3. Proposed solution
 
 The proposal essentially aims at standardizing the usual practice above, by allowing a real array to be viewed as a complex array and vice-versa. The above code would become:
 
     program foo
-	real, allocatable, target :: r1(:), r2(:), r3(:)
-	integer, parameter :: n = 100000
-	complex, pointer :: c1(:), c2(:), c3(:)
-	! ...
-	allocate( r1(n), r2(n), r3(n) )
-	! ... some computations on r1(:) and r2(:) as reals
-	call rfft(r1)
-	call rfft(r2)
-	c1 => complex_pointer(r1)
-	c2 => complex_pointer(r2)
-	c3 => complex_pointer(r3)
-	c3(:) = c1(:) * c2(:)
-	call irfft(r3)
-	! ... some computations on r3(:) as real
-	end program
+    real, allocatable, target :: r1(:), r2(:), r3(:)
+    integer, parameter :: n = 100000
+    complex, pointer :: c1(:), c2(:), c3(:)
+    ! ...
+    allocate( r1(n), r2(n), r3(n) )
+    ! ... some computations on r1(:) and r2(:) as reals
+    call rfft(r1)
+    call rfft(r2)
+    c1 => complex_pointer(r1)
+    c2 => complex_pointer(r2)
+    c3 => complex_pointer(r3)
+    c3(:) = c1(:) * c2(:)
+    call irfft(r3)
+    ! ... some computations on r3(:) as real
+    end program
 
 3.1. New intrinsic functions
 
-c => complex_pointer(r)
+`c => complex_pointer(r)`
 
-- r is a *contiguous* real array, which has either the target or the pointer attribute
-- c is a complex array pointer of the same rank than r
-  - c can also be a complex scalar pointer, in the case r is a rank-1 array of size 2
-- the size of the first dimension of r shall be even
-- c%re refers to the same storage than r(1::2) (rank-1), or r(1::2,:) (rank-2), etc...
-- c%im refers to the same storage than r(2::2) (rank-1), or r(2::2,:) (rank-2), etc...
+- `r` is a *contiguous* real array, which has either the target or the pointer attribute
+- `c` is a complex array pointer of the same rank than `r`
+  - `c` can also be a complex scalar pointer, in the case r is a rank-1 array of size 2
+- the size of the first dimension of `r` shall be even
+- `c%re` refers to the same storage than `r(1::2)` (rank-1), or `r(1::2,:)` (rank-2), etc...
+- `c%im` refers to the same storage than `r(2::2)` (rank-1), or `r(2::2,:)` (rank-2), etc...
 
-r => real_pointer(c)
+`r => real_pointer(c)`
 
 - the exact opposite
-- c is a *contiguous* complex array or a complex scalar, which has either the target or the pointer attribute
-- r is a complex array pointer of the same rank than c
-  - if c is a scalar, r is a rank-1 pointer of size 2
+- `c` is a *contiguous* complex array or a complex scalar, which has either the target or the pointer attribute
+- `r` is a complex array pointer of the same rank than `c`
+  - if `c` is a scalar, then `r` is a rank-1 pointer of size 2
 - same other rules as above
 
 3.2 Alternative syntax
 
 Alternative syntax 1 (similar to the c_f_pointer() routine):
-
+```
 call complex_pointer(r,c[,shape])
 call real_pointer(c,r[,shape])
+```
 
 Alternative syntax 2 (kind of pointer casting):
-
+```
 c => complex :: r
 r => real :: c
+```
 
 4. Objections
 
