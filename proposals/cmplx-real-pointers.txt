@@ -1,0 +1,107 @@
+To: J3                                                     J3/XX-XXX
+From: Pierre Hugonnet
+Subject: allow complex pointer to reals and vice versa
+Date: 2023-12-29
+#Reference:
+
+1. Introduction
+
+The proposal is to allow a complex pointer to be associated to a real array, and similarly to allow a real pointer to be associated to the complex scalar or array
+
+2. Motivation
+
+When working in the Fourier domain, it is common to use in-place real to complex Fourier transforms. Before the forward transform one generally stores data in a real array, and the transform outputs complex numbers in the same real array, with interleaved real and imaginary parts. The complex type is more appropriate to perform computations in the Fourier domain, but this requires either:
+- duplicating the data into a complex array after the transform, thus cancelling the advantage of the in-place transform
+- or using various non-standard tricks (e.g. associating a real actual argument to a complex dummy argument in a routine call without interface) that rely on the fact that virtually all compilers store a complex number by the sequence real part/imaginary part.
+
+For instance, consider a code the performs an FFT based convolution at some point:
+
+    program foo
+	real, allocatable :: r1(:), r2(:), r3(:)
+	integer, parameter :: n = 100000
+	! ...
+	allocate( r1(n), r2(n), r3(n) )
+	! ... some computations on r1(:) and r2(:) as reals
+	call rfft(r1)
+	call rfft(r2)
+	call fftconvol(r1,r2,r3,n/2)   ! called without any interface
+	call irfft(r3)
+	! ... some computations on r3(:) as real
+	end program
+	
+	subroutine fftconvol(c1,c2,c3,n)
+	integer, intent(in) :: n
+	complex, intent(in)  :: c1(n), c2(n)
+	complex, intent(out) :: c3(n)
+	c3(:) = c1(:) * c2(:)
+	end subroutine
+	
+3. Proposed solution
+
+The proposal essentially aims at standardizing the usual practice above, by allowing a real array to be viewed as a complex array and vice-versa. The above code would become:
+
+    program foo
+	real, allocatable, target :: r1(:), r2(:), r3(:)
+	integer, parameter :: n = 100000
+	complex, pointer :: c1(:), c2(:), c3(:)
+	! ...
+	allocate( r1(n), r2(n), r3(n) )
+	! ... some computations on r1(:) and r2(:) as reals
+	call rfft(r1)
+	call rfft(r2)
+	c1 => complex_pointer(r1)
+	c2 => complex_pointer(r2)
+	c3 => complex_pointer(r3)
+	c3(:) = c1(:) * c2(:)
+	call irfft(r3)
+	! ... some computations on r3(:) as real
+	end program
+
+3.1. New intrinsic functions
+
+c => complex_pointer(r)
+
+- r is a *contiguous* real array, which has either the target or the pointer attribute
+- c is a complex array pointer of the same rank than r
+  - c can also be a complex scalar pointer, in the case r is a rank-1 array of size 2
+- the size of the first dimension of r shall be even
+- c%re refer to the same storage than r(1::2) (rank-1), or r(1::2,:) (rank-2), etc...
+- c%im refer to the same storage than r(2::2) (rank-1), or r(2::2,:) (rank-2), etc...
+
+r => real_pointer(c)
+
+- the exact opposite
+- c is a *contiguous* complex array or a complex scalar, which has either the target or the pointer attribute
+- r is a complex array pointer of the same rank than c
+  - if c is a scalar, r is a rank-1 pointer of size 2
+- same other rules as above
+
+3.2 Alternative syntax
+
+Alternative syntax 1 (similar to the c_f_pointer() routine):
+
+call complex_pointer(r,c[,shape])
+call real_pointer(c,r[,shape])
+
+Alternative syntax 2 (pointer casting):
+
+c => complex :: r
+r => real :: c
+
+4. Objections
+
+4.1. Memory layout
+
+It seems that this proposal would constraint the memory layout of the complex type beyond what the current standard does. However, the required layout for this proposal also seems to be the de-facto standard, used by virtually all existing compilers. And it's hard to think about a possible drawback of constraining the layout like this.
+
+4.2. Contiguity
+
+Both the pointed or pointee objects must be contiguous (actually, the contiguity only matters along the first dimension). Ideally, this should be checked at compile time, but this is not possible if the pointed object is itself a pointer. One solution would be to not allow pointers a the pointed objects (which is a significant restriction)
+
+5. References
+
+Fortran Discourse Forum:
+https://fortran-lang.discourse.group/t/complex-type-storage-again/7020
+
+Fortran Proposal Github:
+https://github.com/j3-fortran/fortran_proposals/issues/323
