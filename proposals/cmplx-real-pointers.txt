@@ -10,7 +10,7 @@ The proposal is to allow a complex pointer to be associated to a real array, and
 
 2. Motivation
 
-When working in the Fourier domain, it is common to use in-place real to complex Fourier transforms. Before the forward transform one generally stores data in a real array, and the transform outputs complex numbers in the same real array, with interleaved real and imaginary parts. The complex type is more appropriate to perform computations in the Fourier domain, but this requires either:
+When working in the Fourier domain, it is common to use in-place real to complex Fourier transforms. Before the forward transform one generally stores data in a real array, and the transform outputs complex numbers in the same real array, with interleaved real and imaginary parts. Once in the Fourier domain the complex type is more appropriate to perform computations, but this requires either:
 - duplicating the data into a complex array after the transform, thus cancelling the advantage of the in-place transform
 - or using various non-standard tricks (e.g. associating a real actual argument to a complex dummy argument in a routine call without interface) that rely on the fact that virtually all compilers store a complex number by the sequence real part/imaginary part.
 
@@ -65,8 +65,8 @@ c => complex_pointer(r)
 - c is a complex array pointer of the same rank than r
   - c can also be a complex scalar pointer, in the case r is a rank-1 array of size 2
 - the size of the first dimension of r shall be even
-- c%re refer to the same storage than r(1::2) (rank-1), or r(1::2,:) (rank-2), etc...
-- c%im refer to the same storage than r(2::2) (rank-1), or r(2::2,:) (rank-2), etc...
+- c%re refers to the same storage than r(1::2) (rank-1), or r(1::2,:) (rank-2), etc...
+- c%im refers to the same storage than r(2::2) (rank-1), or r(2::2,:) (rank-2), etc...
 
 r => real_pointer(c)
 
@@ -83,7 +83,7 @@ Alternative syntax 1 (similar to the c_f_pointer() routine):
 call complex_pointer(r,c[,shape])
 call real_pointer(c,r[,shape])
 
-Alternative syntax 2 (pointer casting):
+Alternative syntax 2 (kind of pointer casting):
 
 c => complex :: r
 r => real :: c
@@ -92,11 +92,7 @@ r => real :: c
 
 4.1. Memory layout
 
-It seems that this proposal would constraint the memory layout of the complex type beyond what the current standard does. However, the required layout for this proposal also seems to be the de-facto standard, used by virtually all existing compilers. And it's hard to think about a possible drawback of constraining the layout like this.
-
-4.2. Contiguity
-
-Both the pointed or pointee objects must be contiguous (actually, the contiguity only matters along the first dimension). Ideally, this should be checked at compile time, but this is not possible if the pointed object is itself a pointer. One solution would be to not allow pointers a the pointed objects (which is a significant restriction)
+It seems that this proposal would constraint the memory layout of the complex type beyond what the current standard does. However, the required layout seems to be the de-facto standard, used by virtually all existing compilers. And it's hard to think about a possible drawback of constraining the layout like this.
 
 5. References
 
