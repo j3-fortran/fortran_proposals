@@ -14,7 +14,7 @@ When working in the Fourier domain, it is common to use in-place real to complex
 - duplicating the data into a complex array after the transform, thus cancelling the advantage of the in-place transform
 - or using various non-standard tricks (e.g. associating a real actual argument to a complex dummy argument in a routine call without interface) that rely on the fact that virtually all compilers store a complex number by the sequence real part/imaginary part.
 
-For instance, consider a code the performs an FFT based convolution at some point:
+For instance, consider a code that performs a FFT based convolution at some point:
 
     program foo
     real, allocatable :: r1(:), r2(:), r3(:)
@@ -35,6 +35,7 @@ For instance, consider a code the performs an FFT based convolution at some poin
     complex, intent(out) :: c3(n)
     c3(:) = c1(:) * c2(:)
     end subroutine
+
 	
 3. Proposed solution
 
@@ -63,7 +64,7 @@ The proposal essentially aims at standardizing the usual practice above, by allo
 
 - `r` is a *contiguous* real array, which has either the target or the pointer attribute
 - `c` is a complex array pointer of the same rank than `r`
-  - `c` can also be a complex scalar pointer, in the case r is a rank-1 array of size 2
+  - `c` can also be a complex scalar pointer, in the case where r is a rank-1 array of size 2
 - the size of the first dimension of `r` shall be even
 - `c%re` refers to the same storage than `r(1::2)` (rank-1), or `r(1::2,:)` (rank-2), etc...
 - `c%im` refers to the same storage than `r(2::2)` (rank-1), or `r(2::2,:)` (rank-2), etc...
@@ -78,7 +79,7 @@ The proposal essentially aims at standardizing the usual practice above, by allo
 
 3.2 Alternative syntax
 
-Alternative syntax 1 (similar to the c_f_pointer() routine):
+Alternative syntax 1 (similar to the c_f_pointer() subroutine):
 ```
 call complex_pointer(r,c[,shape])
 call real_pointer(c,r[,shape])
@@ -94,7 +95,10 @@ r => real :: c
 
 4.1. Memory layout
 
-It seems that this proposal would constraint the memory layout of the complex type beyond what the current standard does. However, the required layout seems to be the de-facto standard, used by virtually all existing compilers. And it's hard to think about a possible drawback of constraining the layout like this.
+It seems that this proposal would constraint the memory layout of the complex type beyond what the current standard does. However, the required layout seems to be the de-facto standard, used by virtually all existing compilers, and it's hard to think about a possible drawback of constraining the layout like this.
+
+Also, the proposal would not prevent possible alternative memory layouts for the arrays in future versions of the standard, such as the row major storage. For instance, in the case of a row major 2D array, `c%re` would refer to the same storage as `r(:,1::2)` instead of `r(1::2,:)` for the column major case. More generally the obtained view would be layout dependent, and the standard would have to descibe the view for each layout.
+
 
 5. References
 
