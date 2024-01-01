@@ -114,7 +114,7 @@ r => real :: c
 4. Objections
 
 4.1. Memory layout
-0123456789012345678901234567890123456789012345678901234567890123456789
+
 This proposal would constraint the memory layout of the complex type 
 beyond what the current standard does. However, the required layout 
 seems to be the de-facto standard, used by virtually all existing 
