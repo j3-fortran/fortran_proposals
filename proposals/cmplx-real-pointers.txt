@@ -6,15 +6,28 @@ Date: 2023-12-29
 
 1. Introduction
 
-The proposal is to allow a complex pointer to be associated to a real array, and similarly to allow a real pointer to be associated to the complex scalar or array
+The proposal is to allow a complex pointer to be associated to a real
+array, and similarly to allow a real pointer to be associated to a 
+complex scalar or array
 
 2. Motivation
 
-When working in the Fourier domain, it is common to use in-place real to complex Fourier transforms. Before the forward transform one generally stores data in a real array, and the transform outputs complex numbers in the same real array, with interleaved real and imaginary parts. Once in the Fourier domain the complex type is more appropriate to perform computations, but this requires either:
-- duplicating the data into a complex array after the transform, thus cancelling the advantage of the in-place transform
-- or using various non-standard tricks (e.g. associating a real actual argument to a complex dummy argument in a routine call without interface) that rely on the fact that virtually all compilers store a complex number by the sequence real part/imaginary part.
+When working in the Fourier domain, it is common to use in-place real
+to complex Fourier transforms. Before the forward transform one 
+generally stores data in a real array, and the transform outputs 
+complex numbers in the same real array, with interleaved real and 
+imaginary parts. Once in the Fourier domain the complex type is more
+appropriate to perform computations, but this requires either:
+- duplicating the data into a complex array after the transform, 
+  thus cancelling the advantage of the in-place transform
+- or using various non-standard tricks (e.g. associating a real 
+  actual argument to a complex dummy argument in a routine call 
+  without interface) that rely on the fact that virtually all 
+  compilers store a complex number by the sequence 
+  real part/imaginary part.
 
-For instance, consider a code that performs a FFT based convolution at some point:
+For instance, consider a code that performs a FFT based convolution
+at some point:
 
     program foo
     real, allocatable :: r1(:), r2(:), r3(:)
@@ -39,7 +52,9 @@ For instance, consider a code that performs a FFT based convolution at some poin
 	
 3. Proposed solution
 
-The proposal essentially aims at standardizing the usual practice above, by allowing a real array to be viewed as a complex array and vice-versa. The above code would become:
+The proposal essentially aims at standardizing the usual practice 
+above, by allowing a real array to be viewed as a complex array and 
+vice-versa. The above code would become:
 
     program foo
     real, allocatable, target :: r1(:), r2(:), r3(:)
@@ -62,17 +77,22 @@ The proposal essentially aims at standardizing the usual practice above, by allo
 
 `c => complex_pointer(r)`
 
-- `r` is a *contiguous* real array, which has either the target or the pointer attribute
+- `r` is a *contiguous* real array, which has either the target or the
+  pointer attribute
 - `c` is a complex array pointer of the same rank than `r`
-  - `c` can also be a complex scalar pointer, in the case where r is a rank-1 array of size 2
+  - `c` can also be a complex scalar pointer, in the case where r is a
+    rank-1 array of size 2
 - the size of the first dimension of `r` shall be even
-- `c%re` refers to the same storage than `r(1::2)` (rank-1), or `r(1::2,:)` (rank-2), etc...
-- `c%im` refers to the same storage than `r(2::2)` (rank-1), or `r(2::2,:)` (rank-2), etc...
+- `c%re` refers to the same storage than `r(1::2)` (rank-1), or 
+  `r(1::2,:)` (rank-2), etc...
+- `c%im` refers to the same storage than `r(2::2)` (rank-1), or 
+  `r(2::2,:)` (rank-2), etc...
 
 `r => real_pointer(c)`
 
 - the exact opposite
-- `c` is a *contiguous* complex array or a complex scalar, which has either the target or the pointer attribute
+- `c` is a *contiguous* complex array or a complex scalar, which has 
+  either the target or the pointer attribute
 - `r` is a complex array pointer of the same rank than `c`
   - if `c` is a scalar, then `r` is a rank-1 pointer of size 2
 - same other rules as above
@@ -94,10 +114,20 @@ r => real :: c
 4. Objections
 
 4.1. Memory layout
+0123456789012345678901234567890123456789012345678901234567890123456789
+This proposal would constraint the memory layout of the complex type 
+beyond what the current standard does. However, the required layout 
+seems to be the de-facto standard, used by virtually all existing 
+compilers, and it's hard to think about a possible drawback of 
+constraining the layout like this.
 
-It seems that this proposal would constraint the memory layout of the complex type beyond what the current standard does. However, the required layout seems to be the de-facto standard, used by virtually all existing compilers, and it's hard to think about a possible drawback of constraining the layout like this.
-
-Also, the proposal would not prevent possible alternative memory layouts for the arrays in future versions of the standard, such as the row major storage. For instance, in the case of a row major 2D array, `c%re` would refer to the same storage as `r(:,1::2)` instead of `r(1::2,:)` for the column major case. More generally the obtained view would be layout dependent, and the standard would have to descibe the view for each layout.
+Also, the proposal would not prevent alternative memory layouts for 
+the arrays in future versions of the standard, such as the row major 
+storage. For instance, in the case of a row major 2D array, `c%re` 
+would refer to the same storage as `r(:,1::2)` instead of `r(1::2,:)` 
+for the column major case. More generally the obtained view would be 
+layout dependent, and the standard would have to describe the view for
+each layout.
 
 
 5. References
