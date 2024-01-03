@@ -118,8 +118,8 @@ r => real :: c
 This proposal would constraint the memory layout of the complex type 
 beyond what the current standard does. However, the required layout 
 seems to be the de-facto standard, used by virtually all existing 
-compilers, and it's hard to think about a possible drawback of 
-constraining the layout like this.
+compilers (i.e. storing a complex scalar by the sequence real part/
+imaginary part, in that order).
 
 Also, the proposal would not prevent alternative memory layouts for 
 the arrays in future versions of the standard, such as the row major 
@@ -128,6 +128,12 @@ would refer to the same storage as `r(:,1::2)` instead of `r(1::2,:)`
 for the column major case. More generally the obtained view would be 
 layout dependent, and the standard would have to describe the view for
 each layout.
+
+Similarly, the proposal would be compatible with the so-called 
+split-complex layout, if introduced later (without assessing here if
+such a layout is possible at all). In this layout, a complex array is 
+stored with all the real parts first, then all the imaginary parts. 
+In this case, `c%re` would refer to the same storage as `r(1:n/2)`.
 
 
 5. References
