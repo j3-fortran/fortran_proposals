@@ -78,11 +78,11 @@ vice-versa. The above code would become:
 No new syntax need to be created, the usual pointer association can be
 used:
 
-`c => complex_pointer(r)`
+`c => r`
 
 - `r` is a *contiguous* real array, which has either the target or the
   pointer attribute
-- `c` is a complex array pointer of the same rank than `r`
+- `c` is a complex array pointer of the same rank and same kind than `r`
   - `c` can also be a complex scalar pointer, in the case where r is a
     rank-1 array of size 2
 - the size of the first dimension of `r` shall be even
@@ -91,12 +91,12 @@ used:
 - `c%im` refers to the same storage than `r(2::2)` (rank-1), or 
   `r(2::2,:)` (rank-2), etc...
 
-`r => real_pointer(c)`
+`r => c`
 
 - the exact opposite
 - `c` is a *contiguous* complex array or a complex scalar, which has 
   either the target or the pointer attribute
-- `r` is a complex array pointer of the same rank than `c`
+- `r` is a complex array pointer of the same rank and same kind than `c`
   - if `c` is a scalar, then `r` is a rank-1 pointer of size 2
 - same other rules as above
 
