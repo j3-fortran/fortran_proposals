@@ -65,15 +65,18 @@ vice-versa. The above code would become:
     ! ... some computations on r1(:) and r2(:) as reals
     call rfft(r1)
     call rfft(r2)
-    c1 => complex_pointer(r1)
-    c2 => complex_pointer(r2)
-    c3 => complex_pointer(r3)
+    c1 => r1
+    c2 => r2
+    c3 => r3
     c3(:) = c1(:) * c2(:)
     call irfft(r3)
     ! ... some computations on r3(:) as real
     end program
 
-3.1. New intrinsic functions
+3.1. Syntax
+
+No new syntax need to be created, the usual pointer association can be
+used:
 
 `c => complex_pointer(r)`
 
@@ -97,15 +100,25 @@ vice-versa. The above code would become:
   - if `c` is a scalar, then `r` is a rank-1 pointer of size 2
 - same other rules as above
 
-3.2 Alternative syntax
+3.2 Alternative syntaxes
 
-Alternative syntax 1 (similar to the c_f_pointer() subroutine):
+If one wants to make the association between two different types more
+explicit, also catching possible mistakes at compile time, a new 
+syntax may be introduced:
+
+Alternative syntax 1:
+```
+c => complex_pointer(r)
+r => real_pointer(c)
+```
+
+Alternative syntax 2 (similar to the c_f_pointer() subroutine):
 ```
 call complex_pointer(r,c[,shape])
 call real_pointer(c,r[,shape])
 ```
 
-Alternative syntax 2 (kind of pointer casting):
+Alternative syntax 3 (kind of pointer casting):
 ```
 c => complex :: r
 r => real :: c
