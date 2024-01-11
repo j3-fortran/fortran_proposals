@@ -98,7 +98,7 @@ rank by default (but pointer rank remapping can be used)
 - the exact opposite
 - `c` is a *contiguous* complex array or a complex scalar, which has 
   either the target or the pointer attribute
-- `r` is a complex array pointer of same kind than `c`, and of of the
+- `r` is a real array pointer of same the kind as `c`, and of the same
 rank by default (but pointer rank remapping can be used)
   - if `c` is a scalar, then `r` is a rank-1 pointer of size 2
 - same other rules as above
