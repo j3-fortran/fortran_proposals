@@ -83,7 +83,7 @@ used, with additional rules and restrictions:
 
 - `r` is a *contiguous* real array, which has either the target or the
   pointer attribute
-- `c` is a complex array pointer of same kind than `r`, and of of the
+- `c` is a complex array pointer of the same kind as `r`, and of the same
 rank by default (but pointer rank remapping can be used)
   - `c` can also be a complex scalar pointer, in the case where r is a
     rank-1 array of size 2
