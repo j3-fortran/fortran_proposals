@@ -9,7 +9,7 @@ Date: 2023-12-29
 The proposal is to allow a complex pointer to be associated to a real
 array, and similarly to allow a real pointer to be associated to a 
 complex scalar or array. Going further, this could be extended to 
-argument association between the reals and complex types.
+argument association between entities of type real and complex.
 
 2. Motivation
 
