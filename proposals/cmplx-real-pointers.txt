@@ -8,8 +8,7 @@ Date: 2023-12-29
 
 The proposal is to allow a complex pointer to be associated to a real
 array, and similarly to allow a real pointer to be associated to a 
-complex scalar or array. Going further, this could be extended to 
-argument association between entities of type real and complex.
+complex scalar or array. 
 
 2. Motivation
 
@@ -88,9 +87,9 @@ used, with additional rules and restrictions:
   - `c` can also be a complex scalar pointer, in the case where r is a
     rank-1 array of size 2
 - the size of the first dimension of `r` shall be even
-- `c%re` refers to the same storage than `r(1::2)` (rank-1), or 
+- `c%re` refers to the same storage as `r(1::2)` (rank-1), or 
   `r(1::2,:)` (rank-2), etc...
-- `c%im` refers to the same storage than `r(2::2)` (rank-1), or 
+- `c%im` refers to the same storage as `r(2::2)` (rank-1), or 
   `r(2::2,:)` (rank-2), etc...
 
 `r => c`
@@ -106,8 +105,7 @@ used, with additional rules and restrictions:
 3.2 Alternative syntaxes
 
 If one wants to make the association between two different types more
-explicit, also catching possible mistakes at compile time, a new 
-syntax may be introduced:
+explicit and more type-safe, a new syntax may be introduced:
 
 Alternative syntax 1:
 ```
@@ -127,24 +125,14 @@ c => complex :: r
 r => real :: c
 ```
 
-4. Argument association
+Something generic (that is, not `complex_pointer()` or `real_pointer()`)
+may be desirable in case other inter-type pointer association would be 
+allowed in future versions of the standard.
 
-For full consistency, argument association between the real and 
-complex types of the same kind could (or should?) be allowed, without
-having to use intermediate pointers. For, if pointer association
-is possible and allowed, the argument association is also possible
-with the exact same rules and restrictions (contiguity, etc...).
 
-Should the argument association be allowed, then the default pointer
-association syntax should be kept, without considering the alternative
-syntaxes. The main added value of the alternative syntaxes is to allow
-an additional check at compile time (that the association between two
-different type is really intentional): not only this is not critical,
-but this check cannot be performed with the argument association.
+4. Issues / Objections / Limitations
 
-5. Objections
-
-5.1. Memory layout
+4.1. Memory layout
 
 This proposal would constraint the memory layout of the complex type 
 beyond what the current standard does. However, the required layout 
@@ -166,10 +154,28 @@ such a layout is possible at all). In this layout, a complex array is
 stored with all the real parts first, then all the imaginary parts. 
 In this case, `c%re` would refer to the same storage as `r(1:n/2)`.
 
-6. References
+4.2. Argument association
+
+Allowing a real actual argument to be associated to a complex dummy 
+argument -and vice-versa- has also been considered, but it would raise 
+backward compatibility issues. So this part has been dropped.
+
+4.3. Alignment
+
+Considering for instance a default real type stored on 4 bytes, the 
+default complex type is stored on 8 bytes. Compilers may prefer/want to 
+align complex arrays on 16 bytes boundaries, which cannot be guaranteed 
+if a complex pointer is associated to an arbitrary real array 
+(e.g. `c => r(2:)`). If this is a problem, the pointer association may be
+allowed only in the other way (real pointer associated to a complex array).
+
+
+5. References
 
 Fortran Discourse Forum:
 https://fortran-lang.discourse.group/t/complex-type-storage-again/7020
+https://fortran-lang.discourse.group/t/implicit-real-complex-conversion-in-fortran/7381
 
 Fortran Proposal Github:
 https://github.com/j3-fortran/fortran_proposals/issues/323
+https://github.com/j3-fortran/fortran_proposals/pull/325
