@@ -35,19 +35,43 @@ at some point:
     ! ...
     allocate( r1(n), r2(n), r3(n) )
     ! ... some computations on r1(:) and r2(:) as reals
-    call rfft(r1)
-    call rfft(r2)
-    call fftconvol(r1,r2,r3,n/2)   ! called without any interface
+    call rfft(r1) ; call rfft(r2)
+    call fftconvol(r1,r2,r3,n/2)   ! called without any interface,
+                                   ! hence type mismatchs
     call irfft(r3)
     ! ... some computations on r3(:) as real
     end program
 
+    ! dangling routine (not contained and not in a module)
     subroutine fftconvol(c1,c2,c3,n)
     integer, intent(in) :: n
     complex, intent(in)  :: c1(n), c2(n)
     complex, intent(out) :: c3(n)
     c3(:) = c1(:) * c2(:)
     end subroutine
+
+With modern Fortran another trick has got quite popular, by using the 
+C interoperability features. Nonetheless the trick is non standard:
+
+    program foo
+    use iso_c_binding
+    real, allocatable :: r1(:), r2(:), r3(:)
+    integer, parameter :: n = 100000
+    complex, pointer :: c1(:), c2(:), c3(:)
+    ! ...
+    allocate( r1(n), r2(n), r3(n) )
+    ! ... some computations on r1(:) and r2(:) as reals
+    call rfft(r1) ; call rfft(r2)
+    ! non-standard trick
+    call c_f_pointer( c_loc(r1), c1, [n/2] ) 
+    call c_f_pointer( c_loc(r2), c2, [n/2] ) 
+    call c_f_pointer( c_loc(r3), c3, [n/2] ) 
+
+    c3(:) = c1(:) * c2(:)
+
+    call irfft(r3)
+    ! ... some computations on r3(:) as real
+    end program
 
 	
 3. Proposed solution
@@ -63,11 +87,8 @@ vice-versa. The above code would become:
     ! ...
     allocate( r1(n), r2(n), r3(n) )
     ! ... some computations on r1(:) and r2(:) as reals
-    call rfft(r1)
-    call rfft(r2)
-    c1 => r1
-    c2 => r2
-    c3 => r3
+    call rfft(r1) ; call rfft(r2)
+    c1 => r1 ; c2 => r2 ; c3 => r3
     c3(:) = c1(:) * c2(:)
     call irfft(r3)
     ! ... some computations on r3(:) as real
@@ -80,26 +101,26 @@ used, with additional rules and restrictions:
 
 `c => r`
 
-- `r` is a *contiguous* real array, which has either the target or the
-  pointer attribute
-- `c` is a complex array pointer of the same kind as `r`, and of the same
-  rank by default (but pointer rank remapping can be used)
-  - `c` can also be a complex scalar pointer, in the case where r is a
+- `r` shall be a  *contiguous* real array, which has either the target
+  or the pointer attribute
+- `c` shall be a complex array pointer of the same kind as `r`, and of 
+  the same rank by default (but pointer rank remapping can be used)
+  - `c` could also be a complex scalar pointer, in the case r is a
     rank-1 array of size 2
 - the size of the first dimension of `r` shall be even
-- `c%re` refers to the same storage as `r(1::2)` (rank-1), or 
+- `c%re` shall refer to the same storage as `r(1::2)` (rank-1), or 
   `r(1::2,:)` (rank-2), etc...
-- `c%im` refers to the same storage as `r(2::2)` (rank-1), or 
+- `c%im` shall refer to the same storage as `r(2::2)` (rank-1), or 
   `r(2::2,:)` (rank-2), etc...
 
 `r => c`
 
 - the exact opposite
-- `c` is a *contiguous* complex array or a complex scalar, which has 
-  either the target or the pointer attribute
-- `r` is a real array pointer of the same kind as `c`, and of the same
-  rank by default (but pointer rank remapping can be used)
-  - if `c` is a scalar, then `r` is a rank-1 pointer of size 2
+- `c` shall be a *contiguous* complex array or a complex scalar, which
+  has either the target or the pointer attribute
+- `r` shall be a real array pointer of the same kind as `c`, and of the
+  same rank by default (but pointer rank remapping can be used)
+  - if `c` is a scalar, then `r` shall be a rank-1 pointer of size 2
 - same other rules as above
 
 3.2 Alternative syntaxes
@@ -126,8 +147,15 @@ r => real :: c
 ```
 
 Something generic (that is, not `complex_pointer()` or `real_pointer()`)
-may be desirable in case other inter-type pointer association would be 
+may be desirable in case other inter-type pointer associations would be 
 allowed in future versions of the standard.
+
+3.3 Prototyping, etc...
+
+I think that this proposal doesn't need to have a preliminary prototype 
+implementation, as it essentially consists in standardizing an already
+existing and common practice. A prototype implementation would do 
+nothing else than mimicing the `c_f_pointer()` trick.
 
 
 4. Issues / Objections / Limitations
@@ -158,16 +186,18 @@ In this case, `c%re` would refer to the same storage as `r(1:n/2)`.
 
 Allowing a real actual argument to be associated to a complex dummy 
 argument -and vice-versa- has also been considered, but it would raise 
-backward compatibility issues. So this part has been dropped.
+backward compatibility issues. So this part has been dropped from the
+proposal.
 
 4.3. Alignment
 
 Considering for instance a default real type stored on 4 bytes, the 
 default complex type is stored on 8 bytes. Compilers may prefer/want to 
-align complex arrays on 16 bytes boundaries, which cannot be guaranteed 
+align the complex arrays on 8 bytes boundaries, which cannot be guaranteed 
 if a complex pointer is associated to an arbitrary real array 
 (e.g. `c => r(2:)`). If this is a problem, the pointer association may be
-allowed only in the other way (real pointer associated to a complex array).
+allowed only the other way (real pointer associated to a complex array), 
+where alignement should not be a problem.
 
 
 5. References
