@@ -128,27 +128,30 @@ used, with additional rules and restrictions:
 If one wants to make the association between two different types more
 explicit and more type-safe, a new syntax may be introduced:
 
-Alternative syntax 1:
-```
-c => complex_pointer(r)
-r => real_pointer(c)
-```
-
-Alternative syntax 2 (similar to the c_f_pointer() subroutine):
-```
-call complex_pointer(r,c[,shape])
-call real_pointer(c,r[,shape])
-```
-
-Alternative syntax 3 (kind of pointer casting):
+Alternative syntax 1 (kind of pointer casting):
 ```
 c => complex :: r
 r => real :: c
 ```
 
-Something generic (that is, not `complex_pointer()` or `real_pointer()`)
-may be desirable in case other inter-type pointer associations would be 
-allowed in future versions of the standard.
+Alternative syntax 2:
+```
+c => complex_pointer(r)
+r => real_pointer(c)
+```
+
+Alternative syntax 3 (similar to the c_f_pointer() subroutine):
+```
+call complex_pointer(r,c[,shape][,lower])
+call real_pointer(c,r[,shape][,lower])
+```
+
+Alternative syntax 4 (more generic, in case other inter-type 
+associations would be allowed in future versions of the standard):
+```
+call storage_associate(r,c[,shape][,lower])
+call storage_associate(r,c[,shape][,lower])
+```
 
 3.3 Prototyping, etc...
 
