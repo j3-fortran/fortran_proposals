@@ -19,12 +19,12 @@ complex numbers in the same real array, with interleaved real and
 imaginary parts. Once in the Fourier domain the complex type is more
 appropriate to perform computations, but this requires either:
 - duplicating the data into a complex array after the transform, 
-  thus cancelling the advantage of the in-place transform
-- or using various non-standard tricks (e.g. associating a real 
-  actual argument to a complex dummy argument in a routine call 
-  without interface) that rely on the fact that virtually all 
-  compilers store a complex number by the sequence 
-  real part/imaginary part.
+  thus cancelling the advantage of the in-place transform. Note that in HPC,
+  and particularly when dealing with large data volumes, duplicating the
+  data is really something that we want to avoid whenever possible.
+- or using various non-standard tricks that rely on the fact that virtually 
+  all compilers store a complex number by the sequence real part/
+  imaginary part.
 
 For instance, consider a code that performs a FFT based convolution
 at some point:
