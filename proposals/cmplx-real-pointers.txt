@@ -212,6 +212,12 @@ if a complex pointer is associated to an arbitrary real array
 allowed only the other way (real pointer associated to a complex array), 
 where alignement should not be a problem.
 
+In the case the association would be only one way, another syntax had been
+discussed: for instance if `c` is a rank-2 complex array of shape `[n,m]`, 
+`c%reim` would designate a rank-3 real array of shape `[2,n,m]`. I find the 
+idea interesting, but with the difficulty that in `c%reim` both `c` and
+`reim` would have a non-zero rank, which is not possible wrt the current 
+standard.
 
 5. References
 
