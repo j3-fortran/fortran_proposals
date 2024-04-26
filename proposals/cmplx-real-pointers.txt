@@ -12,6 +12,10 @@ complex scalar or array.
 
 2. Motivation
 
+In short, the motivation is to save memory and cpu-memory bandwidth
+in some HPC contexts, typically when dealing with very large or huge
+data volumes.
+
 When working in the Fourier domain, it is common to use in-place real
 to complex Fourier transforms. Before the forward transform one 
 generally stores data in a real array, and the transform outputs 
