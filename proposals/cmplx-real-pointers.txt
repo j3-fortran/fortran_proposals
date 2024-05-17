@@ -10,6 +10,7 @@ The proposal is to allow a complex pointer to be associated to a real
 array, and similarly to allow a real pointer to be associated to a 
 complex scalar or array. 
 
+
 2. Motivation
 
 In short, the motivation is to save memory and cpu-memory bandwidth
@@ -23,12 +24,13 @@ complex numbers in the same real array, with interleaved real and
 imaginary parts. Once in the Fourier domain the complex type is more
 appropriate to perform computations, but this requires either:
 - duplicating the data into a complex array after the transform, 
-  thus cancelling the advantage of the in-place transform. Note that in HPC,
-  and particularly when dealing with large data volumes, duplicating the
-  data is really something that we want to avoid whenever possible.
-- or using various non-standard tricks that rely on the fact that virtually 
-  all compilers store a complex number by the sequence real part/
-  imaginary part.
+  thus cancelling the advantage of the in-place transform. Note that in 
+  HPC, and particularly when dealing with large data volumes, 
+  duplicating the data is really something that we want to avoid 
+  whenever possible.
+- or using various non-standard tricks that rely on the fact that 
+  virtually all compilers store a complex number by the sequence 
+  real part / imaginary part.
 
 For instance, consider a code that performs a FFT based convolution
 at some point:
@@ -83,7 +85,8 @@ library [1].
 
 More generally, this is a recurrent topic on forums or on 
 StackOverflow [2]
-	
+
+
 3. Proposed solution
 
 The proposal essentially aims at standardizing the usual practice 
@@ -163,7 +166,28 @@ call storage_associate(r,c[,shape][,lower])
 call storage_associate(r,c[,shape][,lower])
 ```
 
-3.3 Prototyping, etc...
+3.3 Intermediate representation
+
+During the discussions it has been proposed tu use an intermediate
+representation between the real and complex view, which would be a real
+view with an augmented rank and first dimension of size 2. Instead of
+going directly from `r(n)` to `c(n/2)` one would define by rank
+remapping:
+`r2(1:2,1:n/2) => r(1:n)`, then `c => r2`
+And the other way:
+`r2 => c`, then `r(1:n) => r2(1:2,1:n/2)`
+
+This could also be coupled with a new pseudo-component notation `c%reim`
+that would be equivalent the `r2` respresentation (i.e. `c%reim` would be
+`real`, with a shape [2,n/2]). 
+
+I personally find that such an intermediate representation just makes 
+the proposal more complex than it needs to be, and that nothing really 
+useful can be performed with it. Moreover the `c%reim` notation would 
+require another change in the standard to allow non zero ranks on both 
+sides of `%`.
+
+3.4 Prototyping, etc...
 
 I think that this proposal doesn't need to have a preliminary prototype 
 implementation, as it essentially consists in standardizing an already
@@ -206,18 +230,12 @@ proposal.
 
 Considering for instance a default real type stored on 4 bytes, the 
 default complex type is stored on 8 bytes. Compilers may prefer/want to 
-align the complex arrays on 8 bytes boundaries, which cannot be guaranteed 
-if a complex pointer is associated to an arbitrary real array 
-(e.g. `c => r(2:)`). If this is a problem, the pointer association may be
-allowed only the other way (real pointer associated to a complex array), 
-where alignement should not be a problem.
+align the complex arrays on 8 bytes boundaries, which cannot be 
+guaranteed if a complex pointer is associated to an arbitrary real array 
+(e.g. `c => r(2:)`). If this is a problem, the pointer association may 
+be allowed only the other way (real pointer associated to a complex 
+array), where alignement should not be a problem.
 
-In the case the association would be only one way, another syntax had been
-discussed: for instance if `c` is a rank-2 complex array of shape `[n,m]`, 
-`c%reim` would designate a rank-3 real array of shape `[2,n,m]`. I find the 
-idea interesting, but with the difficulty that in `c%reim` both `c` and
-`reim` would have a non-zero rank, which is not possible wrt the current 
-standard.
 
 5. References
 
