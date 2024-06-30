@@ -1,0 +1,257 @@
+To: J3                                                     J3/24-129
+From: Pierre Hugonnet
+Subject: allow complex pointer to reals and vice versa
+Date: 2024-June-10
+#Reference:
+
+1. Introduction
+
+The proposal is to allow a complex pointer to be associated to a real
+array, and similarly to allow a real pointer to be associated to a
+complex scalar or array.
+
+
+2. Motivation
+
+In short, the motivation is to save memory and cpu-memory bandwidth
+in some HPC contexts, typically when dealing with very large or huge
+data volumes.
+
+When working in the Fourier domain, it is common to use in-place real
+to complex Fourier transforms. Before the forward transform one
+generally stores data in a real array, and the transform outputs
+complex numbers in the same real array, with interleaved real and
+imaginary parts. Once in the Fourier domain the complex type is more
+appropriate to perform computations, but this requires either:
+- duplicating the data into a complex array after the transform,
+  thus cancelling the advantage of the in-place transform. Note that in
+  HPC, and particularly when dealing with large data volumes,
+  duplicating the data is really something that we want to avoid
+  whenever possible.
+- or using various non-standard tricks that rely on the fact that
+  virtually all compilers store a complex number by the sequence
+  real part / imaginary part.
+
+For instance, consider a code that performs a FFT based convolution
+at some point:
+
+    program foo
+    real, allocatable :: r1(:), r2(:), r3(:)
+    integer, parameter :: n = 100000
+    ! ...
+    allocate( r1(n), r2(n), r3(n) )
+    ! ... some computations on r1(:) and r2(:) as reals
+    call rfft(r1) ; call rfft(r2)
+    call fftconvol(r1,r2,r3,n/2)   ! called without any interface,
+                                   ! hence type mismatchs
+    call irfft(r3)
+    ! ... some computations on r3(:) as real
+    end program
+
+    ! dangling routine (not contained and not in a module)
+    subroutine fftconvol(c1,c2,c3,n)
+    integer, intent(in) :: n
+    complex, intent(in)  :: c1(n), c2(n)
+    complex, intent(out) :: c3(n)
+    c3(:) = c1(:) * c2(:)
+    end subroutine
+
+With modern Fortran another trick has got quite popular, by using the
+C interoperability features. Nonetheless the trick is non standard:
+
+    program foo
+    use iso_c_binding
+    real, allocatable :: r1(:), r2(:), r3(:)
+    integer, parameter :: n = 100000
+    complex, pointer :: c1(:), c2(:), c3(:)
+    ! ...
+    allocate( r1(n), r2(n), r3(n) )
+    ! ... some computations on r1(:) and r2(:) as reals
+    call rfft(r1) ; call rfft(r2)
+    ! non-standard trick
+    call c_f_pointer( c_loc(r1), c1, [n/2] )
+    call c_f_pointer( c_loc(r2), c2, [n/2] )
+    call c_f_pointer( c_loc(r3), c3, [n/2] )
+
+    c3(:) = c1(:) * c2(:)
+
+    call irfft(r3)
+    ! ... some computations on r3(:) as real
+    end program
+
+The `c_f_pointer()` trick is even mentioned in the official
+documentation of FFTW, which is one of the most popular FFT
+library [1].
+
+More generally, this is a recurrent topic on forums or on
+StackOverflow [2]
+
+
+3. Proposed solution
+
+The proposal essentially aims at standardizing the usual practice
+above, by allowing a real array to be viewed as a complex array and
+vice-versa. The above code would become:
+
+    program foo
+    real, allocatable, target :: r1(:), r2(:), r3(:)
+    integer, parameter :: n = 100000
+    complex, pointer :: c1(:), c2(:), c3(:)
+    ! ...
+    allocate( r1(n), r2(n), r3(n) )
+    ! ... some computations on r1(:) and r2(:) as reals
+    call rfft(r1) ; call rfft(r2)
+    c1 => r1 ; c2 => r2 ; c3 => r3
+    c3(:) = c1(:) * c2(:)
+    call irfft(r3)
+    ! ... some computations on r3(:) as real
+    end program
+
+3.1. Syntax
+
+No new syntax need to be created, the usual pointer association can be
+used, with additional rules and restrictions:
+
+`c => r`
+
+- `r` shall be a  *contiguous* real array, which has either the target
+  or the pointer attribute
+- `c` shall be a complex array pointer of the same kind as `r`, and of
+  the same rank by default (but pointer rank remapping can be used)
+  - `c` could also be a complex scalar pointer, in the case r is a
+    rank-1 array of size 2
+- the size of the first dimension of `r` shall be even
+- `c%re` shall refer to the same storage as `r(1::2)` (rank-1), or
+  `r(1::2,:)` (rank-2), etc...
+- `c%im` shall refer to the same storage as `r(2::2)` (rank-1), or
+  `r(2::2,:)` (rank-2), etc...
+
+`r => c`
+
+- the exact opposite
+- `c` shall be a *contiguous* complex array or a complex scalar, which
+  has either the target or the pointer attribute
+- `r` shall be a real array pointer of the same kind as `c`, and of the
+  same rank by default (but pointer rank remapping can be used)
+  - if `c` is a scalar, then `r` shall be a rank-1 pointer of size 2
+- same other rules as above
+
+3.2 Alternative syntaxes
+
+If one wants to make the association between two different types more
+explicit and more type-safe, a new syntax may be introduced:
+
+Alternative syntax 1 (kind of pointer casting):
+```
+c => complex :: r
+r => real :: c
+```
+
+Alternative syntax 2:
+```
+c => complex_pointer(r)
+r => real_pointer(c)
+```
+
+Alternative syntax 3 (similar to the c_f_pointer() subroutine):
+```
+call complex_pointer(r,c[,shape][,lower])
+call real_pointer(c,r[,shape][,lower])
+```
+
+Alternative syntax 4 (more generic, in case other inter-type
+associations would be allowed in future versions of the standard):
+```
+call storage_associate(r,c[,shape][,lower])
+call storage_associate(r,c[,shape][,lower])
+```
+
+3.3 Intermediate representation
+
+During the discussions it has been proposed tu use an intermediate
+representation between the real and complex view, which would be a real
+view with an augmented rank and first dimension of size 2. Instead of
+going directly from `r(n)` to `c(n/2)` one would define by rank
+remapping:
+`r2(1:2,1:n/2) => r(1:n)`, then `c => r2`
+And the other way:
+`r2 => c`, then `r(1:n) => r2(1:2,1:n/2)`
+
+This could also be coupled with a new pseudo-component notation `c%reim`
+that would be equivalent the `r2` respresentation (i.e. `c%reim` would be
+`real`, with a shape [2,n/2]).
+
+I personally find that such an intermediate representation just makes
+the proposal more complex than it needs to be, and that nothing really
+useful can be performed with it. Moreover the `c%reim` notation would
+require another change in the standard to allow non zero ranks on both
+sides of `%`.
+
+3.4 Prototyping, etc...
+
+I think that this proposal doesn't need to have a preliminary prototype
+implementation, as it essentially consists in standardizing an already
+existing and common practice. A prototype implementation would do
+nothing else than mimicing the `c_f_pointer()` trick.
+
+
+4. Issues / Objections / Limitations
+
+4.1. Memory layout
+
+This proposal would constraint the memory layout of the complex type
+beyond what the current standard does. However, the required layout
+seems to be the de-facto standard, used by virtually all existing
+compilers (i.e. storing a complex scalar by the sequence real part/
+imaginary part, in that order).
+
+Also, the proposal would not prevent alternative memory layouts for
+the arrays in future versions of the standard, such as the row major
+storage. For instance, in the case of a row major 2D array, `c%re`
+would refer to the same storage as `r(:,1::2)` instead of `r(1::2,:)`
+for the column major case. More generally the obtained view would be
+layout dependent, and the standard would have to describe the view for
+each layout.
+
+Similarly, the proposal would be compatible with the so-called
+split-complex layout, if introduced later (without assessing here if
+such a layout is possible at all). In this layout, a complex array is
+stored with all the real parts first, then all the imaginary parts.
+In this case, `c%re` would refer to the same storage as `r(1:n/2)`.
+
+4.2. Argument association
+
+Allowing a real actual argument to be associated to a complex dummy
+argument -and vice-versa- has also been considered, but it would raise
+backward compatibility issues. So this part has been dropped from the
+proposal.
+
+4.3. Alignment
+
+Considering for instance a default real type stored on 4 bytes, the
+default complex type is stored on 8 bytes. Compilers may prefer/want to
+align the complex arrays on 8 bytes boundaries, which cannot be
+guaranteed if a complex pointer is associated to an arbitrary real array
+(e.g. `c => r(2:)`). If this is a problem, the pointer association may
+be allowed only the other way (real pointer associated to a complex
+array), where alignement should not be a problem.
+
+
+5. References
+
+[1] https://www.fftw.org/fftw3_doc/Reversing-array-dimensions.html
+
+[2]
+https://fortran-lang.discourse.group/t/
+implicit-real-complex-conversion-in-fortran/7381
+
+https://stackoverflow.com/questions/31590004/
+is-the-storage-of-complex-in-fortran-guaranteed-to-be-two-reals
+
+https://stackoverflow.com/questions/36977737/
+pass-a-real-array-if-a-complex-array-is-expected
+
+Discussions related to this proposal:
+https://fortran-lang.discourse.group/t/complex-type-storage-again/7020
+https://github.com/j3-fortran/fortran_proposals/issues/323
+https://github.com/j3-fortran/fortran_proposals/pull/325
