@@ -197,6 +197,17 @@ integers. We attempt to avoid these as follows:
     - MAXLOC(UNSIGNED array, ...), and MINLOC
     - MAXVAL(UNSIGNED array, ...), MINVAL
 
+- Add the following new intrinsics (names to be decided):
+    - ADD_WRAPPING(UNSIGNED, UNSIGNED) (or ADD_MODULAR) for modular
+      arithmetics; the same for SUB, MUL, DIV
+
+- We can consider also adding the following intrinsics:
+    - Possibly add ADD_SATURATING: saturating at the numeric bounds
+      instead of overflowing; the same for SUB, MUL, DIV
+    - Possibly add ADD_OVERFLOWING (or ADD_CHECKED): indicates with a
+      flag that overflow occurred, wrapped value is returned; the same
+      for SUB, MUL, DIV
+
 - Extend ISO_C_BINDING with KIND numbers, for example,
   C_UINT, C_UINT8_T.
 
