@@ -197,6 +197,10 @@ integers. We attempt to avoid these as follows:
     - MATMUL(UNSIGNED array, UNSIGNED array)
     - MAXLOC(UNSIGNED array, ...), and MINLOC
     - MAXVAL(UNSIGNED array, ...), MINVAL
+    - SUM, PRODUCT
+    - PACK, RESHAPE, SPREAD, TRANSPOSE, UNPACK
+    - SELECTED_UNSIGNED_KIND
+    - UINT
 
 - Add the following new intrinsics (names to be decided):
     - ADD_WRAPPING(UNSIGNED, UNSIGNED) (or ADD_MODULAR) for modular
