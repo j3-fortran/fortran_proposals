@@ -66,8 +66,8 @@ rq15. [optional] The ISO_C_BINDING module may provide additional integer
 
 rq17. [optional] The ISO_C_BINDING module may provide additional integer
       named constants for KIND parameters corresponding to C interchange
-      decimal floating types of the form '_DecimalN' if the companion
-      processor defines them.
+      decimal floating types of the form '_DecimalN' and '_DecimalNx' if
+      the companion processor defines them.
 
 3 Specifications
 ================
@@ -165,6 +165,8 @@ sp15. [if rq15] If the companion processor defines additional types of
 
 sp17. [if rq17] If the companion processor defines additional types of
       the form '_DecimalN', the processor may add integer named
-      constants of the form 'C_DECIMALN'.
+      constants of the form 'C_DECIMALN'. If the companion processor
+      defines additional types of the form '_DecimalNx', the processor
+      may add integer named constants of the form 'C_DECIMALNX'.
 
 === END ===
