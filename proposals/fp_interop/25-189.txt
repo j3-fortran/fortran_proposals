@@ -1,8 +1,8 @@
-To: J3                                                     J3/##-###
+To: J3                                                     J3/25-189
 From: Patrick Fasano
 Subject: Requirements and specifications for interoperability with C
          interchange and extended types
-Date: 2025-Oct-XX
+Date: 2025-October-15
 
 References:
       ISO/IEC 9899:2024 Programming languages -- C ("C23")
