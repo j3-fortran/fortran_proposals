@@ -1,0 +1,191 @@
+To: J3                                                     J3/25-189
+From: Patrick Fasano
+Subject: Requirements and specifications for interoperability with C
+         interchange and extended types
+Date: 2025-October-15
+
+References:
+      ISO/IEC 9899:2024 Programming languages -- C ("C23")
+            (working draft N3220)
+      WG5/N2249 Fortran 202Y Work Items
+      23-176 Add extended floating-point types defined in ISO C23
+            to ISO_C_BINDING
+      ISO/IEC 60559:2020 Floating-Point arithmetic
+      IEEE 754-2019 IEEE Standard for Floating-Point Arithmetic
+
+
+1 Background
+============
+
+bg01. The ISO C23 specification (ISO/IEC 9899:2024) added support for
+      interchange and extended floating-point types (C23 Annex H). The
+      current Fortran 202Y work list WG5/N2249 includes adding
+      interoperability with these types as accepted work item US05. At
+      meeting #230 in June 2023, J3 accepted paper 23-176 as
+      background/use-case for additional interchange types.
+
+bg03. This paper contains formal requirements and specifications for
+      Fortran 202Y proposal US05, "Add extended floating-point types
+      defined in ISO C23 to ISO_C_BINDING".
+
+2 Requirements
+==============
+
+rq01. The C23 standard adds a large number of new types, importing
+      significant portions of ISO/IEC 60559 (a.k.a IEEE 754) into its
+      specification. The most important of these for Fortran
+      interoperability with C are the '_Float16', '_Float32',
+      '_Float64', and '_Float128' types (and their related complex
+      types). Requirements rq02-r05 deal with these new types. Many of
+      the other types, covered by rq07-rq17, are marked as optional and
+      could be dropped independently while keeping the rest of this
+      paper. These optional requirements primarily serve to maintain
+      parity with Annex H of C23.
+
+rq02. The ISO_C_BINDING module should provide integer named constants
+      for KIND parameters corresponding to the C interchange floating
+      types '_Float16', '_Float32', '_Float64', and '_Float128'.
+
+rq03. If the companion processor defines '__STDC_IEC_60559_BFP__' and
+      '__STDC_IEC_60559_TYPES__', then the KIND parameters corresponding
+      to '_Float32' and '_Float64' should equal those corresponding to
+      'float' and 'double', respectively.
+
+rq05. The ISO_C_BINDING module should provide integer named constants
+      for KIND parameters corresponding to the C interchange complex
+      types '_Float16_Complex', '_Float32_Complex', '_Float64_Complex',
+      and '_Float128_Complex'. The values of the named constants should
+      equal those of the respective constants for the interchange
+      floating types.
+
+rq07. [optional] The ISO_C_BINDING module should provide integer named
+      constants for KIND parameters corresponding to the C extended
+      floating types '_Float32x', '_Float64x', and '_Float128x'.
+
+rq09. [optional] The ISO_C_BINDING module should provide integer named
+      constants for KIND parameters corresponding to the C extended
+      complex types '_Float32x_Complex', '_Float64x_Complex', and
+      '_Float128x_Complex'. The values of the named constants should
+      match those of the respective constants for the extended floating
+      types.
+
+rq11. [optional] The ISO_C_BINDING module should provide integer named
+      constants for KIND parameters corresponding to the C interchange
+      decimal floating types '_Decimal32', '_Decimal64', and
+      '_Decimal128'.
+
+rq13. [optional] The ISO_C_BINDING module should provide integer named
+      constants for KIND parameters corresponding to the C extended
+      decimal floating types '_Decimal64x', and '_Decimal128x'.
+
+rq15. [optional] The ISO_C_BINDING module may provide additional integer
+      named constants for KIND parameters corresponding to C interchange
+      floating types of the form '_FloatN', '_FloatNx', and
+      '_FloatN_Complex' if the companion processor defines them.
+
+rq17. [optional] The ISO_C_BINDING module may provide additional integer
+      named constants for KIND parameters corresponding to C interchange
+      decimal floating types of the form '_DecimalN' and '_DecimalNx' if
+      the companion processor defines them.
+
+3 Specifications
+================
+
+sp01. For all integer named constants to be added to the ISO_C_BINDING
+      module, the value shall be a valid real kind type parameter or
+      shall be -1 if the companion processor defines the corresponding C
+      type and there is no interoperating Fortran processor kind, or -2
+      if the companion processor does not define the corresponding C
+      type.
+
+sp02. To the ISO_C_BINDING module, add the following integer named
+      constants for real KIND parameters:
+
+      +----------------+--------------------+
+      | Named constant | C interchange type |
+      +----------------+--------------------+
+      | C_FLOAT16      | _Float16           |
+      | C_FLOAT32      | _Float32           |
+      | C_FLOAT64      | _Float64           |
+      | C_FLOAT128     | _Float128          |
+      +----------------+--------------------+
+
+      If the companion processor defines '__STDC_IEC_60559_BFP__' and
+      '__STDC_IEC_60559_TYPES__', then the constants 'C_FLOAT32' and
+      'C_FLOAT64' should have the same values as 'C_FLOAT' and
+      'C_DOUBLE', respectively (C2023 H.2.4.2).
+
+sp05. To the ISO_C_BINDING module, add the following integer named
+      constants for real KIND parameters:
+
+      +--------------------+--------------------+
+      | Named constant     | C interchange type |
+      +--------------------+--------------------+
+      | C_FLOAT16_COMPLEX  | _Float16_Complex   |
+      | C_FLOAT32_COMPLEX  | _Float32_Complex   |
+      | C_FLOAT64_COMPLEX  | _Float64_Complex   |
+      | C_FLOAT128_COMPLEX | _Float128_Complex  |
+      +--------------------+--------------------+
+
+      The values of each of these named constants shall be the same as
+      the respective constants defined in sp01.
+
+sp07. [if rq07] To the ISO_C_BINDING module, add the following integer
+      named constants for real KIND parameters:
+
+      +----------------+-----------------+
+      | Named constant | C extended type |
+      +----------------+-----------------+
+      | C_FLOAT32X     | _Float32x       |
+      | C_FLOAT64X     | _Float64x       |
+      | C_FLOAT128X    | _Float128x      |
+      +----------------+-----------------+
+
+sp09. [if rq09] To the ISO_C_BINDING module, add the following integer
+      named constants for real KIND parameters:
+
+      +---------------------+--------------------+
+      | Named constant      | C extended type    |
+      +---------------------+--------------------+
+      | C_FLOAT32X_COMPLEX  | _Float32x_Complex  |
+      | C_FLOAT64X_COMPLEX  | _Float64x_Complex  |
+      | C_FLOAT128X_COMPLEX | _Float128x_Complex |
+      +---------------------+--------------------+
+
+sp11. [if rq11] To the ISO_C_BINDING module, add the following integer
+      named constants for real KIND parameters:
+
+      +----------------+--------------------+
+      | Named constant | C interchange type |
+      +----------------+--------------------+
+      | C_DECIMAL32    | _Decimal32         |
+      | C_DECIMAL64    | _Decimal64         |
+      | C_DECIMAL128   | _Decimal128        |
+      +----------------+--------------------+
+
+sp13. [if rq13] To the ISO_C_BINDING module, add the following integer
+      named constants for real KIND parameters:
+
+      +----------------+--------------------+
+      | Named constant | C interchange type |
+      +----------------+--------------------+
+      | C_DECIMAL64X   | _Decimal64x        |
+      | C_DECIMAL128X  | _Decimal128x       |
+      +----------------+--------------------+
+
+sp15. [if rq15] If the companion processor defines additional types of
+      the form '_FloatN', the processor may add integer named constants
+      of the form 'C_FLOATN'. If the companion processor defines
+      additional types of the form '_FloatNx', the processor may add
+      integer named constants of the form 'C_FLOATNX'. If the companion
+      processor defines additional types of the form '_FloatN_Complex',
+      the processor may add integer named constants of the form
+      'C_FLOATN_COMPLEX'.
+
+sp17. [if rq17] If the companion processor defines additional types of
+      the form '_DecimalN', the processor may add integer named
+      constants of the form 'C_DECIMALN'. If the companion processor
+      defines additional types of the form '_DecimalNx', the processor
+      may add integer named constants of the form 'C_DECIMALNX'.
+
+=== END ===
