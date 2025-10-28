@@ -1,8 +1,8 @@
-To: J3                                                     J3/##-###
+To: J3                                                     J3/25-189r1
 From: Patrick Fasano
 Subject: Requirements and specifications for interoperability with C
          interchange and extended types
-Date: 2025-Oct-XX
+Date: 2025-October-28
 
 References:
       ISO/IEC 9899:2024 Programming languages -- C ("C23")
@@ -79,13 +79,13 @@ rq11. The ISO_C_BINDING module shall provide integer named constants
 
 sp01. For all integer named constants to be added to the ISO_C_BINDING
       module, the value shall be a valid real kind type parameter or
-      shall be -1 if the companion processor’s type does not have a
-      precision equal to the precision of any of the Fortran processor’s
-      real kinds, −2 if the companion processor’s type does not have a
-      range equal to the range of any of the Fortran processor’s real
-      kinds, −3 if the companion processor's type has neither the
-      precision nor range of any of the Fortran processor’s real kinds,
-      −4 if there is no interoperating Fortran processor kind for other
+      shall be -1 if the companion processor's type does not have a
+      precision equal to the precision of any of the Fortran processor's
+      real kinds, -2 if the companion processor's type does not have a
+      range equal to the range of any of the Fortran processor's real
+      kinds, -3 if the companion processor's type has neither the
+      precision nor range of any of the Fortran processor's real kinds,
+      -4 if there is no interoperating Fortran processor kind for other
       reasons, and -5 if the companion processor does not define the
       corresponding C type.
 
