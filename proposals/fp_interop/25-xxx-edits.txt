@@ -26,6 +26,10 @@ additional floating types.
 This paper provides edits for Fortran 202Y proposal US05, "Add C
 interoperability for new interchange floating point types in C".
 
+The ISO C23 specification also added 'bool' as a keyword with an
+alternate spelling of '_Bool'. This paper optionally provides edits for
+Fortran 202Y to propagate this change.
+
 2 Edits (relative to 25-007r1)
 ==============================
 
@@ -148,6 +152,16 @@ CFI_type_long_double_Complex:
 
 ------------------------------------------------------------------------
 
+[538:30] Replace two instances of:
+
+      (_Bool)
+
+with:
+
+      (bool)
+
+------------------------------------------------------------------------
+
 [548:table 18.2] Replace the following:
 
       _Bool
@@ -155,6 +169,21 @@ CFI_type_long_double_Complex:
 with:
 
       bool
+
+------------------------------------------------------------------------
+
+[557:table 18.4] Replace the following:
+
+      +---------------+-------+
+      | CFI_type_Bool | _Bool |
+      +---------------+-------+
+
+with:
+
+      +---------------+------+
+      | CFI_type_Bool | bool |
+      | CFI_type_bool | bool |
+      +---------------+------+
 
 ------------------------------------------------------------------------
 
