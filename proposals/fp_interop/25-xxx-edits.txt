@@ -115,6 +115,39 @@ the table:
 
 ------------------------------------------------------------------------
 
+[557:table 18.4] Add the following rows after the row for
+CFI_type_long_double:
+
+      +---------------------+-------------+
+      | CFI_type_Float16    | _Float16    |
+      | CFI_type_Float32    | _Float32    |
+      | CFI_type_Float64    | _Float64    |
+      | CFI_type_Float128   | _Float128   |
+      | CFI_type_Float32x   | _Float32x   |
+      | CFI_type_Float64x   | _Float64x   |
+      | CFI_type_Float128x  | _Float128x  |
+      | CFI_type_Decimal32  | _Decimal32  |
+      | CFI_type_Decimal64  | _Decimal64  |
+      | CFI_type_Decimal128 | _Decimal128 |
+      +---------------------+-------------+
+
+------------------------------------------------------------------------
+
+[557:table 18.4] Add the following rows after the row for
+CFI_type_long_double_Complex:
+
+      +----------------------------+---------------------+
+      | CFI_type_Float16_Complex   | _Float16 _Complex   |
+      | CFI_type_Float32_Complex   | _Float32 _Complex   |
+      | CFI_type_Float64_Complex   | _Float64 _Complex   |
+      | CFI_type_Float128_Complex  | _Float128 _Complex  |
+      | CFI_type_Float32X_Complex  | _Float32x _Complex  |
+      | CFI_type_Float64X_Complex  | _Float64x _Complex  |
+      | CFI_type_Float128X_Complex | _Float128x _Complex |
+      +----------------------------+---------------------+
+
+------------------------------------------------------------------------
+
 [548:table 18.2] Replace the following:
 
       _Bool
