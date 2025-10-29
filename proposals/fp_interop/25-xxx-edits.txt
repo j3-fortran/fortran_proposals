@@ -10,6 +10,7 @@ References:
       ISO/IEC 60559:2020 Floating-Point arithmetic
       25-189r1 Requirements and specifications for interoperability with
             C interchange and extended types
+      25-007r1 Fortran 2028 Working Draft
 
 
 1 Background
@@ -19,11 +20,11 @@ The ISO C23 specification (ISO/IEC 9899:2024) added support for
 interchange and extended floating-point types (C23 Annex H). The current
 Fortran 202Y work list WG5/N2249 includes adding interoperability with
 these types as accepted work item US05. At meeting #237 in October 2025,
-J3 accepted paper 25-178r1 as requirements and specifications for
+J3 passed paper 25-189r1 as requirements and specifications for
 additional floating types.
 
-This paper provides edits for Fortran 202Y proposal US05, "Add extended
-floating-point types defined in ISO C23 to ISO_C_BINDING".
+This paper provides edits for Fortran 202Y proposal US05, "Add C
+interoperability for new interchange floating point types in C".
 
 2 Edits (relative to 25-007r1)
 ==============================
@@ -42,7 +43,7 @@ defined in ISO/IEC 9899:2024 Annex H.
 
 The values of C_FLOAT, C_DOUBLE, C_LONG_DOUBLE, C_FLOAT16, C_FLOAT32,
 C_FLOAT64, C_FLOAT128, C_FLOAT32X, C_FLOAT64X, C_FLOAT128X, C_DECIMAL32
-C_DECIMAL64, and C_DECIMAL128 LE shall each be a valid value for a real
+C_DECIMAL64, and C_DECIMAL128 shall each be a valid value for a real
 kind type parameter on the processor or shall be -1 if the companion
 processor's type does not have a precision equal to the precision of any
 of the Fortran processor's real kinds, -2 if the companion processor's
@@ -64,6 +65,12 @@ C_DOUBLE, respectively.
 
 ------------------------------------------------------------------------
 
+[2:6] Insert a new line:
+
+      ISO/IEC 9899:2024, Programming languages -- C
+
+------------------------------------------------------------------------
+
 [547:13] Replace the line
 
       The C types mentioned in Table 18.2 are defined in ISO/IEC
@@ -72,7 +79,7 @@ C_DOUBLE, respectively.
 with the line
 
       The C types mentioned in Table 18.2 are defined in ISO/IEC
-      9899:2024, 6.2.5, 7.19, 7.22, and H.2.
+      9899:2024, 6.2.5, 7.22, and H.2.
 
 ------------------------------------------------------------------------
 
@@ -96,12 +103,26 @@ with the line
 [547-548:table 18.2] Add the following rows to the COMPLEX section of
 the table:
 
-      +---------------------+--------------------+
-      | C_FLOAT16_COMPLEX   | _Float16_Complex   |
-      | C_FLOAT32_COMPLEX   | _Float32_Complex   |
-      | C_FLOAT64_COMPLEX   | _Float64_Complex   |
-      | C_FLOAT128_COMPLEX  | _Float128_Complex  |
-      | C_FLOAT32X_COMPLEX  | _Float32x_Complex  |
-      | C_FLOAT64X_COMPLEX  | _Float64x_Complex  |
-      | C_FLOAT128X_COMPLEX | _Float128x_Complex |
-      +---------------------+--------------------+
+      +---------------------+---------------------+
+      | C_FLOAT16_COMPLEX   | _Float16 _Complex   |
+      | C_FLOAT32_COMPLEX   | _Float32 _Complex   |
+      | C_FLOAT64_COMPLEX   | _Float64 _Complex   |
+      | C_FLOAT128_COMPLEX  | _Float128 _Complex  |
+      | C_FLOAT32X_COMPLEX  | _Float32x _Complex  |
+      | C_FLOAT64X_COMPLEX  | _Float64x _Complex  |
+      | C_FLOAT128X_COMPLEX | _Float128x _Complex |
+      +---------------------+---------------------+
+
+------------------------------------------------------------------------
+
+[548:table 18.2] Replace the following:
+
+      _Bool
+
+with:
+
+      bool
+
+------------------------------------------------------------------------
+
+===END===
