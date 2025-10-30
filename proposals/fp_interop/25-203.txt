@@ -1,7 +1,7 @@
-To: J3                                                     J3/##-###
+To: J3                                                     J3/25-203
 From: Patrick Fasano
 Subject: US05: Edits for C interchange and extended floating types
-Date: 2025-October-XX
+Date: 2025-October-30
 
 References:
       ISO/IEC 9899:2024 Programming languages -- C ("C23")
