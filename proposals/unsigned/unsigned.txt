@@ -1,0 +1,244 @@
+To: J3                                                     J3/24-XXX
+From:
+Subject: Adding an UNSIGNED type to Fortran
+Date: 2024-October-25
+
+References: 24-116, 24-102, 07-007
+            WG5 N2230 DIN Suggestions for F202Y.pdf
+            WG5 N2142 Fortran 2020 Feature Survey Results 201710.pdf
+
+# 1. Introduction
+
+We propose adding a small set of features for an unsigned data to
+Fortran 202y. Unsigned integers are a basic data type used in many
+programming languages, such as C. They are useful for a range of
+applications, including, but not limited to
+
+- interfacing to C
+- interfacing to the operating system
+- random number generators
+- image processing
+- signal processing
+- hashing
+- cryptography (including multi-precision arithmetic)
+- data compression
+- binary file I/O
+
+Unsigned integers were the fourth most requested item to add to Fortran
+202x in 2017. It is the sixth item on the DIN national body list for
+inclusion in Fortran 202y.
+
+The use cases can be roughly divided into three classes:
+
+- representing unsigned integer
+- bit operations
+- modular arithmetic (2^n for a datatype with n bits)
+
+The two fundamental designs are:
+
+- adding a dedicated type for each use case with the appropriate
+  behavior of aritmetic operators and intrinsic functions on overflow;
+  the different types can possibly just be different kinds for
+  `unsigned(kind=...)`:
+  * `unsigned`: arithmetic operation overflow do not wraparound, or are
+    possibly not even defined
+  * `bits`: bit operations are defined, arithmetic operations do not
+    wraparound or are not defined
+  * `modular`: arithmetic operations wraparound using modular 2^n
+    arithmetic
+- one `unsigned` type that is used for all three use cases; intrinsic
+  functions are used to implement bit operations, various overflow modes
+  (wraparound, checked, saturated), etc. One must choose some default
+  behavior on arithmetic overflow, discussed below.
+
+There is currently no community nor committee agreement which of the two
+fundamnetal designs to do, nor what the default overflow behavior should
+be for arithmetic operations if we go with the second design.
+
+Consequently, we are proposing to implement the second design with
+undefined behavior for arithmetic overflow, consistent with the existing
+signed integers in Fortran, which allows processors to optionally check
+for overflow. This proposal leaves the door open to later implement
+either the first design, or the second design with defined overflow
+behavior (to wraparound). It is also a subset of features that most
+people seem to agree that we need.
+
+The proposal adds a solution to all three use cases (data
+representation, bit operations, modular arithmetic) that processors can
+implement and users can start using. If later we decide to either add
+dedicated types/kinds `bits` and `modular`, or define default arithmetic
+operators' overflow to wraparound, no existing code will break.
+
+## 1.1. Prior art
+
+At least one Fortran compiler, Sun Fortran, supported unsigned integers.
+Documentation can be found at [Oracle]
+(https://docs.oracle.com/cd/E19205-01/819-5263/aevnb/index.html).
+This proposal borrows heavily from that prior art, without sticking
+to it in all details.
+
+## 1.2 Inputs to this proposal
+
+In addition to the references listed above, the discussion at the
+Fortran proposals site
+https://github.com/j3-fortran/fortran_proposals/issues/2
+influenced this proposal.
+
+
+# 2. Goal
+
+Define a new type, UNSIGNED, with a small set of intrinsic operations
+and intrinsic functions that would satisfy most of the use cases listed
+above.
+
+## 2.1 Value range limitation
+
+An UNSIGNED with n bits has a value range between 0 and 2^n-1.
+(Note that Fortran model integers have values between -2^(n-1)+1 and
+2^(n-1)-1).
+
+## 2.2 Arithmetic overflow is undefined
+
+Just like the current (signed) integers, arithmetic overflow is
+undefined. This allows processors to optionally check for overflow.
+
+The following intrinsic binary arithmetic operators are extended
+to support UNSIGNED values:
+    +
+    -
+    *
+    /
+
+The unary - operator shall not be applied to UNSIGNED values.
+
+The exponentiation operator ** shall not be applied to UNSIGNED values.
+
+
+## 2.3 Prohibit mixed-mode arithmetic with INTEGER and REAL
+
+The intrinsic Fortran binary arithmetic operators shall have both
+operands be UNSIGNED if any of the operands is UNSIGNED.
+
+The intrinsic Fortran binary relational operators (defined in R1014 rel-op)
+shall have both operands be UNSIGNED if either of the operands is UNSIGNED.
+
+To perform mixed-mode arithmetic with INTEGER or REAL values,
+the UNSIGNED operand must be converted to an INTEGER or REAL
+value explicitly via the INT or REAL intrinsic functions.
+
+
+# 3. Avoiding traps and pitfalls
+
+There are numerous well-known traps and pitfalls when using unsigned
+integers. We attempt to avoid these as follows:
+- comparison of signed vs. unsigned values: require conversion via
+  an intrinsic function or other means.
+- overflow from assignment of large UNSIGNED values to similar-sized
+  INTEGER entities: Either accept truncation or specify the KIND with a
+  larger range to the INT intrinsic function.
+- confusion about modulo arithmetic, especially with respect to
+  subtraction (e.g., 3u - 5u < 3u .EQV. .false.) is avoided
+  because `3u - 5u` is undefined and compilers can optionally give a
+  compile-time or runtime error.
+
+
+# 4. Proposal
+
+- A type name tentatively called UNSIGNED, with the same KIND
+  mechanism as for INTEGER, plus a SELECTED_UNSIGNED_KIND function,
+  is added to implement unsigned integers.
+
+- Unsigned integer literal constants are marked with a U suffix,
+  with an optional KIND specifier attached via the usual underscore.
+
+- Add a conversion function UINT, with an optional KIND.
+
+- Prohibit binary operations between INTEGER and UNSIGNED or
+  REAL and UNSIGNED without explicit conversion.
+
+- Permit unsigned integer values in a SELECT CASE.
+
+- Prohibit unsigned integers as index variables in a DO statement
+  or as array indices.
+
+- Allow unsigned integers to be read or written in list-directed,
+  namelist or unformatted I/O, and by using the usual edit
+  descriptors such as I, B, O and Z.
+
+- Allow UNSIGNED arguments to some intrinsics:
+    - BGE(UNSIGNED, UNSIGNED) and friends
+    - BIT_SIZE(UNSIGNED)
+    - BTEST(UNSIGNED, INTEGER)
+    - DIGITS(UNSIGNED)
+    - DSHIFTL(UNSIGNED, UNSIGNED, INTEGER)
+    - DSHIFTR(UNSIGNED, UNSIGNED, INTEGER)
+    - HUGE(UNSIGNED)
+    - IAND(UNSIGNED, UNSIGNED), IEOR, IOR, NOT
+    - IBCLR(UNSIGNED, INTEGER), IBITS, IBSET
+    - ISHFT(UNSIGNED, INTEGER, INTEGER) and ISHFTC
+    - LEADZ(UNSIGNED) and TRAILZ
+    - MERGE_BITS(UNSIGNED, UNSIGNED, UNSIGNED
+    - MIN(UNSIGNED, ...) and MAX
+    - MOD(UNSIGNED, UNSIGNED) and MODULO
+    - MVBITS(UNSIGNED, INTEGER, INTEGER, UNSIGNED, INTEGER)
+    - POPCNT(UNSIGNED) and POPPAR
+    - RANGE(UNSIGNED)
+    - OUT_OF_RANGE(UNSIGNED, UNSIGNED [, LOGICAL])
+    - SHIFTA(UNSIGNED, INTEGER), SHIFTL, SHIFTR
+    - TRANSFER(UNSIGNED, UNSIGNED, INTEGER)
+
+- Allow UNSIGNED arguments to some array intrinsics:
+    - IALL(UNSIGNED array, INTEGER, [, mask]) and friends
+    - IPARITY(UNSIGNED array, INTEGER [, mask])
+    - CSHIFT(UNSIGNED array, INTEGER, INTEGER)
+    - DOT_PRODUCT(UNSIGNED array, UNSIGNED array)
+    - EOSHIFT(UNSIGNED array, INTEGER, INTEGER)
+    - FINDLOC(UNSIGNED array, UNSIGNED, ...)
+    - MATMUL(UNSIGNED array, UNSIGNED array)
+    - MAXLOC(UNSIGNED array, ...), and MINLOC
+    - MAXVAL(UNSIGNED array, ...), MINVAL
+    - SUM, PRODUCT
+    - PACK, RESHAPE, SPREAD, TRANSPOSE, UNPACK
+    - SELECTED_UNSIGNED_KIND
+    - UINT
+
+- Add the following new intrinsics (names to be decided):
+    - ADD_WRAPPING(UNSIGNED, UNSIGNED) (or ADD_MODULAR) for modular
+      arithmetics; the same for SUB, MUL, DIV
+
+- We can consider also adding the following intrinsics:
+    - Possibly add ADD_SATURATING: saturating at the numeric bounds
+      instead of overflowing; the same for SUB, MUL, DIV
+    - Possibly add ADD_OVERFLOWING (or ADD_CHECKED): indicates with a
+      flag that overflow occurred, wrapped value is returned; the same
+      for SUB, MUL, DIV
+
+- Extend ISO_C_BINDING with KIND numbers, for example,
+  C_UINT, C_UINT8_T.
+
+- Extend ISO_C_BINDING with other things we forgot to do.
+
+- Extend ISO_Fortran_binding.h appropriately.
+
+- Extend ISO_FORTRAN_ENV with KIND PARAMETERs, for example,
+  UINT8, UINT16, UINT32.
+
+- Conversion of an UNSIGNED value to an INTEGER outside the range of
+  the integer is processor-dependent.
+
+- Conversion of an INTEGER value to an UNSIGNED outside the range of
+  the integer is processor-dependent.
+
+- Conversion of an UNSIGNED value to an INTEGER with a wider range
+  is exact.
+
+# 5. Relation to other proposals
+
+This proposal is almost identical to J3/24-116 with the main difference
+that overflow in arithmetic operators +, -, *, / is undefined instead of
+wrapping around by default.
+
+This proposal complements the BITS proposal, J3/07-007r2.pdf, as
+proposed in J3/22-195.txt. BITS restricts its operations to logical
+operations and comparisons on bit lengths. This proposal adds arithmetic
+operations. This proposal limits the bit lengths to common powers of two.
