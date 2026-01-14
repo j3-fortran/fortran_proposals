@@ -20,7 +20,8 @@ interoperability with new floating-point types added in C23. As such,
 
 This paper provides edits to update and replace references to the ISO
 C17 specification (ISO/IEC 9899:2018) with references to the ISO C23
-specification (ISO/IEC 9899:2024).
+specification (ISO/IEC 9899:2024). The edits in this paper complement
+those presented in 25-203r1 for work item US05.
 
 2 Edits (relative to 25-007r1)
 ==============================
@@ -251,9 +252,9 @@ with
 with the line
 
       The C types mentioned in Table 18.2 are defined in ISO/IEC
-      9899:2024, 6.2.5, 7.22, and H.2.
+      9899:2024, 6.2.5, 7.21, 7.22, and H.2.
 
-Note to editor: This edit is the same as that in 25-203r1.
+Note to editor: This edit is corrected relative to the one that appears in 25-203r1.
 
 ------------------------------------------------------------------------
 
@@ -307,14 +308,20 @@ with
 
 ------------------------------------------------------------------------
 
-[551:16-17] Replace
+[551:16-17] Delete
 
-    ISO/IEC 9899:2018, 6.2.5, 7.19, and 7.20.1
+    (ISO/IEC 9899:2018, 6.2.5, 7.19, and 7.20.1)
 
-with
+[551:note 1] After "The referenced type of a C pointer type", insert:
 
-    ISO/IEC 9899:2024, 6.2.5, 7.22, and H.2
-
+    (ISO/IEC 9899:2024 6.2.5)
+    
+such that the note reads:
+    <<NOTE 1>>
+    The <<referenced type>> of a C pointer type (ISO/IEC 9899:2024 6.2.5) is the 
+    C type of the object that the C pointer type points to. For example, the 
+    referenced type of the pointer type \texttt{int *} is \texttt{int}.
+   
 ------------------------------------------------------------------------
 
 [551:note 2] Replace
