@@ -112,6 +112,10 @@ with
 
     ISO/IEC 9899:2024, 6.7.3.3
 
+Note to J3/editor: ISO/IEC 9899:2024 does not actually guarantee that
+enumeration constants fit in a C int. This will be addressed by
+rewriting or removing this Note in a forthcoming edit paper.
+
 ------------------------------------------------------------------------
 
 [103:note 3] Replace
