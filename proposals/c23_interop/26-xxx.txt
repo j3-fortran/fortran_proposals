@@ -321,10 +321,12 @@ with
     (ISO/IEC 9899:2024, 6.2.5)
 
 such that the note reads:
+
     <<NOTE 1>>
-    The <<referenced type>> of a C pointer type (ISO/IEC 9899:2024, 6.2.5) is the
-    C type of the object that the C pointer type points to. For example, the
-    referenced type of the pointer type \texttt{int *} is \texttt{int}.
+    The <<referenced type>> of a C pointer type (ISO/IEC 9899:2024,
+    6.2.5) is the C type of the object that the C pointer type points
+    to. For example, the referenced type of the pointer type
+    \texttt{int *} is \texttt{int}.
 
 ------------------------------------------------------------------------
 
