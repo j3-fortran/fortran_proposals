@@ -1,7 +1,7 @@
-To: J3                                                     J3/26-XXX
+To: J3                                                     J3/26-112
 From: Patrick Fasano
 Subject: Edits for updating references from C17 to C23
-Date: 2026-January-XX
+Date: 2026-January-14
 
 References:
       ISO/IEC 9899:2024 Programming languages -- C ("C23")
