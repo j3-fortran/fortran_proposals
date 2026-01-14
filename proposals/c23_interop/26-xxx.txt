@@ -258,7 +258,8 @@ with the line
       The C types mentioned in Table 18.2 are defined in ISO/IEC
       9899:2024, 6.2.5, 7.21, 7.22, and H.2.
 
-Note to editor: This edit is corrected relative to the one that appears in 25-203r1.
+Note to editor: This edit is corrected relative to the one that appears
+in 25-203r1.
 
 ------------------------------------------------------------------------
 
