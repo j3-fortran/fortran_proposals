@@ -1,0 +1,459 @@
+To: J3                                                     J3/26-112
+From: Patrick Fasano
+Subject: Edits for updating references from C17 to C23
+Date: 2026-January-14
+
+References:
+      ISO/IEC 9899:2024 Programming languages -- C ("C23")
+      25-203r1 US05: Edits for C interchange and extended floating types
+      ISO/IEC 9899:2018 Programming languages -- C ("C17")
+      25-007r1 Fortran 2028 Working Draft
+
+1 Background
+============
+
+The ISO C23 specification (ISO/IEC 9899:2024) is the latest revision of
+the standard for the C language. At meeting #238 in January 2026, J3
+passed paper 25-203r1 with edits to add support to Fortran 202Y for
+interoperability with new floating-point types added in C23. As such,
+25-203r1 introduced references to the C23 specification.
+
+This paper provides edits to update and replace references to the ISO
+C17 specification (ISO/IEC 9899:2018) with references to the ISO C23
+specification (ISO/IEC 9899:2024). The edits in this paper complement
+those presented in 25-203r1 for work item US05.
+
+2 Edits (relative to 25-007r1)
+==============================
+
+[2:6] Replace the line:
+
+      ISO/IEC 9899:2018, Programming languages -- C
+
+with the line
+
+      ISO/IEC 9899:2024, Programming languages -- C
+
+Note to editor: This edit is the same as that in 25-203r1.
+
+------------------------------------------------------------------------
+
+[7:22] Replace
+
+    ISO/IEC 9899:2018
+
+with
+
+    ISO/IEC 9899:2024
+
+------------------------------------------------------------------------
+
+[50:36] Replace
+
+    ISO/IEC 9899:2018, 5.1.2.2.3 and 7.22.4.4
+
+with
+
+    ISO/IEC 9899:2024, 5.2.2.3.4 and 7.24.5.4
+
+------------------------------------------------------------------------
+
+[50:39] Replace
+
+    ISO/IEC 9899:2018, 7.22.4.4
+
+with
+
+    ISO/IEC 9899:2024, 7.24.5.4
+
+------------------------------------------------------------------------
+
+[57:note] In the first paragraph, replace
+
+    ISO/IEC 9899:2018
+
+with
+
+    ISO/IEC 9899:2024
+
+and in the second paragraph, replace
+
+    ISO/IEC 9899:2018, 6.7.6.3
+
+with
+
+    ISO/IEC 9899:2024, 6.7.7.4
+
+------------------------------------------------------------------------
+
+[102:27] Replace
+
+    ISO/IEC 9899:2018, 6.7.2.2
+
+with
+
+    ISO/IEC 9899:2024, 6.7.3.3
+
+------------------------------------------------------------------------
+
+[103:note 2] Replace
+
+    ISO/IEC 9899:2018
+
+with
+
+    ISO/IEC 9899:2024
+
+and replace
+
+    ISO/IEC 9899:2018, 6.7.2.2
+
+with
+
+    ISO/IEC 9899:2024, 6.7.3.3
+
+Note to J3/editor: ISO/IEC 9899:2024 does not actually guarantee that
+enumeration constants fit in a C int. This will be addressed by
+rewriting or removing this Note in a forthcoming edit paper.
+
+------------------------------------------------------------------------
+
+[103:note 3] Replace
+
+    ISO/IEC 9899:2018
+
+with
+
+    ISO/IEC 9899:2024
+
+------------------------------------------------------------------------
+
+[115:note] Replace
+
+    ISO/IEC 9899:2018
+
+with
+
+    ISO/IEC 9899:2024
+
+and replace
+
+    ISO/IEC 9899:2018, 6.4.3
+
+with
+
+    ISO/IEC 9899:2024, 6.4.4
+
+------------------------------------------------------------------------
+
+[252:19] Replace
+
+    ISO/IEC 9899:2018, 7.21.2
+
+with
+
+    ISO/IEC 9899:2024, 7.23.2
+
+------------------------------------------------------------------------
+
+[538:4] Replace
+
+    ISO/IEC 9899:2018, 6.7.6.3
+
+with
+
+    ISO/IEC 9899:2024, 6.7.7.4
+
+------------------------------------------------------------------------
+
+[538:8] Replace
+
+    ISO/IEC 9899:2018, 6.2.2
+
+with
+
+    ISO/IEC 9899:2024, 6.2.2
+
+------------------------------------------------------------------------
+
+[538:30] Replace two instances of:
+
+      (_Bool)
+
+with:
+
+      (bool)
+
+Note to editor: This edit is the same as that in 25-203r1.
+
+------------------------------------------------------------------------
+
+[539:23] Replace
+
+    ISO/IEC 9899:2018, 5.2.1 and 5.2.2
+
+with
+
+    ISO/IEC 9899:2024, 5.3.1 and 5.3.3
+
+------------------------------------------------------------------------
+
+[540:16-17] Replace
+
+    ISO/IEC 9899:2018, 6.3.2.3 and 6.5.9
+
+with
+
+    ISO/IEC 9899:2024, 6.3.3.3 and 6.5.10
+
+------------------------------------------------------------------------
+
+[543:note] Replace
+
+    ISO/IEC 9899:2018, 6.2.5
+
+with
+
+    ISO/IEC 9899:2024, 6.2.5
+
+------------------------------------------------------------------------
+
+[545:26] Replace
+
+    ISO/IEC 9899:2018, 6.5.3.2
+
+with
+
+    ISO/IEC 9899:2024, 6.5.4.3
+
+------------------------------------------------------------------------
+
+[546:note] Replace
+
+    ISO/IEC 9899:2018, 6.5.3.2
+
+with
+
+    ISO/IEC 9899:2024, 6.5.4.3
+
+------------------------------------------------------------------------
+
+[546:10] Replace
+
+    ISO/IEC 9899:2018, 6.5.3.4
+
+with
+
+    ISO/IEC 9899:2024, 6.5.4.5
+
+------------------------------------------------------------------------
+
+[547:13] Replace the line
+
+      The C types mentioned in Table 18.2 are defined in ISO/IEC
+      9899:2018, 6.2.5, 7.19, and 7.20.1.
+
+with the line
+
+      The C types mentioned in Table 18.2 are defined in ISO/IEC
+      9899:2024, 6.2.5, 7.21, 7.22, and H.2.
+
+Note to editor: This edit is corrected relative to the one that appears
+in 25-203r1.
+
+------------------------------------------------------------------------
+
+[548:table 18.2] Replace the following:
+
+      _Bool
+
+with:
+
+      bool
+
+Note to editor: This edit is the same as that in 25-203r1.
+
+------------------------------------------------------------------------
+
+[548:note] Replace
+
+    ISO/IEC 9899:2018
+
+with
+
+    ISO/IEC 9899:2024
+
+------------------------------------------------------------------------
+
+[548:note 1] Replace
+
+    ISO/IEC 9899:2018
+
+with
+
+    ISO/IEC 9899:2024
+
+------------------------------------------------------------------------
+
+[549:note 4] Replace
+
+    ISO/IEC 9899:2018
+
+with
+
+    ISO/IEC 9899:2024
+
+and replace
+
+    ISO/IEC 9899:2018, 6.2.7
+
+with
+
+    ISO/IEC 9899:2024, 6.2.7
+
+------------------------------------------------------------------------
+
+[551:16-17] Delete
+
+    (ISO/IEC 9899:2018, 6.2.5, 7.19, and 7.20.1)
+
+[551:note 1] After "The referenced type of a C pointer type", insert:
+
+    (ISO/IEC 9899:2024, 6.2.5)
+
+such that the note reads:
+
+    <<NOTE 1>>
+    The <<referenced type>> of a C pointer type (ISO/IEC 9899:2024,
+    6.2.5) is the C type of the object that the C pointer type points
+    to. For example, the referenced type of the pointer type
+    \texttt{int *} is \texttt{int}.
+
+------------------------------------------------------------------------
+
+[551:note 2] Replace
+
+    ISO/IEC 9899:2018, 7.16
+
+with
+
+    ISO/IEC 9899:2024, 7.16
+
+------------------------------------------------------------------------
+
+[557:table 18.4] Replace the following:
+
+      +---------------+-------+
+      | CFI_type_Bool | _Bool |
+      +---------------+-------+
+
+with:
+
+      +---------------+------+
+      | CFI_type_Bool | bool |
+      | CFI_type_bool | bool |
+      +---------------+------+
+
+Note to editor: This edit is the same as that in 25-203r1.
+
+------------------------------------------------------------------------
+
+[561:8-9] Replace
+
+    ISO/IEC 9899:2018, 3.2
+
+with
+
+    ISO/IEC 9899:2024, 3.2
+
+------------------------------------------------------------------------
+
+[564:18-19] Replace
+
+    ISO/IEC 9899:2018, 3.2
+
+with
+
+    ISO/IEC 9899:2024, 3.2
+
+------------------------------------------------------------------------
+
+[566:26] Replace
+
+    ISO/IEC 9899:2018, 3.4.3
+
+with
+
+    ISO/IEC 9899:2024, 3.5.3
+
+------------------------------------------------------------------------
+
+[566:31-32] Replace
+
+    ISO/IEC 9899:2018, 6.2.4
+
+with
+
+    ISO/IEC 9899:2024, 6.2.4
+
+------------------------------------------------------------------------
+
+[568:20] Replace
+
+    ISO/IEC 9899:2018, 6.2.2
+
+with
+
+    ISO/IEC 9899:2024, 6.2.2
+
+------------------------------------------------------------------------
+
+[568:23] Replace
+
+    ISO/IEC 9899:2018
+
+with
+
+    ISO/IEC 9899:2024
+
+------------------------------------------------------------------------
+
+[569:4] Replace
+
+    ISO/IEC 9899:2018, 7.13
+
+with
+
+    ISO/IEC 9899:2024, 7.13
+
+------------------------------------------------------------------------
+
+[569:7] Replace
+
+    ISO/IEC 9899:2018, 7.14.1
+
+with
+
+    ISO/IEC 9899:2024, 7.14.1
+
+------------------------------------------------------------------------
+
+[569:note] Replace
+
+    ISO/IEC 9899:2018
+
+with
+
+    ISO/IEC 9899:2024
+
+------------------------------------------------------------------------
+
+[569:25] Replace
+
+    ISO/IEC 9899:2018, 7.14.1
+
+with
+
+    ISO/IEC 9899:2024, 7.14.1
+
+===END===
