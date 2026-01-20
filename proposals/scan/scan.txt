@@ -1,0 +1,381 @@
+To: J3                                                     J3/##-###
+From: Brad Richardson
+Subject: SCAN and CO_SCAN
+Date: 06-Jan-2023
+
+#Reference:
+
+Introduction
+============
+
+SCAN is a common operation closely related to REDUCE. Both SCAN and
+REDUCE apply a binary operation to a sequence. SCAN returns the
+sequence of results of the operations, where REDUCE returns only the
+final result. Whether a SCAN is INCLUSIVE or EXCLUSIVE determines
+whether an element in the resulting sequence includes the result of
+the binary operation with the corresponding element in the input
+sequence or not, respectively.
+
+Typical applications that make us of scan operations include
+design of binary adders, polynomial interpolation, simulation of
+parallel algorithms that assume the ability for multiple processors
+to access the same memory cell at the same time, on parallel machines
+that forbid simultaneous access. Additional applications can be found
+on the Wikipedia page for "Prefix sum":
+https://en.wikipedia.org/wiki/Prefix_sum
+
+Proposal
+========
+
+Provide a SCAN intrinsic function and CO_SCAN collective subroutine.
+These function and subroutine shall implement scan operations
+analogous to the REDUCE function and CO_REDUCE subroutine.
+
+Descriptions
+============
+
+SCAN(ARRAY, OPERATION[, DIM, MASK, SEGMENT, EXCLUSIVE,
+REVERSED, ORDERED]) OR
+SCAN(ARRAY, OPERATION, IDENTITY[, DIM, MASK, SEGMENT, EXCLUSIVE,
+REVERSED, ORDERED])
+
+Description. Generalized scan of an array.
+
+Class. Transformational function
+
+Arguments.
+ARRAY     shall be an array of any type.
+OPERATION shall be a pure function with exactly two arguments; each
+          argument shall be a scalar, nonallocatable, nonpointer,
+          nonpolymorphic, nonoptional dummy data object. The declared
+          type and type parameters of the first argument shall be the
+          same as IDENTITY if it is present, otherwise it shall be the
+          same as ARRAY. The declared type and type parameters of the
+          second argument shall be the same as ARRAY. If one argument
+          has the ASYNCHRONOUS, TARGET, or VALUE attribute, the other
+          shall have that attribute. Its result shall be a
+          nonpolymorphic scalar and have the same declared type and
+          type parameters as IDENTITY if it is present, otherwise it
+          shall have the same declared type and type parameters as
+          ARRAY. OPERATION should implement a mathematically
+          associative operation. It need not be commutative.
+IDENTITY  shall be a scalar data object.
+DIM (optional) shall be an integer scalar with a value in the range
+          1 <= DIM <= n, where n is the rank of ARRAY.
+MASK (optional) shall be of type logical and shall be conformable
+          with ARRAY.
+SEGMENT (optional) shall be of type logical with the same shape as
+          ARRAY.
+EXCLUSIVE (optional) shall be a logical scalar.
+REVERSED (optional) shall be a logical scalar.
+ORDERED (optional) shall be a logical scalar.
+
+Result Characteristics. The result has the same rank and shape as
+ARRAY. The result has the same declared type and type parameters as
+IDENTITY if it is present, otherwise it has the same declared type
+and type parameters as ARRAY.
+
+Result Value. The value of each element of the result is determined by
+the values of selected elements of ARRAY, and IDENTITY if present. The
+optional arguments DIM, MASK, SEGMENT, EXCLUSIVE and REVERSED affect
+the selection of elements of ARRAY for each element of the result. If
+no elements of ARRAY are selected for a given element of the result
+that result element is set to the value of IDENTITY if it is present,
+otherwise error termination is initiated. The value of the result
+element is determined by successively applying OPERATION to all
+selected values which contribute to that element.
+
+For any given element r of the result, let a be the corresponding
+element of ARRAY. IDENTITY contributes to every element r if it is
+present. Every element of ARRAY contributes to r unless disqualified
+by one of the following rules.
+
+1. If the argument REVERSED is present with the value true, no element
+that precedes a in the array element ordering of ARRAY contributes to
+r. Otherwise no element that follows a in the array element ordering
+of ARRAY contributes to r.
+
+2. If the DIM argument is provided, an element z of ARRAY does not
+contribute to r unless all its indices, excepting only the index for
+dimension DIM, are the same as the corresponding indices of a. If the
+DIM argument is present, then a family of completely independent scan
+operations are carried out along the selected dimension of ARRAY.
+
+3. If the MASK argument is provided, an element z of ARRAY contributes
+to r only in the element of MASK corresponding to z is true. It follows
+that array elements corresponding to positions where the MASK is false
+do not contribute anywhere to the result. However, the result is
+nevertheless defined at all positions, even positions where the MASK
+is false.
+
+4. If the SEGMENT argument is provided, an element z of ARRAY does
+not contribute if there is some intermediate element w of ARRAY,
+possibly z itself, with all of the following properties:
+  a. If the argument REVERSED is present with the value true, w does
+  not follow z but does follow a in the array element ordering;
+  otherwise w does not precede a in the array element ordering;
+  b. If the DIM argument is present, all the indices of w, excepting
+  only the index for dimension DIM, are the same as the corresponding
+  indices of a;
+  c. The element of SEGMENT corresponding to w does not have the same
+  value as the element of SEGMENT corresponding to a. In other words, z
+  can contribute only if there is an unbroken string of SEGMENT values,
+  all alike, extending from z through a.
+
+5. If the EXCLUSIVE argument is provided and is true, then a itself
+does not contribute to r.
+
+6. If the argument ORDERED is provided and is true, then each element
+of the result is calculated strictly in array element order, or in
+reverse array element order if REVERSED is also provided and is true.
+
+These general rules lead to the following important cases:
+
+Case (i):   If ARRAY has rank one, element i of the result of
+            SCAN(ARRAY, OPERATION) is determined by the first i
+            elements of ARRAY; element SIZE(ARRAY)-i+1 of the result
+            of SCAN(ARRAY, OPERATION, REVERSED = .TRUE.) is determined
+            by the last i elements of ARRAY.
+Case (ii):  If ARRAY has rank greater than one, then each element of
+            result of SCAN(ARRAY, OPERATION) has a value determined by
+            the corresponding element a of the ARRAY and all elements
+            of ARRAY that precede a in array element order. For
+            SCAN(ARRAY, OPERATION, REVERSED = .TRUE.), a is determined
+            by the elements of ARRAY that correspond to or follow a in
+            array element order.
+Case (iii): Each element of the result of
+            SCAN(ARRAY, OPERATION, MASK=MASK) is determined by selected
+            elements of ARRAY, namely the corresponding element a of
+            the ARRAY and all elements of ARRAY that precede a in array
+            element order, but an element of ARRAY may contribute to
+            the result only if the corresponding element of MASK is
+            true. If this restriction results in selecting no array
+            elements to contribute to some element of the result, then
+            error termination is initiated. For
+            SCAN(ARRAY, OPERATION, IDENTITY, MASK=MASK), if no elements
+            of ARRAY contribute to some element of the result, then
+            that element of the result is set to IDENTITY. Note that
+            in the general case
+            SCAN(ARRAY, OPERATION, IDENTITY, MASK=MASK, ...) ==
+            SCAN(MERGE(ARRAY, IDENTITY, MASK), OPERATION, ...)
+Case (iv):  Each element of the result of
+            SCAN(ARRAY, OPERATION, DIM=DIM) is determined by selected
+            elements of ARRAY, namely the corresponding element a of
+            the ARRAY and all elements of ARRAY that precede a along
+            dimension DIM; SCAN(A(1:N,1:N), ADD, DIM=2), result element
+            (i1, i2) could be computed as SUM(A(i1,1:i2)). More
+            generally, the values of the section
+            (s1, s2, ..., sDIM-1, :, sDIM+1, ..., sn) of
+            SCAN(ARRAY, OPERATION, DIM=DIM) are equal to
+            SCAN(ARRAY(s1, s2, ..., sDIM-1, :, sDIM+1, ..., sn),
+            OPERATION).
+Case (v):   If ARRAY has rank one, then element i of the result of
+            SCAN(ARRAY, OPERATION, EXCLUSIVE=.TRUE.) is determined by
+            the first i-1 elements of ARRAY.
+Case (vi):  It is possible for SCAN(ARRAY, OPERATION) to have a result
+            that differs from SCAN(ARRAY, OPERATION, ORDERED = .TRUE.)
+Case (vii): If EXCLUSIVE is provided and is true, then IDENTITY shall be
+            provided, since at least one element of the result will have
+            no elements of ARRAY selected to contribute to it.
+Case (viii): The options may be used in any combination.
+
+Examples. The following examples use the function ADD, which returns
+the sum of its two integer arguments, or the function COND_INC which
+returns the second argument plus one if the first argument is .TRUE.,
+and the second argument otherwise.
+Case (i):   SCAN([.TRUE., .FALSE., .TRUE., .TRUE.], COND_INC, 0)
+is [1, 1, 2, 3].
+                              | 1 2 3 |
+Case (ii):  If B is the array | 4 5 6 | then
+                              | 7 8 9 |
+                                             | 45 33 18 |
+SCAN(B, ADD, REVERSED = .TRUE.) is the array | 44 31 15 |.
+                                             | 40 26  9 |
+Case (iii): If A is the array [3, 5, -2, -1, 7, 4, 8] then
+SCAN(A, ADD, MASK = A < 6) is [3, 8, 6, 5, 5, 9, 9].
+                              | 1 2 3 |
+Case (iv):  If B is the array | 4 5 6 | then
+                              | 7 8 9 |
+                                 |  1  2  3 |
+SCAN(B, ADD, DIM=1) is the array |  5  7  9 | and
+                                 | 12 15 18 |
+                                 | 1  3  6 |
+SCAN(B, ADD, DIM=2) is the array | 4  9 15 |.
+                                 | 7 15 24 |
+Case (v):   SCAN([1, 3, 5, 7], ADD, IDENTITY = 0, EXCLUSIVE = .TRUE.) is
+[0, 1, 4, 9].
+                              |  1  2  3  4  5 |
+Case (vi):  If B is the array |  6  7  8  9 10 |, M is the array
+                              | 11 12 13 14 15 |
+| T T T T T |                    | T T F F F |
+| F F T T T | and S is the array | F T T F F |, then
+| T F T F F |                    | T T T T T |
+SCAN(B, ADD, 0, DIM=2, MASK=M, SEGMENT=S, EXCLUSIVE=.TRUE.) is
+|  0  1  0  3  7 |
+|  0  0  0  0  9 |,
+|  0 11 11 24 24 |
+SCAN(B, ADD, 0, DIM=2, MASK=M, SEGMENT=S, EXCLUSIVE=.FALSE.) is
+|  1  3  3  7 12 |
+|  0  0  8  9 19 |,
+| 11 11 24 24 24 |
+SCAN(B, ADD, 0, DIM=2, MASK=M, EXCLUSIVE=.TRUE.) is
+|  0  1  3  6 10 |
+|  0  0  0  8 17 |,
+|  0 11 11 24 24 |
+SCAN(B, ADD, 0, DIM=2, MASK=M, EXCLUSIVE=.FALSE.) is
+|  1  3  6 10 15 |
+|  0  0  8 17 27 |,
+| 11 11 24 24 24 |
+SCAN(B, ADD, 0, DIM=2, SEGMENT=S, EXCLUSIVE=.TRUE.) is
+|  0  1  0  3  7 |
+|  0  0  7  0  9 |,
+|  0 11 23 36 50 |
+SCAN(B, ADD, DIM=2, SEGMENT=S, EXCLUSIVE=.FALSE.) is
+|  1  3  3  7 12 |
+|  6  7 15  9 19 |,
+| 11 23 36 50 65 |
+SCAN(B, ADD, 0, DIM=2, EXCLUSIVE=.TRUE.) is
+|  0  1  3  6 10 |
+|  0  6 13 21 30 |,
+|  0 11 23 36 50 |
+SCAN(B, ADD, DIM=2, EXCLUSIVE=.FALSE.) is
+|  1  3  6 10 15 |
+|  6 13 21 30 40 |,
+| 11 23 36 50 65 |
+SCAN(B, ADD, 0, MASK=M, SEGMENT=S, EXCLUSIVE=.TRUE.) is
+|  0 11  0  0  0 |
+|  0 13  0  4  5 |,
+|  0 13  8  0  0 |
+SCAN(B, ADD, 0, MASK=M, SEGMENT=S, EXCLUSIVE=.FALSE.) is
+|  1 13  3  4  5 |
+|  0 13  8 13 15 |,
+| 11 13 21  0  0 |
+SCAN(B, ADD, 0, MASK=M, EXCLUSIVE=.TRUE.) is
+|  0 12 14 38 51 |
+|  1 14 17 42 56 |,
+|  1 14 25 51 66 |
+SCAN(B, ADD, MASK=M, EXCLUSIVE=.FALSE.) is
+|  1 14 17 42 56 |
+|  1 14 25 51 66 |,
+| 12 14 38 51 66 |
+SCAN(B, ADD, 0, SEGMENT=S, EXCLUSIVE=.TRUE.) is
+|  0 11  0  0  0 |
+|  0 13  0  4  5 |,
+|  0 20  8  0  0 |
+SCAN(B, ADD, SEGMENT=S, EXCLUSIVE=.FALSE.) is
+|  1 13  3  4  5 |
+|  6 20  8 13 15 |,
+| 11 32 21 14 15 |
+SCAN(B, ADD, 0, EXCLUSIVE=.TRUE.) is
+|  0 18 39 63  90 |
+|  1 20 42 67  95 |, and
+|  7 27 50 76 105 |
+SCAN(B, ADD, EXCLUSIVE=.FALSE.) is
+|  1 20 42 67  95 |
+|  7 27 50 76 105 |.
+| 18 39 63 90 120 |
+
+NOTE X
+If OPERATION is not computationally associative, SCAN without
+ORDERED=.TRUE. with the same argument values might not always produce
+the same result, as the processor can apply the associative law to the
+evaluation.
+
+
+CO_SCAN(A, OPERATION[, EXCLUSIVE, REVERSED, STAT, ERRMSG]) OR
+CO_SCAN(A, OPERATION, IDENTITY[, EXCLUSIVE, REVERSED, STAT, ERRMSG])
+
+Description. Generalized scan across images.
+
+Class. Collective subroutine.
+
+Arguments.
+A         shall not be polymorphic. It shall have the same shape,
+          type, and type parameter values in corresponding references.
+          It shall not be a coindexed object. It is an INTENT(INOUT)
+          argument. If A is scalar, the computed value is the result
+          of the scan operation of applying OPERATION to the
+          values of A in all corresponding references. If A is an
+          array, each element of the computed value is equal to the
+          result of the scan operation of applying OPERATION to
+          corresponding elements of A in all corresponding references.
+
+          The value assigned to an element of A is the element of the
+          computed result corresponding to the image number of the
+          executing image.
+OPERATION shall be a pure function with exactly two arguments; the
+          result and each argument shall be a scalar, nonallocatable,
+          nonpointer, nonpolymorphic data object with the same type
+          and type parameters as A. The arguments shall not be
+          optional. If one argument has the ASYNCHRONOUS, TARGET, or
+          VALUE attribute, the other shall have that attribute.
+          OPERATION shall implement a mathematically associative
+          operation. OPERATION shall be the same function on all
+          images in the corresponding references.
+
+          The value of each element of the result is determined by the
+          values of selected images of A, and IDENTITY if present. The
+          optional arguments EXCLUSIVE and REVERSED affect the
+          selection of images for each element of the result. If no
+          images are selected for a given element of the result that
+          result element is set to the value of IDENTITY if it is
+          present, otherwise error termination is initiated. The value
+          of the result element is determined by successively applying
+          OPERATION to all selected values which contribute to that
+          element.
+
+          IDENTITY contributes to every element of the result if it is
+          present. Every image contributes to the result unless
+          disqualified by one of the following rules.
+
+          1. If the argument REVERSED is present with the value true,
+          no image that precedes the corresponding image in the result
+          in numerical order contributes to the result. Otherwise no
+          image that follows the corresponding image in the result
+          in numerical order contributes to the result.
+
+          2. If the EXCLUSIVE argument is provided and is true, then
+          the corresponding image itself does not contribute to the
+          result.
+IDENTITY  shall be a scalar with the same declared type and type
+          parameters as ARRAY. It shall not be a coindexed object. Its
+          value shall be the same in all corresponding references.
+EXCLUSIVE (optional) shall be a logical scalar. Its presence, and value
+          if present, shall be the same in all corresponding
+          references.
+REVERSED (optional) shall be a logical scalar.Its presence, and value
+          if present, shall be the same in all corresponding
+          references.
+STAT (optional) shall be a noncoindexed integer scalar with a decimal
+          exponent range of at least four. It is an INTENT(OUT)
+          argument.
+ERRMSG (optional) shall be a noncoindexed default scalar. It is an
+          INTENT(INOUT) argument.
+
+The semantics of STAT and ERRMSG are described in 16.6.
+
+Example. If the function MY_MULT returns the product of its two
+integer arguments, the number of images in the current team is three,
+and A is the array [1, 3, 5] on image 1, [2, 4, 6] on image 2,
+and [7, 8, 9] on image 3, the value of A after executing the statement
+CALL CO_SCAN(A, MY_MULT, 1, EXCLUSIVE=.TRUE.)
+is [1, 1, 1] on image 1, [1, 3, 5] on image 2,
+and [2, 12, 30] on image 3.
+
+NOTE X
+If the OPERATION function is not mathematically commutative, the result
+of calling CO_SCAN can depend on the order of evaluations.
+
+NOTE X
+The consequences of the selection of contributing values to the result
+are such that if EXCLUSIVE if present with the value .TRUE., then
+IDENTITY shall be provided or error termination will be initiated.
+
+Straw Vote
+==========
+
+How should SCAN be spelled?
+
+A. SCAN and CO_SCAN
+B. ACCUMULATE and CO_ACCUMULATE
+C. Other
