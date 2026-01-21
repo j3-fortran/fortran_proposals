@@ -1,0 +1,176 @@
+To: J3                                                     J3/XX-XXX
+From: Ondrej Certik & William B. Clodius
+Subject: Namespace For Modules
+Date:
+#Reference: J3/19-246.txt, J3/20-108.txt
+
+Proposal for Fortran Standard: 202y (NOT 202x)
+
+
+1. Introduction
+
+The proposal is to allow the import of a module as a namespace to
+require accessing its members using the % operator. Example:
+
+    use, with :: utils
+    ...
+    call utils%savetxt(...)
+
+Where `utils` is the only name that is imported in the local
+namespace. `savetxt` is not accesable directly, only via `utils%`.
+
+This proposal originated at the J3 GitHub repository at [1].
+
+2. Motivation
+
+Several languages with the equivalent of Fortran's modules, e.g.,
+Python, Ada, and Haskell, have the ability to limit access to a
+module's members to a syntax equivalent to module_name %
+member_name. They allow this restriction first, to avoid name
+conflicts for members defined in different large modules, and second,
+to document locally the origin of a member as the origin may have
+implications for the detailed behavior or interpretation of a
+member. The users of these languages find the ability to make these
+restrictions useful.
+
+Of the three languages cited, the most widely used is Python so we
+will use it for our examples. Fortran module usage is equivalent to
+Python's:
+
+    Python                             Fortran
+
+    from A import foo                  use A, only: foo
+    from A import foo as Afoo          use A, only: Afoo => foo
+    from A import *                    use A
+
+Except:
+
+    Python                             Fortran
+
+    import A                           N/A
+    import A as B                      N/A
+
+This proposal proposes to fill in the missing functionality as
+follows:
+
+    Python                             Fortran
+
+    import A                           use, with :: A
+    import A as B                      use, with :: B => A
+
+or perhaps as
+
+
+    Python                             Fortran
+
+    import A                           with A
+    import A as B                      with B => A
+
+
+3. Use Cases
+
+3.1 Same function names in multiple modules
+
+In Python a very common idiom is:
+
+    import math
+    import numpy as np
+    import sympy as sym
+    ...
+    e1 = np.sin(np.pi)      # NumPy expression
+    e2 = math.sin(math.pi)  # Built-in Python math expression
+    e3 = sym.sin(sym.pi)    # SymPy expression
+
+In Fortran currently one has to do:
+
+    use math, only: math_sin => sin, math_pi => pi
+    use numpy, only: np_sin => sin, np_pi => pi
+    use sympy, only: sym_sin => sin, sym_pi => pi
+    ...
+    e1 = np_sin(np_pi)      ! NumPy expression
+    e2 = math_sin(math_pi)  ! Built-in Python math expression
+    e3 = sym_sin(sym_pi)    ! SymPy expression
+
+With this proposal one could also do:
+
+    use, with :: math
+    use, with :: np => numpy
+    use, with :: sym => sympy
+    ...
+    e1 = np%sin(np%pi)      ! NumPy expression
+    e2 = math%sin(math%pi)  ! Built-in Python math expression
+    e3 = sym%sin(sym%pi)    ! SymPy expression
+
+
+3.2 Need to import lots of functions from a module
+
+Existing code (https://github.com/certik/fortran-utils/blob/
+b43bd24cd421509a5bc6d3b9c3eeae8ce856ed88/src/linalg.f90):
+
+    use lapack, only: dsyevd, dsygvd, ilaenv, zgetri, zgetrf, &
+        zheevd,  dgeev, zgeev, zhegvd, dgesv, zgesv, dgetrf, &
+        dgetri, dgelsy, zgelsy, dgesvd, zgesvd, dgeqrf, dorgqr, &
+	dpotrf, dtrtrs
+    ...
+    call dgeev('N', 'V', n, At, lda, wr, wi, vl, ldvl, vr, ldvr, &
+     work, lwork, info)
+    ...
+    call dgetrf(n, n, Amt, lda, ipiv, info)
+    ...
+
+Instead, one can write it as:
+
+    use, with :: lapack
+    ...
+    call lapack%dgeev('N', 'V', n, At, lda, wr, wi, vl, ldvl, vr, &
+     ldvr, work, lwork, info)
+    ...
+    call lapack%dgetrf(n, n, Amt, lda, ipiv, info)
+    ...
+
+Then when another subroutine must be called from the `lapack` module,
+one can just call it, without having to modify the `use` statement.
+
+3.3 Conflicting derived types
+
+    use math, only: math_vector => vector
+    use strings, only: string_vector => vector
+
+    type(math_vector) :: avector
+    type(string_vector) :: bvector
+    ...
+
+vs.
+
+    use, with :: math, only: vector
+    use, with:: strings, only: vector
+
+    type(math % vector) :: avector
+    type(string % vector) :: bvector
+    ...
+
+4. Operators and assignment
+
+Two places where namespace qualification would be a pain to legibility
+are operators and assignments:
+
+    use, with :: math
+
+    a math % = b math % + c
+
+This can be gotten around with the proper use of a USE clause with no
+namespace qualification:
+
+    use, with :: math
+    use :: math, only : assignment(=), operator(+), ...
+
+    a = b + c
+
+but it might be nice to have the operators and assignments by default
+be unqualified by the module namespace.
+
+5. References
+
+[1] https://github.com/j3-fortran/fortran_proposals/issues/1
+
+
