@@ -1,6 +1,6 @@
 To: J3                                                     J3/26-XXX
 From: HPC
-Subject: Recommendation regarding work item DIN3a
+Subject: Recommendation for DIN3a "Support atomic operations in local memory"
 Date: 2026-February-XX
 References: 24-167, WG5/N2230, WG5/N2234, WG5/N2249
 
