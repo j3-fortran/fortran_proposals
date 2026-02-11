@@ -1,0 +1,49 @@
+To: J3                                                     J3/26-116
+From: HPC
+Subject: Recommendation for DIN3a "Support atomic operations in local memory"
+Date: 2026-February-11
+References: 24-167, WG5/N2230, WG5/N2234, WG5/N2249
+
+1. Background
+=============
+
+WG5/N2249 provides the list of accepted work items for the next revision of
+ISO/IEC 1539:2023 (Fortran 202Y). That list currently includes accepted work
+item:
+
+  - DIN3a Add support for atomic operations in local memory
+          Ref: N2230 "DIN Suggestions for F202Y" (other features requested
+          in DIN3 were not accepted.)
+
+This work item was initially added to the list by WG5 at the June 2024 meeting
+in WG5/N2234. As indicated above, it comprises a small subset of the broader
+item DIN3 proposed in WG5/N2230 (and subsequently mostly declined by WG5) to
+expand support for APU processing. The remaining subset relevant to atomic
+operations amounts to a two-sentence request with no specific rationale or use
+cases. To our knowledge, no follow-up J3 papers have been published to further
+support work item DIN3a or elaborate a proposed design for this feature in
+isolation. Nevertheless, Info paper 24-167 rated item DIN3a with difficulty
+level 5 ("Technical change likely to need more than two J3 meetings to
+develop").
+
+In June 2025, WG5 voted to remove the proposed asynchronous tasking feature
+from Fortran 202Y work list item US04. With the deferral of asynchronous
+tasking, it's even less clear how the underspecified DIN3a work item is
+motivated to fit into the remaining language features in Fortran 202Y.
+
+2. Subgroup Recommendation
+==========================
+
+The J3 HPC subgroup recommends that item DIN3a be removed (without prejudice)
+from the Fortran 202Y work list. Proponents are welcome to resubmit the feature
+request for a future revision, along with a more substantive rationale and
+design sketch.
+
+
+3. Resolution
+=============
+
+In passing this paper, INCITS/Fortran (J3) recommends to WG5 that item DIN3a be
+removed from the work list for Fortran 202Y.
+
+===END===
