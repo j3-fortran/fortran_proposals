@@ -1,7 +1,7 @@
-To: J3                                                     J3/26-XXX
+To: J3                                                     J3/26-116
 From: HPC
 Subject: Recommendation for DIN3a "Support atomic operations in local memory"
-Date: 2026-February-XX
+Date: 2026-February-11
 References: 24-167, WG5/N2230, WG5/N2234, WG5/N2249
 
 1. Background
@@ -28,8 +28,8 @@ develop").
 
 In June 2025, WG5 voted to remove the proposed asynchronous tasking feature
 from Fortran 202Y work list item US04. With the deferral of asynchronous
-tasking, it's even less clear how the underspecified DIN3a work item is motivated
-to fit into the remaining language features in Fortran 202Y.
+tasking, it's even less clear how the underspecified DIN3a work item is
+motivated to fit into the remaining language features in Fortran 202Y.
 
 2. Subgroup Recommendation
 ==========================
