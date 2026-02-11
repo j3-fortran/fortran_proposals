@@ -28,7 +28,7 @@ develop").
 
 In June 2025, WG5 voted to remove the proposed asynchronous tasking feature
 from Fortran 202Y work list item US04. With the deferral of asynchronous
-tasking, it's even less clear how the ill-defined DIN3a work item is motivated
+tasking, it's even less clear how the underspecified DIN3a work item is motivated
 to fit into the remaining language features in Fortran 202Y.
 
 2. Subgroup Recommendation
