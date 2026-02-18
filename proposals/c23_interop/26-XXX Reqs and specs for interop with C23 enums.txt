@@ -1,0 +1,213 @@
+To: J3                                                     J3/26-XXX
+From: Patrick Fasano
+Subject: Requirements and specifications for interoperability with C23
+         enumerations
+Date: 2026-February-XX
+
+References:
+      ISO/IEC 9899:2018 Programming languages -- C ("C17")
+      ISO/IEC 9899:2024 Programming languages -- C ("C23")
+      WG5/N2212  The new features of Fortran 2023
+      WG14/N3029 Improved Normal Enumerations
+      WG14/N3030 Enhanced Enumerations
+      23-007r1   Fortran 2023 Working Draft
+      26-112     Edits for updating references from C17 to C23
+
+1 Background
+============
+
+bg01. The ISO C23 specification (ISO/IEC 9899:2024) introduced changes
+      to enumerations that create an incompatibility with the current
+      specification of Fortran interoperable enumerations and enum
+      types. Specifically, WG14 adopted two proposals affecting
+      enumerations in C23:
+      * N3029: "Improved Normal Enumerations", which allows enumeration
+        values greater than INT_MAX and smaller than INT_MIN.
+      * N3030: "Enhanced Enumerations", which allows specifying an
+        underlying type for enumerations.
+
+bg02. WG14/N3029 "Improved Normal Enumerations" changes the rules for
+      the types of enumeration constants and the underlying type of the
+      enumeration. In C17, all enumeration constants were required to be
+      representable as an int. In C23, enumeration constants may have
+      values that are not representable as an int; the compiler
+      determines an underlying integer type that can represent all the
+      values defined in the enumeration.
+
+bg03. WG14/N3030 "Enhanced Enumerations" adds the ability to specify the
+      underlying type of an enumeration. In C17, the underlying type of
+      an enumeration was implementation-defined (subject to being able
+      to represent all the values). In C23, the underlying type can be
+      explicitly specified in the enum declaration (e.g., `enum x : long
+      long { ... }`).
+
+bg04. The current Fortran specification (25-007r1, subclause 7.6.1)
+      relies on the assumption that C enumeration constants fit within a
+      C int. This assumption is explicitly stated in Note 2 of the
+      subclause: "ISO/IEC 9899:2018 guarantees the enumeration constants
+      fit in a C int (ISO/IEC 9899:2018, 6.7.2.2). Therefore, the
+      Fortran processor can evaluate all enumerator values using the
+      integer type with kind parameter C_INT, and then determine the
+      kind parameter of the integer type that is interoperable with the
+      corresponding C enumerated type." With the adoption of WG14/N3029
+      in C23, this guarantee no longer holds. C enumerations may now
+      have values that cannot be represented in a C int.
+
+bg06. The edits in paper 26-112 adopted by J3 at meeting #238 in January
+      2026 to replace references to C17 with C23 in the Fortran
+      specification introduced a factually incorrect statement regarding
+      C enumerations in Note 2 of subclause 7.6.1, which was not
+      addressed in that paper. This paper addresses this issue by
+      proposing options for resolving the incompatibility and providing
+      specifications for each option.
+
+
+2 Requirements
+==============
+
+rq01. The Fortran standard should be updated to address the
+      incompatibility between Fortran interoperable enumerations and C23
+      enumerations.
+
+
+3 Straw polls
+=============
+
+Straw poll
+----------
+How should the incompatibility with C23 enumerations be resolved?
+
+
+OPTION A: Restrict interoperability to C enums compatible with C_INT.
+
+          Add a precondition that says interoperability requires that
+          the C enum have a type that fits within an INTEGER(C_INT).
+
+
+OPTION B: Implicitly determine KIND via new C23 rules.
+
+          Remove the incorrect note and implicitly require that the
+          Fortran processor determine the KIND of the enumerators via
+          the new C23 rules; do not allow explicitly declaring the KIND.
+
+
+OPTION C: Implicitly determine KIND via new C23 rules and add explicit
+          KIND parameter to ENUM.
+
+          Implicitly (or explicitly) require that the Fortran processor
+          determine the KIND of the enumerators via the new C23 rules;
+          add an explicit (optional) KIND parameter to ENUM declarations
+          which override any implicit determination.
+
+
+The subgroup recommends OPTION A.
+
+
+Straw poll analysis
+-------------------
+
+PROS OPTION A:
+AP01. Minimal option.
+AP02. Implicitly fixes the problem with Note 2 (by making it true by
+      restriction).
+AP03. Should not require any Fortran compiler backend changes, just
+      spec wording.
+
+CONS OPTION A:
+AC01. Does not allow interoperability with C's new "wider" (64-bit)
+      enum types, or even explicitly "narrower" enum types (e.g. 8-bit).
+AC02. Must add spec constraint to restrict allowable enumerators.
+AC03. Compiler changes to check the new constraint are required.
+
+PROS OPTION B:
+BP01. No syntax change.
+BP02. Maintains interoperability with the implicit behavior of C enums.
+BP03. No new standard verbiage required.
+BP04. Compatible with C paper WG14/N3029.
+
+CONS OPTION B:
+BC01. Probably still requires some compiler changes to accommodate new
+      wider enums.
+BC02. Does not provide full interoperability with all C enums, because
+      it cannot express all enums that are possible in C23 (specifically
+      those with specified underlying types defined in WG14/N3030).
+
+PROS OPTION C:
+CP01. Maintains full interoperability with all C enums.
+
+CONS OPTION C:
+CC01. Requires introducing new syntax.
+CC02. Requires compiler parsing and backend changes (hence might be
+      considered a new feature).
+
+4 Specifications
+================
+
+4.1 Specifications for Option A
+-------------------------------
+
+sa01. The definition of "interoperable enumerator" should be constrained
+      to require the values of the enumerators to be representable in
+      the integer type with kind parameter C_INT.
+
+sa02. Update or remove Note 2 in subclause 7.6.1 to reflect that
+      interoperability is restricted to enumerations where constants fit
+      in a C int.
+
+4.2 Specifications for Option B
+-------------------------------
+
+sb01. Remove Note 2 in subclause 7.6.1 which incorrectly states that C
+      enumeration constants are guaranteed to fit in a C int.
+
+sb02. The Fortran processor shall determine the interoperable kind of
+      the enumerators based on the type chosen by the companion
+      processor for the corresponding C enumerated type, which may be
+      wider than C_INT.
+
+sb03. Add a Note to subclause 7.6.1 to explain that C23 allows
+      enumeration constants that do not fit in a C int, and that the
+      Fortran processor may need to evaluate all enumerator values using
+      an integer type larger than that with kind parameter C_INT, before
+      determining the kind parameter that is interoperable with the C
+      enumerated type.
+
+4.3 Specifications for Option C
+-------------------------------
+
+sc01. Extend the syntax of the ENUM statement to allow an optional KIND
+      parameter to specify the underlying integer type. One possible
+      syntax is:
+
+      ENUM[(KIND=scalar-int-constant-expr)], BIND(C) [:: enum-type-name]
+
+      Thus, for a C23 enumerator declared as this:
+
+         enum my_long_enum : long {
+            red = 4,
+            blue = 9,
+            yellow
+         };
+
+      an Fortran interoperable enumeration would be declared as this:
+
+         ENUM(KIND=C_LONG), BIND(C) :: my_long_enum
+            ENUMERATOR :: RED = 4, BLUE = 9
+            ENUMERATOR YELLOW
+         END ENUM
+
+sc02. If the KIND parameter is present, the kind type parameter of the
+      enumerators is the value specified by the KIND parameter. The
+      companion processor shall use a compatible underlying type.
+
+sc03. If the KIND parameter is absent, the Fortran processor shall
+      determine the interoperable kind of the enumerators based on the
+      type chosen by the companion processor for the corresponding C
+      enumerated type, which may be wider than C_INT.
+
+sc04. Add a Note to subclause 7.6.1 to explain that C23 allows
+      enumeration constants that do not fit in a C int, and that the
+      Fortran processor may need to evaluate all enumerator values using
+      an integer type larger than that with kind parameter C_INT, before
+      determining the kind parameter that is interoperable with the C
+      enumerated type.
