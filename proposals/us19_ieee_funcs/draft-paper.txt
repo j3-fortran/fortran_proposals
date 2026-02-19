@@ -1,5 +1,5 @@
 To: J3                                                     J3/26-###
-From: Lorri Menard, JoR
+From: Lorri Menard & JoR
 Subject: US19 - Missing IEEE functions
 Date: 2026-February-
 
