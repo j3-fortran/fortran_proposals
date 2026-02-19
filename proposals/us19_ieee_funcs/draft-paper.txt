@@ -1,0 +1,186 @@
+To: J3                                                     J3/25-190r3
+From: Lorri Menard
+Subject: US19 - Missing IEEE functions
+Date: 2025-October-29
+
+Reference: 23-234r2, 25-143, 25-007r1
+
+I  Introduction
+
+Paper 23-234r2 provides a comprehensive list of the IEEE-754
+recommended operations, and calls out the subset that are not
+yet part of the Fortran standard.
+
+Paper 25-143 contains the Requirements and Specifications.  It further
+lists each operation and connects each to its related Fortran operation.
+
+This paper is to be the Edits paper
+
+II Semantics
+
+Only generic functions are to be added for these names, with
+behavior to match that listed in IEEE 754 latest.
+
+III Edits
+
+[xv] Add to "Intrinsic procedures" the sentence:
+"The new intrinsic functions COMPOUND, EXPM1, EXP10M1, EXP2M1,
+LOGP1, LOG10P1, LOG2, LOG2P1, POW, ROOTN, and RSQRT were added
+to correspond to ISO/IEC/IEEE 60559:2020 recommended operations."
+
+
+Table 16.1 - Standard generic intrinsic procedure summary
+
+[383] after COMMAND_ARGUMENT_COUNT add one line:
+COMPOUND(X,N)      E       Exponential growth.
+
+[383] after EXP add three lines:
+EXPM1(X)           E       Exponential minus 1.
+EXP10M1(X)         E       Base 10 exponential minus 1.
+EXP2M1(X)          E       Base 2 exponential minus 1.
+
+[384] after LOG add one line:
+LOGP1(X)           E       Natural logarithm of a value plus 1.
+
+[384] after LOG10 add three lines:
+LOG10P1(X)         E       Common logarithm of a value plus 1.
+LOG2(X)            E       Binary logarithm.
+LOG2P1(X)          E       Binary logarithm of a value plus 1.
+
+[385] after POPPAR add one line:
+POW(X,Y)           E       Exponentiation.
+
+[385] after RESHAPE add one line:
+ROOTN(X,N)         E       Radical function.
+
+[385] after RRSPACING add one line:
+RSQRT(X)           E       Reciprocal square root.
+
+
+16.9  Specifications of the standard intrinsic procedures
+
+[412:13+] insert one new intrinsic {note: after COMMAND_ARGUMENT_COUNT}
+
+16.9.59+ COMPOUND(X, N)
+  <<Description.>>  Exponential growth.
+  <<Class.>> Elemental function.
+  <<Arguments.>> X shall be of type real, and must be >=-1.
+                 N shall be of numeric type.
+  <<Result characteristics.>> Same as X.
+  <<Result value.>> The result has a value equal to a processor-dependent
+  approximation to (1+X)**N.
+
+
+[423:28+] add these three new intrinsics {note: after EXP}
+
+16.9.84+ EXPM1(X)
+  <<Description.>> Exponential minus 1.
+  <<Class.>> Elemental function.
+  <<Argument.>> X shall be of type real or complex.
+  <<Result characteristics.>> Same as X.
+  <<Result value.>> The result has a value equal to a processor-dependent
+  approximation to EXP(X)-1.  If X is of type complex, its imaginary part
+  is regarded as a value in radians.
+
+16.9.84++ EXP10M1(X)
+  <<Description.>> Base 10 exponential minus 1.
+  <<Class.>> Elemental function.
+  <<Argument.>> X shall be of type real or complex.
+  <<Result characteristics.>> Same as X.
+  <<Result value.>> The result has a value equal to a processor-dependent
+  approximation to (10**X)-1. If X is of type complex, its imaginary part
+  is regarded as a value in radians.
+
+16.9.84+++ EXP2M1(X)
+  <<Description.>> Base 2 exponential minus 1.
+  <<Class.>> Elemental function.
+  <<Argument.>> X shall be of type real or complex.
+  <<Result characteristics.>> Same as X.
+  <<Result value.>> The result has a value equal to a processor-dependent
+  approximation to (2**X)-1. If X is of type complex, its imaginary part
+  is regarded as a value in radians.
+
+[445:12+] insert one intrinsic: {note: after LOG}
+
+16.9.128+ LOGP1(X)
+  <<Description.>> Natural logarithm of a value plus 1.
+  <<Class.>> Elemental function.
+  <<Argument.>> X shall be of type real or complex.  If X is real its
+  value shall be greater than -1.  If X is complex its value shall not
+  be -1.
+  <<Result characteristics.>> Same as X.
+  <<Result value.>> The result has a value equal to a processor-dependent
+  approximation to LOG(X+1).  A result of type complex is the principal
+  value with imaginary part 'w' in the range -pi <= 'w' <= pi.  If the
+  real part of X is less than -1 and the imaginary part of X is zero,
+  then the imaginary part of the result is approximately pi if the
+  imaginary part of X is positive real zero or the processor does not
+  distinguish between positive and negative real zero, and approximately
+  -pi if the imaginary part of X is negative real zero.
+
+[445:27+] insert three intrinsics:  {note: after LOG10)
+
+16.9.130+ LOG10P1(X)
+  <<Description.>> Common logarithm of a value plus 1.
+  <<Class.>> Elemental function.
+  <<Argument.>> X shall be of type real and its value shall be greater
+  than -1.
+  <<Result characteristics.>> Same as X.
+  <<Result value.>> The result has a value equal to a processor-dependent
+  approximation to LOG10(X+1).
+
+16.9.130++ LOG2(X)
+  <<Description.>> Binary logarithm.
+  <<Class.>> Elemental function.
+  <<Argument.>> X shall be of type real or complex. If X is real its
+  value shall be greater than zero.  If X is complex its value shall
+  not be zero.
+  <<Result characteristics.>> Same as X
+  <<Result value.>> The result has a value equal to a processor-dependent
+  approximation to LOG(X)/LOG(2.)
+
+16.9.130+++ LOG2P1(X)
+  <<Description.>> Binary logarithm of a value plus 1.
+  <<Class.>> Elemental function.
+  <<Argument.>> X shall be of type real or complex.  If X is real its
+  value shall be greater than -1.  If X is complex its value shall
+  not be -1.
+  <<Result characteristics.>> Same as X.
+  <<Result value.>> The result has a value equal to a processor-dependent
+  approximation to LOG2(X+1).
+
+[463:7+] insert one intrinsic {note: after POPPAR}
+
+16.9.161+ POW(X,Y)
+  <<Description.>> Exponentiation.
+  <<Class.>> Elemental function.
+  <<Arguments.>> X shall be of type real or complex.
+                 Y shall be of type numeric.
+  <<Result characteristics.>> Same as X.
+  <<Result value.>> The result is as if it had been written X**Y.
+
+[470:21+] insert one intrinsic {note: after RESHAPE}
+
+16.9.175+ ROOTN(X,N)
+  <<Description.>> Radical function.
+  <<Class.>> Elemental function.
+  <<Arguments.>> X shall be of type real or complex.
+                 N shall be of type integer, and shall not be zero.
+  <<Result characteristics.>> Same as X.
+  <<Result value.>> The result has a value equal to a processor-dependent
+  approximation to X**(1./N).  A result of type complex is the principal
+  value with the real part greater than or equal to zero.  When the
+  real part of the result is zero, the imaginary part has the same sign
+  as the imaginary part of X.
+
+[470:31+] insert one intrinsic {note: after RRSPACING}
+ 16.9.176+ RSQRT(X)
+  <<Description.>> Computes the reciprocal of the square root of a
+  given value.
+  <<Class.>> Elemental function
+  <<Argument.>> X shall be of type real or complex.  If X is real its
+  value shall be greater than or equal to zero.  If X is complex its
+  value must not be zero.
+  <<Result characteristics.>> Same as X.
+  <<Result value.>> The result has a value equal to a processor-dependent
+  approximation to 1/SQRT(X).
