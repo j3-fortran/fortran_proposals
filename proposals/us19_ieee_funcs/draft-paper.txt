@@ -1,9 +1,9 @@
-To: J3                                                     J3/25-190r3
-From: Lorri Menard
+To: J3                                                     J3/26-###
+From: Lorri Menard, JoR
 Subject: US19 - Missing IEEE functions
-Date: 2025-October-29
+Date: 2026-February-
 
-Reference: 23-234r2, 25-143, 25-007r1
+Reference: 23-111r1, 23-234r2, 25-143, 25-190r3, 25-007r1
 
 I  Introduction
 
@@ -13,6 +13,9 @@ yet part of the Fortran standard.
 
 Paper 25-143 contains the Requirements and Specifications.  It further
 lists each operation and connects each to its related Fortran operation.
+
+Note that POW from 25-143 is no longer included; there was no value
+that this routine could provide over simply using "X**Y".
 
 This paper is to be the Edits paper
 
@@ -25,7 +28,7 @@ III Edits
 
 [xv] Add to "Intrinsic procedures" the sentence:
 "The new intrinsic functions COMPOUND, EXPM1, EXP10M1, EXP2M1,
-LOGP1, LOG10P1, LOG2, LOG2P1, POW, ROOTN, and RSQRT were added
+LOGP1, LOG10P1, LOG2, LOG2P1, ROOTN, and RSQRT were added
 to correspond to ISO/IEC/IEEE 60559:2020 recommended operations."
 
 
@@ -47,9 +50,6 @@ LOG10P1(X)         E       Common logarithm of a value plus 1.
 LOG2(X)            E       Binary logarithm.
 LOG2P1(X)          E       Binary logarithm of a value plus 1.
 
-[385] after POPPAR add one line:
-POW(X,Y)           E       Exponentiation.
-
 [385] after RESHAPE add one line:
 ROOTN(X,N)         E       Radical function.
 
@@ -70,6 +70,10 @@ RSQRT(X)           E       Reciprocal square root.
   <<Result value.>> The result has a value equal to a processor-dependent
   approximation to (1+X)**N.
 
+   It is recommended that the processor compute the result using a method
+   that does not incur loss of precision by forming X+1.
+
+  <<Example.>> COMPOUND(1.0, 2) has the value 4.0 (approximately).
 
 [423:28+] add these three new intrinsics {note: after EXP}
 
@@ -82,6 +86,12 @@ RSQRT(X)           E       Reciprocal square root.
   approximation to EXP(X)-1.  If X is of type complex, its imaginary part
   is regarded as a value in radians.
 
+  It is recommended that the processor compute the result using a method
+  that does not incur loss of precision by forming $e^X$ and then
+  subtracting 1.
+
+  <<Example.>> EXPM1(1.0E-11) has the value 1.0E-11 (approximately).
+
 16.9.84++ EXP10M1(X)
   <<Description.>> Base 10 exponential minus 1.
   <<Class.>> Elemental function.
@@ -91,6 +101,12 @@ RSQRT(X)           E       Reciprocal square root.
   approximation to (10**X)-1. If X is of type complex, its imaginary part
   is regarded as a value in radians.
 
+  It is recommended that the processor compute the result using a method
+  that does not incur loss of precision by forming $10^X$ and then
+  subtracting 1.
+
+  <<Example.>> EXP10M1(-2.0) has the value -0.99 (approximately).
+
 16.9.84+++ EXP2M1(X)
   <<Description.>> Base 2 exponential minus 1.
   <<Class.>> Elemental function.
@@ -99,6 +115,12 @@ RSQRT(X)           E       Reciprocal square root.
   <<Result value.>> The result has a value equal to a processor-dependent
   approximation to (2**X)-1. If X is of type complex, its imaginary part
   is regarded as a value in radians.
+
+  It is recommended that the processor compute the result using a method
+  does not incur loss of precision by forming $2^X$ and then
+  subtracting 1.
+
+  <<Example.>> EXP2M1(-2.0) has the value -0.75 (approximately).
 
 [445:12+] insert one intrinsic: {note: after LOG}
 
@@ -111,12 +133,17 @@ RSQRT(X)           E       Reciprocal square root.
   <<Result characteristics.>> Same as X.
   <<Result value.>> The result has a value equal to a processor-dependent
   approximation to LOG(X+1).  A result of type complex is the principal
-  value with imaginary part 'w' in the range -pi <= 'w' <= pi.  If the
-  real part of X is less than -1 and the imaginary part of X is zero,
-  then the imaginary part of the result is approximately pi if the
+  value with imaginary part $\omega$ in the range $-\pi \leq \omega \leq \pi$.
+  If the real part of X is less than -1 and the imaginary part of X is zero,
+  then the imaginary part of the result is approximately $\pi$ if the
   imaginary part of X is positive real zero or the processor does not
   distinguish between positive and negative real zero, and approximately
-  -pi if the imaginary part of X is negative real zero.
+  $-\pi$ if the imaginary part of X is negative real zero.
+
+  It is recommended that the processor compute the result using a method
+  that does not incur loss of precision by forming X+1.
+
+  <<Example.>> LOGP1(1.0E-11) has the value 1.0E-11 (approximately).
 
 [445:27+] insert three intrinsics:  {note: after LOG10)
 
@@ -129,6 +156,12 @@ RSQRT(X)           E       Reciprocal square root.
   <<Result value.>> The result has a value equal to a processor-dependent
   approximation to LOG10(X+1).
 
+  It is recommended that the processor compute the result using a method
+  that does not incur loss of precision by forming X+1.
+
+  <<Example.>> LOG10P1(9.0) has the value 1.0 (approximately).
+
+
 16.9.130++ LOG2(X)
   <<Description.>> Binary logarithm.
   <<Class.>> Elemental function.
@@ -138,6 +171,8 @@ RSQRT(X)           E       Reciprocal square root.
   <<Result characteristics.>> Same as X
   <<Result value.>> The result has a value equal to a processor-dependent
   approximation to LOG(X)/LOG(2.)
+
+  <<Example>> LOG2(4.0) has the value 2.0 (approximately).
 
 16.9.130+++ LOG2P1(X)
   <<Description.>> Binary logarithm of a value plus 1.
@@ -149,15 +184,10 @@ RSQRT(X)           E       Reciprocal square root.
   <<Result value.>> The result has a value equal to a processor-dependent
   approximation to LOG2(X+1).
 
-[463:7+] insert one intrinsic {note: after POPPAR}
+  It is recommended that the processor compute the result using a method
+  that does not incur loss of precision by forming X+1.
 
-16.9.161+ POW(X,Y)
-  <<Description.>> Exponentiation.
-  <<Class.>> Elemental function.
-  <<Arguments.>> X shall be of type real or complex.
-                 Y shall be of type numeric.
-  <<Result characteristics.>> Same as X.
-  <<Result value.>> The result is as if it had been written X**Y.
+  <<Example.>> LOG2P1(3.0) has the value 2.0 (approximately).
 
 [470:21+] insert one intrinsic {note: after RESHAPE}
 
@@ -173,8 +203,11 @@ RSQRT(X)           E       Reciprocal square root.
   real part of the result is zero, the imaginary part has the same sign
   as the imaginary part of X.
 
+  <<Example>> ROOTN(27.0, 3) has the value 3.0 (approximately).
+
 [470:31+] insert one intrinsic {note: after RRSPACING}
- 16.9.176+ RSQRT(X)
+
+16.9.176+ RSQRT(X)
   <<Description.>> Computes the reciprocal of the square root of a
   given value.
   <<Class.>> Elemental function
@@ -184,3 +217,9 @@ RSQRT(X)           E       Reciprocal square root.
   <<Result characteristics.>> Same as X.
   <<Result value.>> The result has a value equal to a processor-dependent
   approximation to 1/SQRT(X).
+
+  It is recommended that the processor compute the result using a method
+  that does not incur loss of precision by forming SQRT(X) and then 
+  dividing one by the result.
+
+  <<Example>> RSQRT(4.0) has the value 0.5 (approximately).
