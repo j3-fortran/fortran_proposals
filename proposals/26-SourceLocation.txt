@@ -1,0 +1,169 @@
+To: J3                                                     J3/26-xxx
+From: Lorri Menard & JoR
+Subject: US11 - Provide intrinsics for source location
+Date: 
+
+Reference: 23-193r1
+
+I  Introduction
+
+Paper 23-193r1 notes that users have requested a way to get the source
+name and source line in their programs, as well as the current
+procedure name.  Uses for this would be for debugging, for
+logging purposes, etc.
+
+This request is being addressed in the preprocessor work via __FILE__
+and __LINE__, however there are some uses for intrinsic routines for
+source name and line, as well as for current procedure name.
+
+II Use cases
+
+It is useful to be able to pass the name of the current module/procedure
+to diagnostic layers such as error handlers, progress reporters, etc.   
+While a developer could readily produce such a string, that string will 
+often become incorrect as code undergoes other refactoring.  
+Further, experience shows that developers often use cut-and-paste when 
+developing new procedures ending up with wildly wrong names being passed 
+to the diagnostic layer.
+
+A preprocessor directive in a TEMPLATE declaration will be resolved at
+compile-time of the TEMPLATE.  However, instantiation of that template
+will happen in other files at other lines.  For debugging or logging
+purposes the value of __FILE__ and/or __LINE__ would not be helpful.
+
+Similarly, if there were a preprocessor command for current procedure
+name, it too would be resolved at compile time (probably to the name
+of the TEMPLATE procedure) but not to the name given by the user.
+
+This paper proposes adding three new intrinsic functions to the
+ISO_FORTRAN_ENV module to provide relevant information that could be
+useful for diagnosing problems at a later date.
+
+III Specifications
+
+SOURCE_FILE([CONTEXT])
+Description. Processor-dependent string that describes the name of the
+ source input to the translation phase of program execution.
+Class. Transformational function
+Argument.
+  CONTEXT(optional)   Shall be of type logical.  It is an INTENT(IN) argument.
+Result Characteristics. 
+The result is a default character scalar with processor-dependent length.
+
+Result Value.
+If CONTEXT is not present or has the value .FALSE. the processor shall return
+a filesystem name of the source input.
+If CONTEXT is present and has the value .TRUE. the processor may amend that
+string with more detailed filesystem information.
+If no information is available the value is the string "UNKNOWN FILE"
+
+****Straw vote:  Is there a better value?
+UNKNOWN FILE
+UNKNOWN INPUT
+Something else?
+
+
+SOURCE_LINE()
+Description. Returns the current source line
+Class. Transformational function
+Argument. None
+
+Result characteristics. Default integer value of the current source line.
+
+Result value.
+By default this is computed from the start of the file where the first
+line is counted as 1.  If a #line preprocessor directive is seen that
+will establish a new source line number.
+It is expected that SOURCE_LINE() and the preprocessor command __LINE__
+return the same value.
+
+
+PROCEDURE_NAME([CONTEXT])
+Description. Processor-dependent string that describes the name of the
+             current procedure being executed.
+Class. Transformational function
+Argument.
+  CONTEXT(optional)   Shall be of type logical.  It is an INTENT(IN) argument.
+Result characteristics. Default character scalar with processor-dependent
+                        length
+
+Result value.
+If CONTEXT is not present or has the value .FALSE. the following information
+will be returned.
+In the case of a MODULE procedure the name will be the original name 
+from the module (not a possible rename).
+In the case of an instantiated TEMPLATE procedure, the name will be the
+ one given by the user.
+In the case this is used to create a PARAMETER constant in the specifications
+section it will return the name of the program unit.  
+
+If the program unit is an unnamed main program, it will return the string "MAIN PROGRAM"
+
+****Straw vote:  Is there a better value?
+MAIN PROGRAM
+UNNAMED [PROGRAM]
+Something else?
+
+If CONTEXT is present and has the value .TRUE. a single string will be returned
+that gives full context of the procedure name in the following format:
+[module[(submodule)]:]subprogram[.internal][=binding_name]
+
+****Straw vote:
+Should this be module(submodule) or (module)submodule to match the 
+submodule syntax? (reference example 3)
+module(submodule)
+(module)submodule
+something else?
+
+
+Examples for PROCEDURE_NAME(context):
+
+Example 1:
+program main
+   print*, procedure_name()      ! 'MAIN'
+   print*, procedure_name(.TRUE.)! 'MAIN'
+contains
+   subroutine s()
+      print*, procedure_name()       ! 'S'
+      print*, procedure_name(.TRUE.) ! 'MAIN.S'
+   end subroutine s
+end program main
+
+Example 2:
+module A
+   character(*), parameter :: mod_name = procedure_name()             ! 'A' 
+   character(*), parameter :: full_mod_name = procedure_name(.TRUE.) !  'A:'
+contains
+   subroutine s()
+      print*, procedure_name()       ! 'S'
+      print*, procedure_name(.TRUE.) ! 'A:S'
+   contains
+      subroutine inner()
+         print*, procedure_name()      ! 'INNER' or 'A:S.INNER'
+         print*, procedure_name(.TRUE.)! 'A:S.INNER'
+      end subroutine inner
+   end subroutine s
+   subroutine s2() bind(C,name='qQ')
+      print*, procedure_name()       ! 'S2'
+      print*, procedure_name(.TRUE.) ! 'A:S2=qQ'
+   end subroutine s2
+end module A
+
+Example 3:
+submodule (A) B
+   character(*), parameter :: submod_name = procedure_name() ! 'B'
+   character(*), parameter :: full = procedure_name(.TRUE.) ! 'A(B):'
+                                                            ! (or '(A)B:')
+contains
+   subroutine s()
+      print*, procedure_name()       ! 'S' 
+      print*, procedure_name(.TRUE.) ! 'A(B):S' or '(A)B:S'
+   contains
+      subroutine inner()
+         print*, procedure_name()       ! 'inner'
+         print*, procedure_name(.TRUE.) ! 'A(B):s.inner' or (A)B:s.inner
+      end subroutine inner
+   end subroutine s
+end submodule
+
+
