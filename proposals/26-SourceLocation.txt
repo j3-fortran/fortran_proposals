@@ -35,8 +35,8 @@ Similarly, if there were a preprocessor command for current procedure
 name, it too would be resolved at compile time (probably to the name
 of the TEMPLATE procedure) but not to the name given by the user.
 
-This paper proposes adding three new intrinsic functions to the
-ISO_FORTRAN_ENV module to provide relevant information that could be
+This paper proposes adding three new functions to the
+intrinsic module ISO_FORTRAN_ENV to provide relevant information that could be
 useful for diagnosing problems at a later date.
 
 III Specifications
