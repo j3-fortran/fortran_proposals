@@ -23,17 +23,16 @@ to diagnostic layers such as error handlers, progress reporters, etc.
 While a developer could readily produce such a string, that string will 
 often become incorrect as code undergoes other refactoring.  
 Further, experience shows that developers often use cut-and-paste when 
-developing new procedures ending up with wildly wrong names being passed 
+developing new procedures, ending up with wildly wrong names being passed 
 to the diagnostic layer.
 
 A preprocessor directive in a TEMPLATE declaration will be resolved at
 compile-time of the TEMPLATE.  However, instantiation of that template
 will happen in other files at other lines.  For debugging or logging
-purposes the value of __FILE__ and/or __LINE__ would not be helpful.
+purposes the value of __FILE__ and/or __LINE__ might not be helpful.
 
-Similarly, if there were a preprocessor command for current procedure
-name, it too would be resolved at compile time (probably to the name
-of the TEMPLATE procedure) but not to the name given by the user.
+The current preprocessing standardization effort (25-142r2) does not
+anticipate adding preprocessor support for procedure name.
 
 This paper proposes adding three new functions to the
 intrinsic module ISO_FORTRAN_ENV to provide relevant information that could be
@@ -52,15 +51,21 @@ The result is a default character scalar with processor-dependent length.
 
 Result Value.
 If CONTEXT is not present or has the value .FALSE. the processor shall return
-a filesystem name of the source input.
-If CONTEXT is present and has the value .TRUE. the processor may amend that
-string with more detailed filesystem information.
-If no information is available the value is the string "UNKNOWN FILE"
+a processor-dependent value representing the name of the source input.
+If CONTEXT is present and has the value .TRUE. the result shall be a
+processor-dependent value representing a potentially more detailed
+name of the source input
+If no information is available the value is the string "UNKNOWN".
 
 ****Straw vote:  Is there a better value?
+<empty string>
+UNKNOWN
 UNKNOWN FILE
 UNKNOWN INPUT
 Something else?
+
+Example.  SOURCE_FILE() might have the value 'program.F90' and 
+SOURCE_FILE(.true.) might have the value '/usr/src/program.F90'.
 
 
 SOURCE_LINE()
@@ -71,11 +76,10 @@ Argument. None
 Result characteristics. Default integer value of the current source line.
 
 Result value.
-By default this is computed from the start of the file where the first
-line is counted as 1.  If a #line preprocessor directive is seen that
-will establish a new source line number.
-It is expected that SOURCE_LINE() and the preprocessor command __LINE__
-return the same value.
+A positive value representing the index of the invoking line within the Fortran
+program, computed in a processor-dependent manner.
+If the processor includes a preprocessor, it is recommended that SOURCE_LINE()
+return the same value reported by the preprocessor.
 
 
 PROCEDURE_NAME([CONTEXT])
@@ -100,8 +104,10 @@ section it will return the name of the program unit.
 If the program unit is an unnamed main program, it will return the string "MAIN PROGRAM"
 
 ****Straw vote:  Is there a better value?
+MAIN
 MAIN PROGRAM
 UNNAMED [PROGRAM]
+<empty string>
 Something else?
 
 If CONTEXT is present and has the value .TRUE. a single string will be returned
@@ -113,6 +119,7 @@ Should this be module(submodule) or (module)submodule to match the
 submodule syntax? (reference example 3)
 module(submodule)
 (module)submodule
+module/submodule
 something else?
 
 
@@ -139,7 +146,7 @@ contains
       print*, procedure_name(.TRUE.) ! 'A:S'
    contains
       subroutine inner()
-         print*, procedure_name()      ! 'INNER' or 'A:S.INNER'
+         print*, procedure_name()      ! 'INNER'
          print*, procedure_name(.TRUE.)! 'A:S.INNER'
       end subroutine inner
    end subroutine s
@@ -154,16 +161,21 @@ submodule (A) B
    character(*), parameter :: submod_name = procedure_name() ! 'B'
    character(*), parameter :: full = procedure_name(.TRUE.) ! 'A(B):'
                                                             ! (or '(A)B:')
+                                                            ! (or 'A/B:')
 contains
    subroutine s()
       print*, procedure_name()       ! 'S' 
-      print*, procedure_name(.TRUE.) ! 'A(B):S' or '(A)B:S'
+      print*, procedure_name(.TRUE.) ! 'A(B):S' or '(A)B:S'or 'A/B:S'
    contains
       subroutine inner()
          print*, procedure_name()       ! 'inner'
-         print*, procedure_name(.TRUE.) ! 'A(B):s.inner' or (A)B:s.inner
+         print*, procedure_name(.TRUE.) ! 'A(B):s.inner' or
+                                        ! '(A)B:s.inner' or
+                                        ! 'A/B:S.inner'
+
       end subroutine inner
    end subroutine s
 end submodule
+
 
 
