@@ -1,6 +1,6 @@
 To: J3                                                     J3/26-xxx
 From: Lorri Menard & JoR
-Subject: US11 - Provide intrinsics for source location
+Subject: US11: Specifications for intrinsics for source location
 Date: 
 
 Reference: 23-193r1
