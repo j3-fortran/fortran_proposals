@@ -1,6 +1,6 @@
 To: J3                                                     J3/26-###
 From: Lorri Menard & JoR
-Subject: US19 - Missing IEEE functions
+Subject: US19 - Missing IEEE functions, edits
 Date: 2026-February-
 
 Reference: 23-111r1, 23-234r2, 25-143, 25-190r3, 25-007r1
@@ -9,7 +9,7 @@ I  Introduction
 
 Paper 23-234r2 provides a comprehensive list of the IEEE-754
 recommended operations, and calls out the subset that are not
-yet part of the Fortran standard.
+yet available as intrinsic operations in the Fortran standard.
 
 Paper 25-143 contains the Requirements and Specifications.  It further
 lists each operation and connects each to its related Fortran operation.
@@ -208,11 +208,10 @@ RSQRT(X)           E       Reciprocal square root.
 [470:31+] insert one intrinsic {note: after RRSPACING}
 
 16.9.176+ RSQRT(X)
-  <<Description.>> Computes the reciprocal of the square root of a
-  given value.
+  <<Description.>> Reciprocal square root.
   <<Class.>> Elemental function
   <<Argument.>> X shall be of type real or complex.  If X is real its
-  value shall be greater than or equal to zero.  If X is complex its
+  value shall be greater than zero.  If X is complex its
   value must not be zero.
   <<Result characteristics.>> Same as X.
   <<Result value.>> The result has a value equal to a processor-dependent
