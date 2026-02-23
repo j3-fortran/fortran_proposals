@@ -1,13 +1,13 @@
-To: J3                                                     J3/26-XXX
+To: J3                                                     J3/26-122
 From: Patrick Fasano & HPC
 Subject: Reqs/specs for interoperability with C23 enumerations
-Date: 2026-February-XX
-Reference: ISO/IEC 9899:2018 ! Programming languages -- C ("C17")
-Reference: ISO/IEC 9899:2024 ! Programming languages -- C ("C23")
+Date: 2026-February-23
+Reference: ISO/IEC-9899:2018 ! Programming languages -- C ("C17")
+Reference: ISO/IEC-9899:2024 ! Programming languages -- C ("C23")
 Reference: WG5/N2212  ! The new features of Fortran 2023
 Reference: WG14/N3029 ! Improved Normal Enumerations
 Reference: WG14/N3030 ! Enhanced Enumerations
-Reference: 23-007r1   ! Fortran 2023 Working Draft
+Reference: 24-007     ! Fortran 2023
 Reference: 26-112     ! Edits for updating references from C17 to C23
 
 1 Background
@@ -38,7 +38,7 @@ bg03. WG14/N3030 "Enhanced Enumerations" adds the ability to specify the
       explicitly specified in the enum declaration (e.g., `enum x : long
       long { ... }`).
 
-bg04. The current Fortran specification (23-007r1, subclause 7.6.1)
+bg04. The current Fortran specification (24-007, subclause 7.6.1)
       relies on the assumption that C enumeration constants fit within a
       C int. This assumption is explicitly stated in Note 2 of the
       subclause: "ISO/IEC 9899:2018 guarantees the enumeration constants
@@ -202,7 +202,7 @@ sc02. If the KIND parameter is present, the kind type parameter of the
       enumerators is the value specified by the KIND parameter. The
       corresponding interoperable C enumerated type is one that uses a
       compatible underlying type (in addition to the other requirements
-      specified in 23-007r1, sec 7.6.1 para 2).
+      specified in 24-007, sec 7.6.1 para 2).
 
 sc03. If the KIND parameter is absent, the Fortran processor shall
       determine the interoperable kind of the enumerators based on the
