@@ -1,6 +1,6 @@
-To: J3                                                     J3/26-122
+To: J3                                                     J3/26-122r1
 From: Patrick Fasano & HPC
-Subject: Reqs/specs for interoperability with C23 enumerations
+Subject: Reqs/specs/syntax for interoperability with C23 enumerations
 Date: 2026-February-23
 Reference: ISO/IEC-9899:2018 ! Programming languages -- C ("C17")
 Reference: ISO/IEC-9899:2024 ! Programming languages -- C ("C23")
@@ -9,6 +9,7 @@ Reference: WG14/N3029 ! Improved Normal Enumerations
 Reference: WG14/N3030 ! Enhanced Enumerations
 Reference: 24-007     ! Fortran 2023
 Reference: 26-112     ! Edits for updating references from C17 to C23
+Reference: 26-122 ! Reqs/specs for interoperability with C23 enumerations
 
 1 Background
 ============
@@ -102,6 +103,9 @@ OPTION C: Implicitly determine KIND via new C23 rules and add explicit
 
 The subgroup recommends OPTION A.
 
+The straw poll taken during J3 meeting #239 indicated consensus for
+OPTION C. This revision adopts the specifications and syntax from 26-122
+for OPTION C.
 
 Straw poll analysis
 -------------------
@@ -141,46 +145,14 @@ CC01. Requires introducing new syntax.
 CC02. Requires compiler parsing and backend changes (hence might be
       considered a new feature).
 
-4 Specifications
-================
-
-4.1 Specifications for Option A
--------------------------------
-
-sa01. The definition of "interoperable enumerator" should be constrained
-      to require the values of the enumerators be representable in the
-      integer type with kind parameter C_INT.
-
-sa02. Update or remove Note 2 in subclause 7.6.1 to reflect that
-      interoperability is restricted to enumerations where constants fit
-      in a C int.
-
-4.2 Specifications for Option B
--------------------------------
-
-sb01. Remove Note 2 in subclause 7.6.1 which incorrectly states that C
-      enumeration constants are guaranteed to fit in a C int.
-
-sb02. The Fortran processor shall determine the interoperable kind of
-      the enumerators based on the type chosen by the companion
-      processor for the corresponding C enumerated type, which may be
-      wider than C_INT.
-
-sb03. Optionally, add a replacement Note to subclause 7.6.1 to explain
-      that C23 allows enumeration constants that do not fit in a C int,
-      and that the Fortran processor may need to evaluate all enumerator
-      values using an integer type with wider range than the integer
-      type with kind parameter C_INT, before determining the kind
-      parameter that is interoperable with the C enumerated type.
-
-4.3 Specifications for Option C
--------------------------------
+4 Specifications/Syntax
+=======================
 
 sc01. Extend the syntax of the ENUM statement to allow an optional KIND
-      parameter to specify the underlying integer type. One possible
-      syntax (shown only for illustrative purposes):
+      parameter to specify the underlying integer type. The proposed
+      syntax is:
 
-      ENUM[(KIND=scalar-int-constant-expr)], BIND(C) [:: enum-type-name]
+      ENUM[([KIND=]scalar-int-constant-expr)], BIND(C) [:: enum-type-name]
 
       Thus, for a C23 enumerator declared as this:
 
@@ -208,12 +180,5 @@ sc03. If the KIND parameter is absent, the Fortran processor shall
       determine the interoperable kind of the enumerators based on the
       type chosen by the companion processor for the corresponding C
       enumerated type, which may be wider than C_INT.
-
-sc04. Add a Note to subclause 7.6.1 to explain that C23 allows
-      enumeration constants that do not fit in a C int, and that the
-      Fortran processor may need to evaluate all enumerator values using
-      an integer type with wider range than the integer type with kind
-      parameter C_INT, before determining the kind parameter that is
-      interoperable with the C enumerated type.
 
 ==END==
