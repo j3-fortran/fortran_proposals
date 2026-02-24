@@ -103,9 +103,16 @@ OPTION C: Implicitly determine KIND via new C23 rules and add explicit
 
 The subgroup recommends OPTION A.
 
-The straw poll taken during J3 meeting #239 indicated consensus for
-OPTION C. This revision adopts the specifications and syntax from 26-122
-for OPTION C.
+The straw poll was taken during J3 meeting #239, with the following
+results:
+
+OPTION A:   1
+OPTION B:   0
+OPTION C:  14
+Undecided:  3
+
+This revision adopts the specifications and syntax from 26-122 for
+OPTION C.
 
 Straw poll analysis
 -------------------
