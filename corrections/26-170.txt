@@ -1,0 +1,362 @@
+To: J3                                                     J3/26-170
+Subject: Edits for UTI 001: TEAM restrictions for collectives
+From: HPC
+Date: 2026-June-12
+References: 22-163, 25-127r1, 25-202r3, 26-137, 26-007r1
+
+1. Background
+-------------
+
+Unresolved Technical Issue (UTI) 001 in 26-007r1, inserted by the Editor,
+reads as follows:
+
+  "Edits permitted unrelated teams to be collectivised.
+
+  25-125r1 said that "this feature" was analogous to SYNC TEAM. That requires a
+  team value of an ancestor, child or the current team.
+
+  An unrestricted team could be a side-by-side team with overlapping membership,
+  or far away in the team hierarchy tree. That does not seem to make sense. If
+  you cannot CHANGE TEAM (or exit from CHANGE TEAMs) to reach the team, the
+  logic is very suspect.
+
+  There is, I believe, no way to satisfy any reasonable rules for "same sequence
+  of invocations" in between team transitions if unrelated teams are permitted
+  here. Therefore, I believe we really should not do that, as apart from the
+  wording difficulties, permitting unrelated teams would inhibit cost-effective
+  runtime deadlock detection.
+
+  Therefore, I inserted the same condition (requirement) as for the SYNC TEAM
+  statement."
+
+2. Response
+-----------
+
+The edits, as passed by unanimous consent at meeting #237 in 25-202r3, allow
+passing any valid team argument to a collective subroutine. Edits for the same
+technical design were also previously passed by unanimous consent at meeting
+#236 in superseded paper 25-127r1.
+
+On procedural grounds, the HPC subgroup believes it suffices to respond that
+this was a deliberate design decision, and therefore the technical content of
+the edits should stand as passed (twice) in plenary. The next section provides
+the edits to restore the approved design in the current draft.
+
+The remaining sections of this paper provide additional context.
+
+3. Edits
+--------
+
+Below are the edits to restore the feature relative to 26-007r1, consistent
+with the technical design passed in 25-202r3.
+
+These edits also supersede concurrent paper 26-137, which proposes typographical
+corrections to the same paragraphs.
+
+-------------------------------------------------------------------------
+[425] 17.6 Collective subroutines
+
+Delete UTI 001
+
+-------------------------------------------------------------------------
+[425:2-3] 17.6 Collective subroutines
+
+Delete the phrase:
+
+", which shall be an ancestor team, the current team, or a team whose parent is
+the current team"
+
+Such that paragraph 2 reads:
+
+"The team specified by an invocation of a collective subroutine is the current
+team if the TEAM argument does not appear in that invocation. Otherwise, it is
+the team identified by the value of the TEAM argument. On all images
+participating in the same collective computation, the specified team shall be
+the same team."
+
+-------------------------------------------------------------------------
+[455:15-17] 17.9.54 CO_BROADCAST
+
+After "scalar of type" in the first sentence, insert the missing word
+"TEAM_TYPE".
+
+Delete the phrase:
+
+"Its value shall be that of an ancestor team, the current team, or a team whose
+parent is the current team;"
+
+and capitalize the subsequent word as the new start of the sentence, such that
+the passage reads:
+
+TEAM  shall be a scalar of type TEAM_TYPE from the intrinsic module
+      ISO_FORTRAN_ENV. It is an INTENT (IN) argument. It shall identify the
+      same team in all corresponding references. If TEAM does not appear, the
+      team specified is the current team.
+
+-------------------------------------------------------------------------
+[456:12-14]  17.9.55 CO_MAX
+
+After "scalar of type" in the first sentence, insert the missing word
+"TEAM_TYPE".
+
+Delete the phrase:
+
+"Its value shall be that of an ancestor team, the current team, or a team whose
+parent is the current team;"
+
+and capitalize the subsequent word as the new start of the sentence, such that
+the passage matches the one shown above for CO_BROADCAST.
+
+-------------------------------------------------------------------------
+[457:1-3] 17.9.56 CO_MIN
+
+After "scalar of type" in the first sentence, insert the missing word
+"TEAM_TYPE".
+
+Delete the phrase:
+
+"Its value shall be that of an ancestor team, the current team, or a team whose
+parent is the current team;"
+
+and capitalize the subsequent word as the new start of the sentence, such that
+the passage matches the one shown above for CO_BROADCAST.
+
+-------------------------------------------------------------------------
+[458:3-5] 17.9.57 CO_REDUCE
+
+After "scalar of type" in the first sentence, insert the missing word
+"TEAM_TYPE".
+
+Delete the phrase:
+
+"Its value shall be that of an ancestor team, the current team, or a team whose
+parent is the current team;"
+
+and capitalize the subsequent word as the new start of the sentence, such that
+the passage matches the one shown above for CO_BROADCAST.
+
+-------------------------------------------------------------------------
+[459:18-20] 17.9.58 CO_REDUCE_PREFIX_EXCLUSIVE
+
+After "scalar of type" in the first sentence, insert the missing word
+"TEAM_TYPE".
+
+Delete the phrase:
+
+"Its value shall be that of an ancestor team, the current team, or a team whose
+parent is the current team;"
+
+and capitalize the subsequent word as the new start of the sentence, such that
+the passage matches the one shown above for CO_BROADCAST.
+
+-------------------------------------------------------------------------
+[460:28-30] 17.9.59 CO_REDUCE_PREFIX_INCLUSIVE
+
+After "scalar of type" in the first sentence, insert the missing word
+"TEAM_TYPE".
+
+Delete the phrase:
+
+"Its value shall be that of an ancestor team, the current team, or a team whose
+parent is the current team;"
+
+and capitalize the subsequent word as the new start of the sentence, such that
+the passage matches the one shown above for CO_BROADCAST.
+
+-------------------------------------------------------------------------
+[461:42-43, 462:1] 17.9.60 CO_SUM
+
+After "scalar of type" in the first sentence, insert the missing word
+"TEAM_TYPE".
+
+Delete the phrase:
+
+"Its value shall be that of an ancestor team, the current team, or a team whose
+parent is the current team;"
+
+and capitalize the subsequent word as the new start of the sentence, such that
+the passage matches the one shown above for CO_BROADCAST.
+
+-------------------------------------------------------------------------
+[462:27-29] 17.9.61 CO_SUM_PREFIX_EXCLUSIVE
+
+After "scalar of type" in the first sentence, insert the missing word
+"TEAM_TYPE".
+
+Delete the phrase:
+
+"Its value shall be that of an ancestor team, the current team, or a team whose
+parent is the current team;"
+
+and capitalize the subsequent word as the new start of the sentence, such that
+the passage matches the one shown above for CO_BROADCAST.
+
+-------------------------------------------------------------------------
+[463:17-19] 17.9.62 CO_SUM_PREFIX_INCLUSIVE
+
+After "scalar of type" in the first sentence, insert the missing word
+"TEAM_TYPE".
+
+Delete the phrase:
+
+"Its value shall be that of an ancestor team, the current team, or a team whose
+parent is the current team;"
+
+and capitalize the subsequent word as the new start of the sentence, such that
+the passage matches the one shown above for CO_BROADCAST.
+-------------------------------------------------------------------------
+
+4. Context
+----------
+
+The edits passed in 25-127r1 and subsequently in 25-202r3 deliberately do NOT
+restrict the team argument to specify the current team or an ancestor or child
+of the current team.  The primary design goal of work item DIN1 "collective
+subroutines on a specified team" (22-163) was to decouple collective subroutine
+references from the CHANGE TEAM construct; burdening the new feature with
+unnecessary restrictions based on the current team fundamentally contradicts
+that goal.
+
+The main restrictions (that should remain) are:
+
+1. the TEAM argument must be a valid scalar of type TEAM_TYPE, which (due to
+   restrictions elsewhere in the standard) implies that the executing image
+   is a member of the specified TEAM, and
+2. that all active images of the specified TEAM must invoke the same collective
+   subroutine statement in segments that are not ordered with respect to each
+   other (a direct extension of the wording for current team invocations).
+
+The question about relative ordering of collective subroutine invocations within
+a segment is the topic of UTI-002 and will be discussed separately in the
+response to that UTI.
+
+
+5. Use case
+-----------
+
+Contrary to the implication in the UTI, HPC subgroup believes there *are* valid
+use cases for invoking collectives on teams that are neither an ancestor nor
+child of the current team.
+
+For example, consider a computation over a dense rectangular domain with a
+regular, 2-d blocked domain decomposition across images (assume a perfect square
+number of images for illustrative purposes). Each image is a member of a "row
+team" containing all the images occupying the same row in the 2-d decomposition,
+and a "column team" containing all the images occupying the same column in the
+2-d decomposition. These two teams have overlapping membership without a subset
+relationship, and hence neither team can be an ancestor of the other in the
+team hierarchy (although they can share a parent team).
+
+Now imagine the computation involves a long-lived CHANGE TEAM to the row team,
+which includes allocation of long-lived coarrays over that row team, and
+collective communication across members of the row team. At occasional (but
+deterministic) points, the computation also needs to perform collective
+communication over the column teams; for example to compute a max error across
+columns of the simulation as part of evaluating convergence criteria.  If
+collectives over a specified team are constrained similarly to SYNC TEAM
+(prohibiting collectives over a team that is not an ancestor or child of the
+current team), that would make it difficult to concisely and efficiently
+express such a pattern.
+
+6. Digression about SYNC TEAM
+-----------------------------
+Passed edit paper 25-202r3 makes no mention of the SYNC TEAM statement.
+SYNC TEAM in some ways is analogous to collective subroutines on a specified
+team, but is really an orthogonal multi-image feature. For example, SYNC TEAM is
+an image control statement, whereas collective subroutines are not. As such, we
+should not feel obligated to copy unnecessary restrictions from SYNC TEAM to
+collective subroutines.
+
+Relevant normative text from Fortran 2023 11.7.6 SYNC TEAM:
+  "The team-value shall identify an ancestor team, the current team, or a team
+   whose parent is the current team. The executing image shall be a member of
+   the specified team."
+
+There is currently no normative requirement restricting sequencing of SYNC TEAM
+statements across images. Even with the restrictions quoted above on valid team
+arguments, it remains very easy to write conforming programs where
+synchronization using SYNC TEAM would be expected to deadlock at runtime, as
+demonstrated in the following standard-conforming examples:
+
+Example 1: two child teams sharing a parent:
+----------
+
+  ! Assume 4 or more images
+  PROGRAM sync_team_child_vs_child
+    USE,INTRINSIC :: ISO_FORTRAN_ENV, only : TEAM_TYPE
+
+    TYPE (TEAM_TYPE) :: T_odds_and_evens, T_everyone !, T_initial
+
+    print *, THIS_IMAGE(), "/", NUM_IMAGES(), ": HELLO"
+
+    ! Each image is a member of three teams:
+    ! T_initial = GET_TEAM() ! initial team
+    FORM TEAM (1, T_everyone) ! child team 1
+    FORM TEAM (mod(THIS_IMAGE(),2)+1, T_odds_and_evens) ! child team 2
+
+    IF (THIS_IMAGE() <= 2) THEN  ! first two images
+      SYNC TEAM (T_everyone)
+    ELSE ! remaining images
+      SYNC TEAM (T_odds_and_evens)
+    END IF
+  END PROGRAM
+
+(Silent deadlock confirmed on: NAG 7.2, HPE CCE 20.0, GCC 16.1)
+(Crashes on: GCC 15.2 / OpenCoarrays 2.10.3)
+
+Side note: unlike collective subroutines and some other collective image
+control statements, there is no "same statement" requirement for SYNC TEAM,
+SYNC ALL or SYNC IMAGES.
+
+Example 2: current team versus child team (or ancestor team)
+----------
+
+  ! Assume 3 or more images
+  PROGRAM sync_team_current_vs_child
+    USE,INTRINSIC :: ISO_FORTRAN_ENV, only : TEAM_TYPE
+
+    TYPE (TEAM_TYPE) :: T_initial, T_child
+
+    print *, THIS_IMAGE(), "/", NUM_IMAGES(), ": HELLO"
+
+    ! Each image is a member of two teams:
+    T_initial = GET_TEAM() ! initial team
+    FORM TEAM (1, T_child) ! child team
+
+    IF (mod(THIS_IMAGE(),2) == 1) THEN  ! odd images
+      SYNC TEAM (T_initial)
+      SYNC TEAM (T_child)
+    ELSE ! even images
+      SYNC TEAM (T_child)
+      SYNC TEAM (T_initial)
+    END IF
+  END PROGRAM
+
+(Silent deadlock confirmed on: NAG 7.2, HPE CCE 20.0, GCC 16.1)
+(Compile failure on: GCC 15.2 / OpenCoarrays 2.10.3)
+
+If one modifies Example 2 to wrap the *if-construct* with CHANGE TEAM(T_child),
+the program then demonstrates a deadlock between the current team and the
+parent team.
+
+There is no current work item for relaxing the requirements on SYNC TEAM (nor
+are we proposing that here), but it might be worth separately considering in
+the future. Adding normative text to prohibit deadlocks with SYNC TEAM or other
+multi-image synchronization constructs might also be worth considering, but is
+orthogonal to this UTI. The main point for the purposes of this UTI is to
+observe that the current normative restrictions on SYNC TEAM arguments do *not*
+prevent the possibility of deadlock, they merely inhibit potentially valid use
+cases.
+
+Moreover, in the case of SYNC TEAM the problematic restrictions are often
+avoidable; because the programmer *may* be able to arrange synchronization
+across a team that is not an ancestor or child of the current team by instead
+invoking SYNC TEAM on a common ancestor team (i.e. oversynchronization:
+potentially incorporating images that don't actually need to be synchronized by
+the algorithm). This approach is inelegant, presumably incurs a performance
+penalty, and may be awkward to orchestrate in some control flows without
+deadlock.  However no such recourse exists in general for collective reductions,
+where every member of the specified team participates in the collective
+computation and potentially affects the resulting values.
+
+===END===
