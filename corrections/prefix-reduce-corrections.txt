@@ -1,0 +1,290 @@
+To: J3                                                     J3/26-XXX
+Subject: Edits to correct prefix reductions (US20)
+From: Dan Bonachea & Brandon Cook
+Date: 2026-May-XX
+References: 25-199r2, 26-103r3, 26-007r1
+
+1. Background
+-------------
+
+Paper 25-199r2 passed at meeting #237 contains edits to add new intrinsics for
+work item US20, specifically collective subroutines for prefix reductions.
+
+Paper 26-103r3 passed at meeting #238 contains edits to add new intrinsics for
+work item US20, specifically transformational functions for prefix reductions.
+
+Several defects were introduced in applying these edits in 26-007 (and
+propagated to 26-007r1), This paper provides edits to resolve the problems.
+
+2. Miscellaneous Edits
+----------------------
+
+Below are edits, relative to 26-007r1, with interspersed rationale.
+
+-------------------------------------------------------------------------
+[458:25] 17.9.58 CO_REDUCE_PREFIX_EXCLUSIVE
+
+Delete the extraneous blank character appearing in the second line of the
+intrinsic section header, immediately following the first appearance of
+OPERATION.
+
+I.e., replace the line:
+
+  "(A, OPERATION , INITIAL [, STAT, ERRMSG]) or"
+
+with:
+
+  "(A, OPERATION, INITIAL [, STAT, ERRMSG]) or"
+
+
+-------------------------------------------------------------------------
+[459:3-4] 17.9.58 CO_REDUCE_PREFIX_EXCLUSIVE
+
+In the description of the INITIAL argument, append the omitted sentence:
+
+  "It is an INTENT (IN) argument."
+
+This sentence was dropped (apparently inadvertently) during transcription of the
+passed edits, and restores symmetry with the descriptions of similar arguments
+to intrinsic subroutines throughout 17.9 (e.g., the RESULT_IMAGE argument to
+CO_REDUCE).
+
+We acknowledge this sentence is technically redundant due to 17.2.1 p3, but
+until we decide to remove all such redundant descriptions throughout 17.9, the
+confusing asymmetry is more problematic than the trivial redundancy.
+
+-------------------------------------------------------------------------
+[459:17] 17.9.58 CO_REDUCE_PREFIX_EXCLUSIVE
+
+In the last sentence describing the OPERATION argument, replace the phrase:
+
+  "to image i"
+
+with:
+
+  "on image i"
+
+Such that the entire sentence reads:
+
+ "When S_i has only one item remaining, that value is assigned to A on image i."
+
+This appears to have been a typo, and deploys the terminology used throughout
+the standard.
+
+-------------------------------------------------------------------------
+[526:7] 17.9.187 REDUCE_PREFIX_EXCLUSIVE
+
+The second formula for Case(i) inserted by the Editor contains an off-by-one
+error. Ordered exclusive reductions can be expressed as a recurrence equation
+where each result value depends on the value of the *prior* array element, not
+the current one.
+
+A simple demonstration of this is to observe that the value of:
+
+   REDUCE_PREFIX_EXCLUSIVE( [ a_1, a_2 ], OPERATION, INITIAL, ORDERED=.true.)
+
+is equal to:
+
+   [ INITIAL, OPERATION(INITIAL, a_1) ]
+
+where the 2nd element of the result depends on the 1st element of ARRAY.
+
+Replace:
+
+  " i - 1"
+
+with:
+
+  " i - 2"
+
+Such that the entire sentence reads:
+
+  "If ORDERED is present with the value true, the ith element of the result,
+   r_i, for i > 1, shall be equal to the value of
+   OPERATION (r_(i-1), ARRAY (LBOUND (ARRAY, 1) + i - 2))."
+
+-------------------------------------------------------------------------
+[526:15] 17.9.187 REDUCE_PREFIX_EXCLUSIVE
+
+The final formula in Case(ii) was transcribed incorrectly from the edit paper,
+and is missing the nonoptional INITIAL argument.
+
+Replace:
+
+  "OPERATION, DIM = 1"
+
+with:
+
+  "OPERATION, INITIAL, DIM = 1"
+
+Such that the expression reads:
+
+  "REDUCE_PREFIX_EXCLUSIVE (ARRAY (i_1,i_2,...,i_i(DIM-1),:,i_(DIM+1),...,i_n),
+                            OPERATION, INITIAL, DIM = 1 [, ORDERED = ORDERED])."
+
+-------------------------------------------------------------------------
+[527:9] 17.9.188 REDUCE_PREFIX_INCLUSIVE
+
+The second formula for Case(i) inserted by the Editor incorrectly indexes
+ARRAY using the unstated assumption that LBOUND(ARRAY, 1) has the value 1.
+
+Replace:
+
+  "ARRAY(i)"
+
+with:
+
+  "ARRAY(LBOUND(ARRAY, 1) + i - 1)"
+
+Such that the entire sentence reads:
+
+  "If ORDERED is present with the value true, the ith element of the result,
+   r_i, for i > 1, shall be equal to the value of
+   OPERATION (r_(i-1), ARRAY (LBOUND (ARRAY, 1) + i - 1))."
+
+This corrects the problem and also establishes symmetry with the analogous
+formula (coincidentally corrected above) for REDUCE_PREFIX_EXCLUSIVE.
+
+-------------------------------------------------------------------------
+[527:20] 17.9.188 REDUCE_PREFIX_INCLUSIVE
+
+The Case(i) example was transcribed incorrectly from the edit paper, such that
+it now presents a wrong answer.
+
+Replace:
+
+  "[3, 2, 5]"
+
+with:
+
+  "[2, 3, 4]"
+
+Such that Case(i) now reads:
+
+  "The value of REDUCE_PREFIX_INCLUSIVE ([2, 3, 4], MY_MULT) is [2, 6, 24]."
+
+
+-------------------------------------------------------------------------
+[542:5] 17.9.219 SUM_PREFIX_EXCLUSIVE
+
+The Case(iii) example was transcribed incorrectly from the edit paper, such that
+it now presents a wrong answer.
+
+Replace:
+
+  "| 1 3 5 |
+   | 2 4 6 |"
+
+with:
+
+  "| 1 2 3 |
+   | 4 5 6 |"
+
+Such that Case(iii) now reads:
+
+  "If B is the array | 1 2 3 |
+                     | 4 5 6 |,
+   SUM_PREFIX_EXCLUSIVE (B, DIM = 2) has the same value as
+   RESHAPE ([SUM_PREFIX_EXCLUSIVE (B (1, :)), SUM_PREFIX_EXCLUSIVE (B (2, :))],
+            SHAPE (B)),
+   which is equal to | 0 1 3 |
+                     | 0 4 9 |."
+
+-------------------------------------------------------------------------
+[543:1] 17.9.220 SUM_PREFIX_INCLUSIVE
+
+The Case(iii) example was transcribed incorrectly from the edit paper, such that
+it now presents a wrong answer.
+
+Replace:
+
+  "| 1 3 5 |
+   | 2 4 6 |"
+
+with:
+
+  "| 1 2 3 |
+   | 4 5 6 |"
+
+Such that Case(iii) now reads:
+
+  "If B is the array | 1 2 3 |
+                     | 4 5 6 |,
+   SUM_PREFIX_INCLUSIVE (B, DIM = 2) has the same value as
+   RESHAPE ([SUM_PREFIX_INCLUSIVE (B (1, :)), SUM_PREFIX_INCLUSIVE (B (2, :))],
+            SHAPE (B)),
+   which is equal to | 1 3 6  |
+                     | 4 9 15 |."
+
+-------------------------------------------------------------------------
+
+3. Correcting the asymmetry in A argument description to collectives
+--------------------------------------------------------------------
+
+Fortran 2023 specified five collective subroutines. 25-199r2 / 26-007r1 raised
+this tally to nine collective subroutines.
+
+In 26-007r1, all five of the collective subroutines inherited from Fortran 2023
+and the two new CO_SUM_PREFIX_{EXCLUSIVE,INCLUSIVE} intrinsics specify an A
+argument whose description includes the phrase:
+
+  "shall have the same shape, type, and type parameter values, in corresponding
+   references."
+
+However, in the two new CO_REDUCE_PREFIX_{EXCLUSIVE,INCLUSIVE} intrinsics, the
+analogous phrase instead reads:
+
+  "shall have the same shape and type parameter values in corresponding
+   references."
+
+Note the removal of the word ", type" in the second case. Phrasing aside, it
+remains critical to ensure we require the type of the A argument to be identical
+in corresponding references (for every collective subroutine).
+
+The phrasing difference is *probably* not actually meaningful, because in the
+case of CO_REDUCE* the description of the OPERATION argument requires every
+image to pass the "same function" in corresponding references, whose result and
+each argument are additionally required to have the same type as A; thus one can
+deduce the A argument must have the same type in corresponding references.
+Note the "same statement" requirement in 17.6 p1 alone is probably (at least
+currently) insufficient for this deduction, since the introduction of generic
+subprograms blurred the meaning of "same statement" (see related UTI-007).
+
+Regardless of the rationale for omitting the word ", type", this asymmetry in
+description is unnecessary and undesirable because it invites the reader to
+question why the phrase differs for only these two collective subroutines.
+Consistency of phrasing for analogous requirements is far more important than
+removing a trivial redundancy in two new collective subroutines and leaving it
+unchanged in the rest.
+
+One could potentially fix this discrepancy by removing the word ", type" from
+this phrase in the description of the A argument where it currently appears in
+CO_REDUCE, and possibly some of the other six collective subroutines.  However
+we believe it is more clear and direct to resolve the discrepancy by simply
+adding the missing word to the CO_REDUCE_PREFIX_{EXCLUSIVE,INCLUSIVE} sections.
+
+3.1 Edits for A argument
+------------------------
+
+-------------------------------------------------------------------------
+[458:30-31] 17.9.58 CO_REDUCE_PREFIX_EXCLUSIVE
+
+In the description of argument A, insert the word ", type" after the word
+"shape", such that the sentence reads:
+
+  "It shall have the same shape, type and type parameter values in corresponding
+  references."
+
+
+-------------------------------------------------------------------------
+[460:6-7] 17.9.59 CO_REDUCE_PREFIX_INCLUSIVE
+
+In the description of argument A, insert the word ", type" after the word
+"shape", such that the sentence reads:
+
+  "It shall have the same shape, type and type parameter values in corresponding
+  references."
+
+-------------------------------------------------------------------------
+
+===END===
