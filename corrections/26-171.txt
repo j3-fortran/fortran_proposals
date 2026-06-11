@@ -1,0 +1,396 @@
+To: J3                                                     J3/26-171
+Subject: Edits for UTI 002: collective subroutine sequencing
+From: Dan Bonachea & HPC
+Date: 2026-June-12
+References: 25-127r1, 25-202r3, 26-007r1
+
+1. Introduction
+---------------
+
+Papers 25-127r1 and 25-202r3, passed by J3 in meetings #236 and #237
+respectively, provide edits for work item DIN1: Collectives over a specified
+team.
+
+In the course of applying these edits, the Editor inserted Unresolved Technical
+Issue (UTI) 002, which reads as follows in 26-007r1:
+
+ "Suggested wording change for p2 (now p3) did not work.
+
+  That is, does not work unless every invocation in between team transitions
+  specified the same team.
+
+  When the teams are not the "current" team, there is a serious problem with
+  delineations (the team transitions) as the images outside the current team
+  will be almost always be executing completely independent code sequences, and
+  completely different invocations of collectives.
+
+  It does not work for two different, overlapping, invocations using child
+  teams.
+
+  One could envisage trying to make it work for child teams by something along
+  the lines of "the sequence of invocations of collective subroutines shall be
+  the same except that a collective subroutine that specifies a child team need
+  only be executed on images that are also members of the child team". I don't
+  think that works though, as there could be inexplicable processor-dependent
+  deadlocks. We allow SYNC TEAM to specify child teams even though it is trivial
+  for that to deadlock... but there, the deadlock is reasonably detectable
+  without much overhead.
+
+  We surely do not want the internal communications of collectives to
+  potentially (and randomly) deadlock.
+
+  I am reasonably confident that with sufficient thought, we can come up with
+  something reasonable that allows the good cases, and does not allow the bad
+  ones. The last thing we should want to do is to completely neutralise the
+  "same sequence" requirement, as that would seriously impact program
+  reliability.
+
+The HPC subgroup agrees there is a problem here.
+
+This paper provides background information to fully explain the subtleties of
+the problem, and edits to resolve it.
+
+2. Background
+-------------
+
+There are many correctness requirements on the invocation of collective
+subroutines in Fortran. Many of these are guided by the same basic requirement,
+which informally stated is that images must "agree" on the order of
+collective subroutines invocations in which they are involved, both with
+respect to other collective subroutine invocations and more generally with
+image control statements that synchronize images. For demonstration purposes,
+here are some trivial counter-examples of programs that need not be supported:
+
+Example 1: (should be forbidden)
+---------
+
+  PROGRAM misordered_collective
+    integer :: X = 1
+    if (THIS_IMAGE() == 1) SYNC ALL
+    call CO_SUM(X)
+    if (THIS_IMAGE() /= 1) SYNC ALL
+  END PROGRAM
+
+When executed with more than one image, image 1 invokes SYNC ALL and then
+CO_SUM, and the other images invoke in the opposite order. This program produces
+silent deadlock on GFortran 16.1, NAG 7.2, and a fatal runtime error on HPE Cray
+Fortran 20.0.
+
+Example 2: (should be forbidden)
+---------
+
+  PROGRAM missequenced_collective
+    integer :: X = 1
+    if (THIS_IMAGE() == 1) then
+      call do_collective(.true.)
+      call do_collective(.false.)
+    else
+      call do_collective(.false.)
+      call do_collective(.true.)
+    end if
+
+    contains
+      subroutine do_collective(do_sum)
+         logical, intent(in) :: do_sum
+         if (do_sum) then
+           call CO_SUM(X)
+         else
+           call CO_MAX(X)
+         endif
+      end subroutine
+  END PROGRAM
+
+When executed with more than one image, image 1 invokes CO_SUM(X) and then
+CO_MAX(X), and the other images invoke in the opposite order. It's not even
+clear to a human reader what meaningful result the programmer expected here.
+This program computes garbage results on GFortran 16.1, and produces a fatal
+runtime error on NAG 7.2 and HPE CCE 20.0.
+
+To understand why such programs are problematic, consider that in the common
+(non-error) case, an invocation of a Fortran 2023 computational collective
+(CO_{SUM,MIN,MAX,REDUCE}) where the RESULT_IMAGE argument is absent implies
+data dependencies that effectively act as a barrier synchronization across the
+participating images. Specifically, in the absence of very aggressive
+optimization, no image can complete the collective computation until after
+every participating image has reached the corresponding reference and provided
+its contribution. This synchronization property is not guaranteed by the
+language, but is likely exhibited by most implementations (at least when
+RESULT_IMAGE is absent), which is one reason why Example 1 might deadlock if it
+were permitted.  When RESULT_IMAGE is present, there are similarly data
+dependencies that generally incur (weaker) synchronization behaviors, as the
+root image usually cannot produce a result until after every other participating
+image has provided its contribution.
+
+Even in references where such synchronization need not occur within the
+implementation, there are usually other processor-dependent reasons why all
+images participating in a collective subroutine reference must "agree" on the
+sequence of invocation of collective computations. In Example 2 the images
+don't agree on the semantics of the first collective subroutine invocation;
+image 1 is attempting to compute a CO_SUM while the rest of the images are
+attempting to compute a CO_MAX. It would be difficult to specify a meaningful
+result for such a program.
+
+Clearly some kind of ordering property must be maintained in order for programs
+to run correctly and meaningfully without deadlock, or breaking in mysterious
+ways within the implementation of collective subroutines. What's less clear is
+the extent to which the standard should attempt to mandate such a correctness
+property. In particular, such ordering properties are very much a dynamic
+property of the parallel execution trace, and not something that can be
+enforced statically in general.
+
+In Fortran 2023, these problems are dealt with in subclause 16.6 ("Collective
+subroutines"). The first paragraph reads:
+
+ "Successful execution of a collective subroutine performs a calculation on all
+  the images of the current team and assigns a computed value on one or all of
+  them. If it is invoked by one image, it shall be invoked by the same statement
+  on all active images of its current team in segments that are not ordered with
+  respect to each other; corresponding references participate in the same
+  collective computation."
+
+This paragraph clearly forbids multi-image executions of Example 1 above.
+Specifically, the SYNC ALL statement defines a segment boundary across images
+and specifies that prior execution segments are ordered before the subsequent
+ones. In Example 1 different images invoke CO_SUM from segments that are
+ordered with respect to each other, and thus violate the "not ordered with
+respect to each other" rule of paragraph 1. This is a useful rule, but it only
+helps in the specific situation where the problematic calls appear in segments
+that happen to be relatively ordered across images. It does nothing to forbid
+Example 2, where there are no segment boundaries near the problematic collective
+invocations, and they do not appear in segments ordered with respect to each
+other.
+
+This UTI revolves around what we will informally call the "same sequence"
+requirement of collective subroutines, which is intended to cover cases such as
+Example 2. Here is the wording of that requirement as it appears in Fortran
+2023 (16.6 p 2):
+
+ "Before execution of the first CHANGE TEAM statement on an image, in between
+  executions of CHANGE TEAM and/or END TEAM statements, and after the last
+  execution of an END TEAM statement, the sequence of invocations of collective
+  subroutines shall be the same on all active images of a team."
+
+This requirement is intended to ensure that all images involved "reach" the
+same collective subroutine invocations in the same order, even when no relative
+segment ordering is involved. This clearly forbids multi-image executions of
+Example 2, because: (1) there are no CHANGE TEAM statements (thus the entire
+execution precedes "the first CHANGE TEAM"), (2) there is only one team (the
+initial team), and (3) the sequence of invocations of collective subroutines
+differs across the active images of the only team (thus the "shall" requirement
+is violated and the program execution is not standard-conforming).
+
+At first glance this rule seems to mandate the necessary property, forbidding
+program executions that must be forbidden, while still allowing program
+executions that should be permitted. Unfortunately the situation is less
+clear-cut in programs with non-trivial team involvement.
+
+3. Problems with the "same sequence" requirement in Fortran 2023
+----------------------------------------------------------------
+
+The CHANGE TEAM construct provides image control statements that respectively
+change the current team of invoking images to a child of the current team
+(CHANGE TEAM), and restore the current team back to the parent team (END TEAM).
+A useful intuition here is that images maintain a stack-like discipline of
+pushing and popping that determines the current team, with the additional
+restriction that images can only "push" a direct child team of the
+then-current team.
+
+Fortran 2018 relaxed (relative to TS 18508:2015) the requirement that CHANGE
+TEAM must collectively be invoked by all members of the current (parent) team
+(see subclause C.1.2 [675:23-24]). In Fortran 2018 and later, CHANGE TEAM need
+only be invoked by images who are members of the "new" team, i.e., the child
+team (see 11.1.5.2 p5-6). Image synchronization performed by the CHANGE TEAM and
+END TEAM statements is similarly across the "new" (child) team (see 11.1.5.2
+p8 and Note 2). However the collective "same sequence" requirement quoted above
+was not updated to reflect this relaxation. Specifically, it implicitly assumes
+that all images agree on the sequence of CHANGE TEAM and END TEAM statements; a
+property that is common to many programs but one which is not required by the
+standard.
+
+The main problem revolves around the following phrase (Fortran 2023 16.6 p2):
+
+ "... the sequence of invocations of collective subroutines shall be the same
+  on all active images of a team."
+
+Of what team? The initial team? The team that was current at the time of the
+invocation? All teams of which the images happen to be a member? All of these
+intentions are plausible interpretations, and none of them are sufficient to
+unambiguously handle non-trivial cases such as the one shown in the following
+example.
+
+Example 3: (should be permitted)
+---------
+
+  PROGRAM tricky_change_team
+    USE,INTRINSIC :: ISO_FORTRAN_ENV
+    TYPE (TEAM_TYPE) :: T_odds_and_evens, T_everyone ! , T_initial
+    INTEGER :: me, ni, x
+
+    me = THIS_IMAGE()
+    ni = NUM_IMAGES()
+    print *, me, "/", ni, ": HELLO"
+
+    ! Each image is a member of three teams:
+    ! T_initial = GET_TEAM()
+    FORM TEAM (1, T_everyone)
+    FORM TEAM (mod(me,2)+1, T_odds_and_evens)
+
+    SYNC ALL
+
+    x = me
+    call CO_MAX(x)  ! COLLECTIVE: T_initial (all images)
+    IF (THIS_IMAGE() == 1) print *, "max of initial (first):", x
+
+    IF (mod(me,2) == 1) THEN ! Roughly half the images execute the following:
+
+      CHANGE TEAM(T_odds_and_evens) ! BOUNDARY: odd-numbered images only
+
+        x = me
+        call CO_MAX(x) ! COLLECTIVE: odd team only of T_odds_and_evens
+        IF (THIS_IMAGE() == 1) print *, "max of odds:", x
+
+      END TEAM ! BOUNDARY: odd-numbered images only
+
+    END IF
+
+    print *, me, "/", ni, ": HERE"
+    x = me
+    call CO_MAX(x)  ! COLLECTIVE: T_initial (all images)
+    IF (THIS_IMAGE() == 1) print *, "max of initial (second):", x
+
+    CHANGE TEAM(T_everyone) ! BOUNDARY: all images
+
+      x = me
+      call CO_MAX(x)  ! COLLECTIVE: T_everyone (all images)
+      IF (THIS_IMAGE() == 1) print *, "max of everyone:", x
+
+    END TEAM ! BOUNDARY: all images
+
+    SYNC ALL
+    print *, me, "/", ni, ": DONE"
+  END PROGRAM
+
+In this example, a subset of the images CHANGE TEAM to a child team, invoke a
+collective subroutine over that team, and then END TEAM, after which all the
+images on the initial team invoke a collective subroutine. Unlike the examples
+given in Section 2, the HPC subgroup believes there is no fundamental reason
+that executions of this program should be forbidden. This program should execute
+(without deadlocks) as the programmer intended. Indeed testing shows it executes
+correctly and produces the expected results on GFortran 16.1 and NAG 7.2 (it
+produces a fatal runtime error on HPE CCE 20.0, which has been reported as
+HPE Case #5400026783).
+
+A very strict reading of the current (ambiguous) requirement in Fortran 2023
+16.6 p2 might imply that any program that does not execute an identical sequence
+of CHANGE TEAM and END TEAM statements on every image would be prohibited from
+invoking any collective subroutines, at least in the intervals where the
+sequences are not identical across every image. Such an interpretation is overly
+restrictive and almost certainly not what we want to specify.
+
+4. Collectives over a specified team
+-------------------------------------------
+Everything discussed to this point deals only with the existing Fortran 2023
+feature set and problematic verbiage in the Collective Subroutines section of
+the Fortran 2023 standard. Now we need to consider the additional complication
+added by work item DIN1 (with edits passed in 25-127r1 and 25-202r3). This new
+feature adds a TEAM argument to collectives, which enables execution of
+collective subroutines on a specified team (in particular a team that differs
+from the current team).
+
+Observations:
+
+1. With the introduction of collectives on a specified team, any collective
+   subroutine reference can specify any of a number of teams (where the current
+   team is just one option). As such, the value of the current team no longer
+   uniquely determines the images involved in a collective subroutine reference.
+
+2. Moreover, an image may be a member of many teams and execute collective
+   subroutines over all of them without ever executing a CHANGE TEAM construct.
+   Indeed, this was one of the primary motivations for the DIN1 feature
+   (collectives over a specified team); namely, to decouple collective
+   subroutine invocations from the current team and the CHANGE TEAM construct.
+
+3. As such, the CHANGE TEAM construct has become mostly irrelevant to the
+   collective sequencing requirements.  CHANGE TEAM and END TEAM continue to be
+   image control statements that impose segment order (and thus impact the "in
+   segments that are not ordered with respect to each other" requirement), but
+   it no longer makes sense to structure collective sequencing requirements
+   around the CHANGE TEAM construct.
+
+Nevertheless, we still need some requirements to specify what execution
+sequences of collective subroutine references are permitted, and to clarify
+which execution sequences could possibly lead to deadlock. Edits are provided
+below.
+
+5. Edits (relative to 26-007r1)
+--------
+
+-------------------------------------------------------------------------
+[425] (17.6 Collective subroutines)
+
+Delete UTI 002.
+
+-------------------------------------------------------------------------
+[425:5-7] (17.6 Collective subroutines, paragraph 3)
+
+Delete the first sentence that reads:
+
+ "Before execution of the first CHANGE TEAM statement on an image, in between
+  executions of CHANGE TEAM and/or END TEAM statements, and after the last
+  execution of an END TEAM statement, the sequence of invocations of collective
+  subroutines shall be the same on all active images of a team."
+
+And replace that sentence with the following sentences:
+
+ "All participating images must invoke collective subroutines in the same order
+  per team. Specifically, once any image begins executing the invocation of a
+  collective subroutine, all other active images in the specified team must
+  eventually invoke the corresponding reference, and no other collective
+  subroutine reference with the same specified team in between. An invocation of
+  a collective subroutine is not guaranteed to complete execution on an image
+  until after all participating images have reached the corresponding reference.
+ "
+
+Add new note to the same paragraph:
+
+ "NOTE: The processor is not required to detect violations of the rule that
+        collective subroutines are invoked in the same order per team, nor is
+        it responsible for detecting or resolving deadlock problems (such as
+        two images waiting on different collective subroutine references
+        specifying different teams with overlapping membership).
+        The implementation of collective subroutines is permitted but not
+        required to include synchronization between participating images.
+        A program that makes assumptions about the presence or absence of
+        unspecified synchronization is unlikely to be portable."
+
+-------------------------------------------------------------------------
+
+6. Rationale
+------------
+
+The first two sentences of the edits above specify the required condition for
+correct execution of collective computation, which is roughly that all images
+on a given team must "agree" on the order of corresponding collective subroutine
+references specifying that team. The wording is modeled on wording appearing in
+section 6.12 of the MPI 5.0 standard [250:1-4], where the analogous problem
+arises for MPI collective operations performed over a specified communicator
+(the MPI analog to a Fortran team).
+
+The final sentence and NOTE above explicitly clarify that a reference to any
+collective subroutine *might* include (in the worst case) fully blocking
+synchronization between all participating images. This in turn implies that
+portable programs should always be written under the assumption of such
+synchronization, and that any deadlocks arising from such synchronization
+represent a programmer error. (Wording here was based on 26-007r1 5.3.4 NOTE 2
+and 9.8.1.2 NOTE 1).
+
+The proposed approach is analogous to the general approach taken with all other
+image-synchronization operations in the language. Image deadlocks are not
+forbidden by the standard; neither as a general principle, nor by imposing
+rules of execution that would conservatively prevent deadlocks. Instead, the
+semantics of image synchronization are written to explain the execution
+dependencies they induce between images, which may lead to deadlock as a
+natural consequence during the execution of programs that are not structured to
+respect those inter-image dependencies.
+
+===END===
