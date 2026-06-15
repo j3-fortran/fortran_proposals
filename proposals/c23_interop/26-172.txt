@@ -1,0 +1,85 @@
+To: J3                                                     J3/26-172
+From: /HPC
+Subject: Responses to UTIs for interoperability with C (003, 004, 005)
+Date: 2026-June-12
+
+Reference: 26-007r1 25-203r1
+
+In 26-007r1, the Editor identified three unresolved technical
+issues (UTIs) associated with improvements to interoperability with C.
+The HPC subgroup makes the following recommendations:
+
+========
+
+UTI 003 "Redundant synonyms are unnecessary and unhelpful."
+
+    Adding all those *_COMPLEX named constants just confuses people who
+    haven't completely understood that type complex kind numbers are by
+    definition identical to the real kind numbers for their parts. It
+    bloats the language, the module, and the user programs that we
+    thereby encourage to use these names. It's too late to get rid of
+    the old ones, but we should not continue to add more useless and
+    unnecessarily verbose names.
+
+HPC subgroup agrees with the Editor. The following edit reverts the
+relevant changes from paper 25-203r1:
+
+----
+
+[604:14-18] Replace the sentence
+
+    The values of C_FLOAT_COMPLEX, C_DOUBLE_COMPLEX,
+    C_LONG_DOUBLE_COMPLEX, C_FLOAT16_COMPLEX, C_FLOAT32_COMPLEX,
+    C_FLOAT64_COMPLEX, C_FLOAT128_COMPLEX, C_FLOAT32X_COMPLEX,
+    C_FLOAT64X_COMPLEX, and C_FLOAT128X_COMPLEX shall be the same as
+    those of C_FLOAT, C_DOUBLE, C_LONG_DOUBLE, C_FLOAT16,C_FLOAT32,
+    C_FLOAT64, C_FLOAT128, C_FLOAT32X, C_FLOAT64X, and C_FLOAT128X,
+    respectively.
+
+with the sentence
+
+    The values of C_FLOAT_COMPLEX, C_DOUBLE_COMPLEX, and
+    C_LONG_DOUBLE_COMPLEX, shall be the same as those of C_FLOAT,
+    C_DOUBLE, and C_LONG_DOUBLE, respectively.
+
+----
+
+[613-614:table 19.2] Remove the following rows from the COMPLEX section
+of the table:
+
+      +---------------------+---------------------+
+      | C_FLOAT16_COMPLEX   |   _Float16 _Complex |
+      | C_FLOAT32_COMPLEX   |   _Float32 _Complex |
+      | C_FLOAT64_COMPLEX   |   _Float64 _Complex |
+      | C_FLOAT128_COMPLEX  |  _Float128 _Complex |
+      | C_FLOAT32X_COMPLEX  |  _Float32x _Complex |
+      | C_FLOAT64X_COMPLEX  |  _Float64x _Complex |
+      | C_FLOAT128X_COMPLEX | _Float128x _Complex |
+      +---------------------+---------------------+
+
+Delete UTI 003.
+
+========
+
+UTI 004 "Potential contradictions are unhelpful."
+
+    Did not insert "If the companion processor defines the C
+    preprocessor macros __STDC_IEC_60559_BFP__ and
+    __STDC_IEC_60559_TYPES__, the values of C_FLOAT32 and C_FLOAT64
+    shall be the same as those of C_FLOAT and C_DOUBLE, respectively."
+
+HPC subgroup agrees with the Editor. Delete UTI 004.
+
+========
+
+UTI 005 "What is the point of adding a synonym?"
+
+    There is no good reason for having two names for the same C type.
+    ...
+    We cannot get rid of CFI_type_Bool without incompatibility, so we
+    need to keep that, but there seems to be little to gain by adding
+    CFI_type_bool as a synonym.
+
+HPC subgroup agrees with the Editor. Delete UTI 005.
+
+==END==
