@@ -265,6 +265,7 @@ adding the missing word to the CO_REDUCE_PREFIX_{EXCLUSIVE,INCLUSIVE} sections.
 
 3.1 Edits for A argument
 ------------------------
+<Revision 1 update 2>: Added the missing "Oxford comma" in edits below.
 
 -------------------------------------------------------------------------
 [458:30-31] 17.9.58 CO_REDUCE_PREFIX_EXCLUSIVE
@@ -272,7 +273,7 @@ adding the missing word to the CO_REDUCE_PREFIX_{EXCLUSIVE,INCLUSIVE} sections.
 In the description of argument A, insert the word ", type" after the word
 "shape", such that the sentence reads:
 
-  "It shall have the same shape, type and type parameter values in corresponding
+ "It shall have the same shape, type, and type parameter values in corresponding
   references."
 
 
@@ -282,7 +283,7 @@ In the description of argument A, insert the word ", type" after the word
 In the description of argument A, insert the word ", type" after the word
 "shape", such that the sentence reads:
 
-  "It shall have the same shape, type and type parameter values in corresponding
+ "It shall have the same shape, type, and type parameter values in corresponding
   references."
 
 -------------------------------------------------------------------------
