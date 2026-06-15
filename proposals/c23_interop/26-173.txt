@@ -1,0 +1,80 @@
+To: J3                                                     J3/26-173
+From: /HPC
+Subject: Mark C_*_COMPLEX as obsolescent
+Date: 2026-June-12
+
+References: 26-007r1 26-172 25-205r1
+
+In 26-007r1, the Editor identified unresolved technical issue (UTI) 003
+"Redundant synonyms are unnecessary and unhelpful." In paper 26-172, the
+HPC subgroup recommended (in agreement with the Editor) that the new
+named constants of the form C_*_COMPLEX added by paper 25-205r1 be
+removed. This paper proposes applying the same reasoning consistently to
+existing C_*_COMPLEX named constants.
+
+========
+
+01. Background
+
+In 26-007r1, the Editor introduced UTI 003:
+
+      Redundant synonyms are unnecessary and unhelpful.
+
+      Adding all those *_COMPLEX named constants just confuses people
+      who haven't completely understood that type complex kind numbers
+      are by definition identical to the real kind numbers for their
+      parts. It bloats the language, the module, and the user programs
+      that we thereby encourage to use these names. It's too late to get
+      rid of the old ones, but we should not continue to add more
+      useless and unnecessarily verbose names.
+
+In 26-172, the HPC subgroup recommended reverting the addition of
+*_COMPLEX named constants. Here, the subgroup recommends going further
+and marking the other named constants as obsolescent, so as to actively
+discourage new programs from using them.
+
+========
+
+Edits:
+
+[604:14-15] Add footnotes to C_FLOAT_COMPLEX, C_DOUBLE_COMPLEX, and
+C_LONG_DOUBLE_COMPLEX which state, respectively:
+
+      The C_FLOAT_COMPLEX named constant is obsolescent.
+
+      The C_DOUBLE_COMPLEX named constant is obsolescent.
+
+      The C_LONG_DOUBLE_COMPLEX named constant is obsolescent.
+
+----
+
+[613:table 19.2] Modify the first three rows of the COMPLEX section of
+the table to read:
+
++---------+-------------------------------------------+----------------------+
+|         | C_FLOAT (or C_FLOAT_COMPLEX*)             | float _Complex       |
+| COMPLEX | C_DOUBLE (or C_DOUBLE_COMPLEX*)           | double _Complex      |
+|         | C_LONG_DOUBLE (or C_LONG_DOUBLE_COMPLEX*) | long double _Complex |
++---------+-------------------------------------------+----------------------+
+
+where the asterisks are footnotemarks with the same obsolescence text as
+the edit on page 604.
+
+----
+
+[667:32] Add a new item to the list of obsolescent features:
+
+(XX) C_FLOAT_COMPLEX, C_DOUBLE_COMPLEX, and C_LONG_DOUBLE_COMPLEX named
+constants - see B.3.15+.
+
+[670:4] Add a new subclause and paragraph:
+
+B.3.15+  C_FLOAT_COMPLEX, C_DOUBLE_COMPLEX, and C_LONG_DOUBLE_COMPLEX
+named constants
+
+C_FLOAT_COMPLEX, C_DOUBLE_COMPLEX, and C_LONG_DOUBLE_COMPLEX named
+constants are redundant to, and have the same values as, the named
+constants C_FLOAT, C_DOUBLE, and C_LONG_DOUBLE, respectively. Use the
+latter constants instead of the former.
+
+==END==
