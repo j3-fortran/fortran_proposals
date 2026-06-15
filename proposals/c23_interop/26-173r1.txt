@@ -1,7 +1,7 @@
-To: J3                                                     J3/26-173
+To: J3                                                     J3/26-173r1
 From: /HPC
 Subject: Mark C_*_COMPLEX as obsolescent
-Date: 2026-June-12
+Date: 2026-June-15
 
 References: 26-007r1 26-172 25-205r1
 
@@ -36,6 +36,13 @@ discourage new programs from using them.
 ========
 
 Edits:
+
+[xv] Add to introduction, under Intrinsic Modules bullet:
+
+      The redundant named constants C_FLOAT_COMPLEX, C_DOUBLE_COMPLEX,
+      C_LONG_DOUBLE_COMPLEX are now considered to be obsolescent.
+
+----
 
 [604:14-15] Add footnotes to C_FLOAT_COMPLEX, C_DOUBLE_COMPLEX, and
 C_LONG_DOUBLE_COMPLEX which state, respectively:
