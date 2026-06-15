@@ -54,6 +54,49 @@ until we decide to remove all such redundant descriptions throughout 17.9, the
 confusing asymmetry is more problematic than the trivial redundancy.
 
 -------------------------------------------------------------------------
+<Revision 1 update 1>
+
+Despite the "General rule" from 17.2.1 p3, subclause 17.9 currently includes
+45 instances of "INTENT (IN)" appearing in the description of dummy arguments
+to various intrinsic subroutines.  Of all the dummy arguments to all the
+intrinsic subroutines appearing in subclause 17.9, exactly four dummy argument
+descriptions are missing an explicit "INTENT" in 26-007r1. Those are:
+
+* CO_REDUCE: OPERATION argument
+* CO_REDUCE_PREFIX_EXCLUSIVE: OPERATION and INITIAL arguments
+* CO_REDUCE_PREFIX_INCLUSIVE: OPERATION argument
+
+This asymmetry argues for additionally adding an explicit "INTENT (IN)" to the
+OPERATION arguments to CO_REDUCE*, which would then establish a consistent
+pattern that subroutines in 17.9 always provide an explicit INTENT for all dummy
+arguments. Suggested edits for this proposal are:
+
+[457:33] 17.9.57 CO_REDUCE
+
+In the first paragraph describing the OPERATION argument, append the sentence:
+
+  "It is an INTENT (IN) argument."
+
+[459:10] 17.9.58 CO_REDUCE_PREFIX_EXCLUSIVE
+
+In the first paragraph describing the OPERATION argument, append the sentence:
+
+  "It is an INTENT (IN) argument."
+
+[460:20] 17.9.58 CO_REDUCE_PREFIX_INCLUSIVE
+
+In the first paragraph describing the OPERATION argument, append the sentence:
+
+  "It is an INTENT (IN) argument."
+
+Another option to restore symmetry would be to delete all 45 instances of
+"INTENT (IN)" that currently appear in 17.9.  That would imply a broader change
+and (in the author's humble opinion) would degrade readability for lay users
+who skip straight to reading the subclause associated with a given subroutine
+and might be unfamiliar with the "General rule" from 17.2.1 p3.
+
+<end Revision 1 update 1>
+-------------------------------------------------------------------------
 [459:17] 17.9.58 CO_REDUCE_PREFIX_EXCLUSIVE
 
 In the last sentence describing the OPERATION argument, replace the phrase:
