@@ -1,7 +1,7 @@
-To: J3                                                     J3/26-159r1
+To: J3                                                     J3/26-159r2
 Subject: Edits to correct prefix reductions (US20)
 From: Dan Bonachea & Brandon Cook
-Date: 2026-June-15
+Date: 2026-June-16
 References: 25-199r2, 26-103r3, 26-007r1
 
 1. Background
