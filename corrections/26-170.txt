@@ -1,7 +1,7 @@
-To: J3                                                     J3/26-170
+To: J3                                                     J3/26-170r1
 Subject: Edits for UTI 001: TEAM restrictions for collectives
 From: HPC
-Date: 2026-June-12
+Date: 2026-June-16
 References: 22-163, 25-127r1, 25-202r3, 26-137, 26-007r1
 
 1. Background
