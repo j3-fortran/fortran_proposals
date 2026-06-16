@@ -1,0 +1,29 @@
+To: J3                                                     J3/26-118
+From: HPC
+Subject: Recommendation for US18 "Allow Polymorphism in Coarrays"
+Date: 2026-February-16
+References: WG5-N2249, 23-217
+
+1. Introduction
+============
+
+23-217 ("Usable Polymorphism in Coarrays") proposed relaxing several
+constraints to enable more usable polymorphism with coindexed objects in
+coarrays. It appears as accepted work item US18 in N2249 (Jun 2025) for the
+upcoming Standard, but was first accepted in N2234 (Jun 2024).  Since its
+submission, interest has waned and the anticipated complexity of an
+implementation has increased.
+
+2. Subgroup Recommendation
+=========================
+
+Given the lack of interest and progress, the J3 HPC subgroup recommends that
+item US18 be removed (without prejudice) from the Fortran 202Y work list. The
+item may be reconsidered in the future if and when a subgroup or individual
+accepts ownership and a stronger set of motivating examples to justify the
+expected implementation burden.
+
+3. Resolution
+===========
+In passing this paper, INCITS/Fortran (J3) recommends to WG5 that work item
+US18 be removed from the work list for Fortran 202Y.
