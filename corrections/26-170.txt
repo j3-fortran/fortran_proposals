@@ -37,12 +37,12 @@ passing any valid team argument to a collective subroutine. Edits for the same
 technical design were also previously passed by unanimous consent at meeting
 #236 in superseded paper 25-127r1.
 
-On procedural grounds, the HPC subgroup believes it suffices to respond that
-this was a deliberate design decision, and therefore the technical content of
-the edits should stand as passed (twice) in plenary. The next section provides
-the edits to restore the approved design in the current draft.
+The HPC subgroup asserts that this was a deliberate design decision, and
+therefore the technical content of the edits should stand as passed twice in
+plenary. The next section provides the edits to restore the approved design in
+the current draft.
 
-The remaining sections of this paper provide additional context.
+The remaining sections (4-6) of this paper provide additional context.
 
 3. Edits
 --------
