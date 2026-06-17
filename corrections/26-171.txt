@@ -342,14 +342,13 @@ Delete the first sentence that reads:
 
 And replace that sentence with the following sentences:
 
- "All participating images must invoke collective subroutines in the same order
-  per team. Specifically, once any image begins executing the invocation of a
-  collective subroutine, all other active images in the specified team must
-  eventually invoke the corresponding reference, and no other collective
-  subroutine reference with the same specified team in between. An invocation of
-  a collective subroutine is not guaranteed to complete execution on an image
-  until after all participating images have reached the corresponding reference.
- "
+ "All participating images shall invoke collective subroutines in the same order
+  per team. Once an image invokes a collective subroutine, all other active
+  images in the specified team shall eventually execute the corresponding
+  reference, and no other collective subroutine with the same specified team in
+  between. An invocation of a collective subroutine is not guaranteed to
+  complete execution on an image until after all participating images have
+  reached the corresponding reference."
 
 Add new note to the same paragraph:
 
@@ -359,9 +358,9 @@ Add new note to the same paragraph:
         two images waiting on different collective subroutine references
         specifying different teams with overlapping membership).
         The implementation of collective subroutines is permitted but not
-        required to include synchronization between participating images.
+        required to include synchronization among participating images.
         A program that makes assumptions about the presence or absence of
-        unspecified synchronization is unlikely to be portable."
+        unspecified synchronization is unlikely to be reliable."
 
 -------------------------------------------------------------------------
 
